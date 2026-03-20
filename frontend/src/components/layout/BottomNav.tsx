@@ -1,0 +1,77 @@
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+
+const MapIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z"/>
+    <path d="M12 22C16 18 20 14.4183 20 10C20 5.58172 16.4183 2 12 2C7.58172 2 4 5.58172 4 10C4 14.4183 8 18 12 22Z"/>
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8"/>
+    <path d="M21 21L16.65 16.65"/>
+  </svg>
+);
+
+const ProfileIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <path d="M12 5V19M5 12H19"/>
+  </svg>
+);
+
+export default function BottomNav() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { t } = useTranslation();
+
+  // Hide on splash/auth paths
+  const hiddenPaths = ['/splash', '/auth'];
+  if (hiddenPaths.some((p) => location.pathname.startsWith(p))) return null;
+
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
+
+  const Tab = ({ path, icon, label }: { path: string; icon: React.ReactNode; label: string }) => (
+    <button
+      onClick={() => navigate(path)}
+      className={`flex flex-col items-center justify-center flex-1 py-2 transition-colors ${
+        isActive(path) ? 'text-teal-600' : 'text-stone-400'
+      }`}
+    >
+      {icon}
+      <span className="text-[10px] font-medium mt-0.5">{label}</span>
+      {isActive(path) && <div className="w-1 h-1 rounded-full bg-teal-500 mt-0.5" />}
+    </button>
+  );
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-stone-100 pb-safe">
+      <div className="flex items-center h-16 max-w-lg mx-auto px-2">
+        <Tab path="/" icon={<MapIcon />} label={t('nav.home')} />
+        <Tab path="/search" icon={<SearchIcon />} label={t('nav.search')} />
+
+        <div className="flex items-center justify-center flex-1">
+          <button
+            onClick={() => navigate('/rate')}
+            className="flex items-center justify-center w-12 h-12 -mt-5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-500/25 active:scale-95 transition-transform"
+          >
+            <PlusIcon />
+          </button>
+        </div>
+
+        <Tab path="/profile" icon={<ProfileIcon />} label={t('nav.profile')} />
+      </div>
+    </nav>
+  );
+}

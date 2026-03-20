@@ -1,0 +1,157 @@
+{
+  "app": {
+    "name": "CleanCheck",
+    "tagline": "Rate restrooms. Predict kitchen quality."
+  },
+  "nav": {
+    "home": "Map",
+    "search": "Search",
+    "rate": "Rate",
+    "profile": "Profile"
+  },
+  "splash": {
+    "skip": "Skip",
+    "next": "Next",
+    "getStarted": "Get Started",
+    "slide1Title": "Rate Restrooms.\nPredict Kitchens.",
+    "slide1Desc": "The cleanliness of a restroom reveals a lot about a restaurant's kitchen.",
+    "slide2Title": "How it Works",
+    "slide2Desc": "Rate 5 criteria and get a CleanScore for every restaurant.",
+    "slide3Title": "Join CleanCheck",
+    "slide3Desc": "Create an account or continue as a guest.",
+    "continueAsGuest": "Continue as Guest",
+    "criteria": {
+      "cleanliness": "Overall Cleanliness",
+      "smell": "Smell & Freshness",
+      "supplies": "Supplies & Toiletries",
+      "maintenance": "Maintenance",
+      "accessibility": "Accessibility"
+    }
+  },
+  "home": {
+    "title": "Nearby",
+    "nearby": "Nearby Restaurants",
+    "noRatings": "No ratings yet",
+    "ratings": "ratings",
+    "away": "away"
+  },
+  "search": {
+    "placeholder": "Search restaurants...",
+    "filters": "Filters",
+    "noResults": "No results found",
+    "noResultsDesc": "Try a different search term or expand your filters.",
+    "allCuisines": "All",
+    "minScore": "Min. Score",
+    "distance": "Distance"
+  },
+  "restaurant": {
+    "cleanScore": "CleanScore",
+    "kitchenConfidence": "Kitchen Confidence",
+    "rateThis": "Rate this Restaurant",
+    "criteria": {
+      "cleanliness": "Cleanliness",
+      "smell": "Smell",
+      "supplies": "Supplies",
+      "maintenance": "Maintenance",
+      "accessibility": "Accessibility"
+    },
+    "reviews": "Reviews",
+    "noReviews": "No reviews yet. Be the first!",
+    "photos": "Photos"
+  },
+  "rating": {
+    "title": "Rate",
+    "step1Title": "Choose Restaurant",
+    "step1Desc": "Select a restaurant near you",
+    "step2Title": "Rate the Restroom",
+    "step2Desc": "Score 5 criteria",
+    "step3Title": "Photo & Comment",
+    "step3Desc": "Optional: Add a photo or comment",
+    "step4Title": "Done!",
+    "searchRestaurant": "Search restaurant...",
+    "nearYou": "Near You",
+    "orSearch": "Or search manually",
+    "yourScore": "Your CleanScore",
+    "addPhoto": "Add Photo",
+    "addComment": "Add a comment...",
+    "skip": "Skip",
+    "submit": "Submit Rating",
+    "done": "Done",
+    "share": "Share",
+    "thankYou": "Thanks for your rating!",
+    "badgeEarned": "Badge Earned!",
+    "overall": "Overall"
+  },
+  "profile": {
+    "title": "Profile",
+    "memberSince": "Member since",
+    "totalRatings": "Ratings",
+    "restaurants": "Restaurants",
+    "avgScore": "Avg Score",
+    "badges": "Badges",
+    "history": "Rating History",
+    "settings": "Settings",
+    "language": "Language",
+    "logout": "Log out",
+    "loginPrompt": "Log in to save your ratings",
+    "login": "Log in",
+    "noBadges": "No badges earned yet"
+  },
+  "auth": {
+    "login": "Log in",
+    "register": "Register",
+    "email": "Email",
+    "username": "Username",
+    "password": "Password",
+    "continueAsGuest": "Continue as Guest",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?"
+  },
+  "badges": {
+    "firstRating": {
+      "name": "First Step",
+      "description": "Submitted your first rating"
+    },
+    "tenRatings": {
+      "name": "Regular",
+      "description": "Submitted 10 ratings"
+    },
+    "fiftyRatings": {
+      "name": "Hygiene Hero",
+      "description": "Submitted 50 ratings"
+    },
+    "explorer": {
+      "name": "Explorer",
+      "description": "Rated 10 different restaurants"
+    },
+    "critic": {
+      "name": "Critic",
+      "description": "Detailed rating with comment and photo"
+    },
+    "earlyBird": {
+      "name": "Early Bird",
+      "description": "Submitted a rating before 8 AM"
+    }
+  },
+  "geo": {
+    "tooFar": "You are too far away",
+    "tooFarDesc": "You must be within 200m of the restaurant to rate.",
+    "currentDistance": "Current distance",
+    "maxDistance": "Max. distance",
+    "updateLocation": "Update Location",
+    "checking": "Checking location...",
+    "withinRange": "Within range",
+    "outOfRange": "Out of range"
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "km": "km",
+    "m": "m"
+  }
+}

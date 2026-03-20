@@ -1,0 +1,68 @@
+import 'dotenv/config';
+import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import path from 'path';
+
+import authRoutes from './routes/auth';
+import restaurantRoutes from './routes/restaurants';
+import ratingRoutes from './routes/ratings';
+import userRoutes from './routes/users';
+import { initModeration } from './services/moderationService';
+
+const app = express();
+const PORT = parseInt(process.env.PORT || '3001', 10);
+
+// Middleware
+app.use(helmet());
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/restaurants', restaurantRoutes);
+app.use('/api/ratings', ratingRoutes);
+app.use('/api/users', userRoutes);
+
+// Health check
+app.get('/api/health', (_req: Request, res: Response) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Serve static files (frontend)
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// SPA fallback — serve index.html for non-API routes
+app.get('*', (req: Request, res: Response) => {
+  if (req.path.startsWith('/api')) {
+    res.status(404).json({ error: 'API route not found' });
+    return;
+  }
+  const indexPath = path.join(__dirname, '..', 'public', 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      res.status(404).json({ error: 'Not found' });
+    }
+  });
+});
+
+// Error handling middleware
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+app.listen(PORT, async () => {
+  console.log(`CleanCheck API running on port ${PORT}`);
+
+  // Pre-load content moderation model (non-blocking)
+  try {
+    await initModeration();
+    console.log('Content moderation ready');
+  } catch (err) {
+    console.warn('Content moderation failed to initialize — uploads will still work but without NSFW scanning');
+  }
+});
+
+export default app;

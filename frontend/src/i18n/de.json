@@ -1,0 +1,157 @@
+{
+  "app": {
+    "name": "CleanCheck",
+    "tagline": "Bewerte Toiletten. Sag Küchenqualität voraus."
+  },
+  "nav": {
+    "home": "Karte",
+    "search": "Suche",
+    "rate": "Bewerten",
+    "profile": "Profil"
+  },
+  "splash": {
+    "skip": "Überspringen",
+    "next": "Weiter",
+    "getStarted": "Los geht's",
+    "slide1Title": "Bewerte Toiletten.\nSag Küchen voraus.",
+    "slide1Desc": "Die Sauberkeit der Toilette verrät viel über die Küche eines Restaurants.",
+    "slide2Title": "So funktioniert's",
+    "slide2Desc": "Bewerte 5 Kriterien und erhalte einen CleanScore für jedes Restaurant.",
+    "slide3Title": "Tritt CleanCheck bei",
+    "slide3Desc": "Erstelle ein Konto oder fahre als Gast fort.",
+    "continueAsGuest": "Als Gast fortfahren",
+    "criteria": {
+      "cleanliness": "Allgemeine Sauberkeit",
+      "smell": "Geruch",
+      "supplies": "Ausstattung",
+      "maintenance": "Instandhaltung",
+      "accessibility": "Zugänglichkeit"
+    }
+  },
+  "home": {
+    "title": "In der Nähe",
+    "nearby": "Restaurants in der Nähe",
+    "noRatings": "Noch keine Bewertungen",
+    "ratings": "Bewertungen",
+    "away": "entfernt"
+  },
+  "search": {
+    "placeholder": "Restaurant suchen...",
+    "filters": "Filter",
+    "noResults": "Keine Ergebnisse gefunden",
+    "noResultsDesc": "Versuche einen anderen Suchbegriff oder erweitere die Filter.",
+    "allCuisines": "Alle",
+    "minScore": "Min. Score",
+    "distance": "Entfernung"
+  },
+  "restaurant": {
+    "cleanScore": "CleanScore",
+    "kitchenConfidence": "Küchen-Vertrauen",
+    "rateThis": "Dieses Restaurant bewerten",
+    "criteria": {
+      "cleanliness": "Sauberkeit",
+      "smell": "Geruch",
+      "supplies": "Ausstattung",
+      "maintenance": "Instandhaltung",
+      "accessibility": "Zugänglichkeit"
+    },
+    "reviews": "Bewertungen",
+    "noReviews": "Noch keine Bewertungen. Sei der Erste!",
+    "photos": "Fotos"
+  },
+  "rating": {
+    "title": "Bewertung abgeben",
+    "step1Title": "Restaurant wählen",
+    "step1Desc": "Wähle ein Restaurant in deiner Nähe",
+    "step2Title": "Bewerte die Toilette",
+    "step2Desc": "Bewerte 5 Kriterien",
+    "step3Title": "Foto & Kommentar",
+    "step3Desc": "Optional: Füge ein Foto oder Kommentar hinzu",
+    "step4Title": "Geschafft!",
+    "searchRestaurant": "Restaurant suchen...",
+    "nearYou": "In deiner Nähe",
+    "orSearch": "Oder suche manuell",
+    "yourScore": "Dein CleanScore",
+    "addPhoto": "Foto hinzufügen",
+    "addComment": "Kommentar hinzufügen...",
+    "skip": "Überspringen",
+    "submit": "Bewertung abschicken",
+    "done": "Fertig",
+    "share": "Teilen",
+    "thankYou": "Danke für deine Bewertung!",
+    "badgeEarned": "Abzeichen verdient!",
+    "overall": "Gesamt"
+  },
+  "profile": {
+    "title": "Profil",
+    "memberSince": "Mitglied seit",
+    "totalRatings": "Bewertungen",
+    "restaurants": "Restaurants",
+    "avgScore": "Schnitt",
+    "badges": "Abzeichen",
+    "history": "Bewertungsverlauf",
+    "settings": "Einstellungen",
+    "language": "Sprache",
+    "logout": "Abmelden",
+    "loginPrompt": "Melde dich an, um deine Bewertungen zu speichern",
+    "login": "Anmelden",
+    "noBadges": "Noch keine Abzeichen verdient"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "email": "E-Mail",
+    "username": "Benutzername",
+    "password": "Passwort",
+    "continueAsGuest": "Als Gast fortfahren",
+    "forgotPassword": "Passwort vergessen?",
+    "noAccount": "Noch kein Konto?",
+    "hasAccount": "Bereits ein Konto?"
+  },
+  "badges": {
+    "firstRating": {
+      "name": "Erster Schritt",
+      "description": "Erste Bewertung abgegeben"
+    },
+    "tenRatings": {
+      "name": "Stammgast",
+      "description": "10 Bewertungen abgegeben"
+    },
+    "fiftyRatings": {
+      "name": "Hygiene-Held",
+      "description": "50 Bewertungen abgegeben"
+    },
+    "explorer": {
+      "name": "Entdecker",
+      "description": "10 verschiedene Restaurants bewertet"
+    },
+    "critic": {
+      "name": "Kritiker",
+      "description": "Detaillierte Bewertung mit Kommentar und Foto"
+    },
+    "earlyBird": {
+      "name": "Frühaufsteher",
+      "description": "Bewertung vor 8 Uhr morgens abgegeben"
+    }
+  },
+  "geo": {
+    "tooFar": "Du bist zu weit entfernt",
+    "tooFarDesc": "Du musst innerhalb von 200m des Restaurants sein, um bewerten zu können.",
+    "currentDistance": "Aktuelle Entfernung",
+    "maxDistance": "Max. Entfernung",
+    "updateLocation": "Standort aktualisieren",
+    "checking": "Standort wird geprüft...",
+    "withinRange": "In Reichweite",
+    "outOfRange": "Außer Reichweite"
+  },
+  "common": {
+    "back": "Zurück",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "loading": "Laden...",
+    "error": "Fehler",
+    "retry": "Erneut versuchen",
+    "km": "km",
+    "m": "m"
+  }
+}
