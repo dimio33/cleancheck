@@ -134,12 +134,15 @@ export default function RestaurantDetail() {
         </div>
       )}
 
-      {/* CTA */}
-      <div className="px-4 mt-4">
+      {/* Sticky CTA */}
+      <div className="fixed bottom-20 left-0 right-0 px-4 z-30 max-w-lg mx-auto">
         <motion.button
           onClick={() => navigate('/rate', { state: { restaurantId: restaurant.id } })}
-          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform"
+          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-semibold shadow-lg shadow-teal-500/30 active:scale-[0.98] transition-transform text-base"
           whileTap={{ scale: 0.98 }}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
         >
           {t('restaurant.rateThis')}
         </motion.button>

@@ -7,13 +7,13 @@ import ScoreGauge from '../components/ui/ScoreGauge';
 import { useGeolocation, getHighAccuracyPosition } from '../hooks/useGeolocation';
 import { getDistance, formatDistance } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
-import { useAuthStore } from '../stores/authStore';
+// authStore import kept for potential future use
 import { useToastStore } from '../components/ui/Toast';
 import api from '../services/api';
 import type { Restaurant, CriteriaScores } from '../types';
 
 // Geo-verification constants
-const GEO_MAX_DISTANCE_METERS = 200;
+const GEO_MAX_DISTANCE_METERS = 500;
 const IS_DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
 const CRITERIA = [
@@ -29,7 +29,7 @@ export default function RatingFlow() {
   const location = useLocation();
   const { t } = useTranslation();
   const { lat, lng } = useGeolocation();
-  const { token } = useAuthStore();
+  // Anonymous ratings allowed - no token check needed
   const addToast = useToastStore((s) => s.addToast);
 
   const { restaurants } = useRestaurantStore();
@@ -138,15 +138,7 @@ export default function RatingFlow() {
   const handleSubmit = async () => {
     if (!selectedRestaurant) return;
 
-    // Guest users: redirect to login
-    if (!token) {
-      addToast(t('profile.loginPrompt'), 'info');
-      navigate('/auth');
-      return;
-    }
-
     try {
-      // If restaurant is from OSM (not in our DB), create it first
       let restaurantId = selectedRestaurant.id;
       if (restaurantId.startsWith('osm-')) {
         const osmId = parseInt(restaurantId.replace('osm-', ''), 10);
@@ -351,11 +343,21 @@ export default function RatingFlow() {
               </div>
             </div>
 
+            {preselected && (
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder={t('rating.addComment')}
+                maxLength={1000}
+                className="w-full h-20 p-3 bg-stone-50 rounded-xl border-0 text-sm text-stone-900 placeholder:text-stone-400 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 mb-4 transition-all"
+              />
+            )}
+
             <button
-              onClick={() => setStep(3)}
+              onClick={() => preselected ? handleSubmit() : setStep(3)}
               className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform"
             >
-              {t('splash.next')}
+              {preselected ? t('rating.submit') : t('splash.next')}
             </button>
           </motion.div>
         )}

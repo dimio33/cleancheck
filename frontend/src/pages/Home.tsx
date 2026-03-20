@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { getDistance, getScoreColor, getScoreLabel } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
@@ -76,12 +76,15 @@ function UserLocationMarker({ lat, lng, zoom }: { lat: number; lng: number; zoom
   return <Marker position={[lat, lng]} icon={userIcon} />;
 }
 
+const SNAP_POINTS = [0.3, 0.55, 0.85];
+
 export default function Home() {
   const geo = useGeolocation();
   const { lat, lng } = geo;
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [sheetOpen, setSheetOpen] = useState(true);
+  const [sheetHeight, setSheetHeight] = useState(0.55);
+  const [sortBy, setSortBy] = useState<'distance' | 'score'>('distance');
   const { restaurants, loading, fetchRestaurants, radius, setRadius } = useRestaurantStore();
 
   useEffect(() => {
@@ -91,11 +94,16 @@ export default function Home() {
   }, [lat, lng, radius, geo.loading, fetchRestaurants]);
 
   const restaurantsWithDistance = useMemo(() => {
-    return restaurants.map((r) => ({
+    const withDist = restaurants.map((r) => ({
       ...r,
       distance: getDistance(lat, lng, r.lat, r.lng),
-    })).sort((a, b) => a.distance - b.distance);
-  }, [lat, lng, restaurants]);
+    }));
+
+    if (sortBy === 'score') {
+      return withDist.sort((a, b) => (b.clean_score ?? -1) - (a.clean_score ?? -1));
+    }
+    return withDist.sort((a, b) => a.distance - b.distance);
+  }, [lat, lng, restaurants, sortBy]);
 
   const mapZoom = zoomForRadius(radius);
 
@@ -147,68 +155,108 @@ export default function Home() {
       </div>
 
       {/* Bottom Sheet - Restaurant List */}
-      <AnimatePresence>
-        {sheetOpen && (
-          <motion.div
-            className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl shadow-[0_-2px_20px_rgba(0,0,0,0.06)] max-w-lg mx-auto"
-            style={{ height: '42vh' }}
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          >
-            {/* Handle */}
-            <div
-              className="flex justify-center pt-3 pb-1 cursor-grab"
-              onClick={() => setSheetOpen(!sheetOpen)}
+      <motion.div
+        className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl shadow-[0_-2px_20px_rgba(0,0,0,0.06)] max-w-lg mx-auto"
+        style={{ height: `${sheetHeight * 100}vh` }}
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+      >
+        {/* Handle */}
+        <div
+          className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing"
+          onTouchStart={(e) => {
+            const startY = e.touches[0].clientY;
+            const startHeight = sheetHeight;
+
+            const onMove = (e2: TouchEvent) => {
+              const deltaY = startY - e2.touches[0].clientY;
+              const deltaPercent = deltaY / window.innerHeight;
+              const newHeight = Math.max(0.2, Math.min(0.9, startHeight + deltaPercent));
+              setSheetHeight(newHeight);
+            };
+
+            const onEnd = () => {
+              // Snap to nearest point
+              const nearest = SNAP_POINTS.reduce((prev, curr) =>
+                Math.abs(curr - sheetHeight) < Math.abs(prev - sheetHeight) ? curr : prev
+              );
+              setSheetHeight(nearest);
+              document.removeEventListener('touchmove', onMove);
+              document.removeEventListener('touchend', onEnd);
+            };
+
+            document.addEventListener('touchmove', onMove);
+            document.addEventListener('touchend', onEnd);
+          }}
+        >
+          <div className="w-12 h-1.5 bg-stone-300 rounded-full" />
+        </div>
+
+        <div className="px-4 pb-2">
+          <div className="flex gap-1.5 mb-3">
+            {RADIUS_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setRadius(opt.value)}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                  radius === opt.value
+                    ? 'bg-teal-500 text-white'
+                    : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Sort toggle */}
+          <div className="flex items-center gap-2 mt-2 mb-1">
+            <span className="text-[10px] uppercase tracking-widest text-stone-400">{t('home.sortBy')}:</span>
+            <button
+              onClick={() => setSortBy('distance')}
+              className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                sortBy === 'distance' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-400'
+              }`}
             >
-              <div className="w-9 h-1 bg-stone-200 rounded-full" />
-            </div>
+              {t('search.distance')}
+            </button>
+            <button
+              onClick={() => setSortBy('score')}
+              className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                sortBy === 'score' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-400'
+              }`}
+            >
+              Score
+            </button>
+          </div>
 
-            <div className="px-4 pb-2">
-              <div className="flex gap-1.5 mb-3">
-                {RADIUS_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setRadius(opt.value)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
-                      radius === opt.value
-                        ? 'bg-teal-500 text-white'
-                        : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-              <h2 className="text-xs uppercase tracking-widest text-stone-400 font-medium">
-                {t('home.nearby')}
-              </h2>
-            </div>
+          <h2 className="text-xs uppercase tracking-widest text-stone-400 font-medium">
+            {t('home.nearby')} ({restaurantsWithDistance.length})
+          </h2>
+        </div>
 
-            <div className="overflow-y-auto px-4 pb-24" style={{ height: 'calc(100% - 56px)' }}>
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
-                  <span className="ml-3 text-sm text-stone-400">{t('common.loading')}</span>
-                </div>
-              ) : restaurantsWithDistance.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <span className="text-3xl mb-3">🍽️</span>
-                  <p className="text-sm text-stone-400">{t('search.noResults')}</p>
-                  <p className="text-xs text-stone-300 mt-1">{t('search.noResultsDesc')}</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {restaurantsWithDistance.map((r, i) => (
-                    <RestaurantCard key={r.id} restaurant={r} distance={r.distance} index={i} />
-                  ))}
-                </div>
-              )}
+        <div className="overflow-y-auto px-4 pb-24" style={{ height: 'calc(100% - 56px)' }}>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+              <span className="ml-3 text-sm text-stone-400">{t('common.loading')}</span>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          ) : restaurantsWithDistance.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <span className="text-3xl mb-3">🍽️</span>
+              <p className="text-sm text-stone-400">{t('search.noResults')}</p>
+              <p className="text-xs text-stone-300 mt-1">{t('search.noResultsDesc')}</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {restaurantsWithDistance.map((r, i) => (
+                <RestaurantCard key={r.id} restaurant={r} distance={r.distance} index={i} />
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
 }

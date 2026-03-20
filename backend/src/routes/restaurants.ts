@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../utils/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { optionalAuth } from '../middleware/optionalAuth';
 
 const router = Router();
 
@@ -99,8 +100,8 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// POST /api/restaurants — create restaurant (auth required)
-router.post('/', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+// POST /api/restaurants — create restaurant (anonymous or authenticated)
+router.post('/', optionalAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { name, address, lat, lng, city, cuisine_type, osm_id } = req.body;
 

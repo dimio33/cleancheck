@@ -70,18 +70,6 @@ export default function RestaurantCard({ restaurant, distance, index = 0 }: Rest
               <span className="text-xs text-stone-400">
                 {formatDistance(distance)} {t('home.away')}
               </span>
-              {/* Proximity indicator: green pin if within 200m, gray if farther */}
-              <span title={distance <= 200 ? t('geo.withinRange') : t('geo.outOfRange')}>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill={distance <= 200 ? '#10B981' : '#D6D3D1'}
-                  className="flex-shrink-0"
-                >
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
-                </svg>
-              </span>
             </>
           )}
         </div>

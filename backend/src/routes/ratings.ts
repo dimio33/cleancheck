@@ -2,13 +2,22 @@ import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { query } from '../utils/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { optionalAuth } from '../middleware/optionalAuth';
 import { calculateOverallScore, recalculateRestaurantScore } from '../services/scoreService';
 import { checkAndAwardBadges } from '../services/badgeService';
 import { geoVerify, calculateDistance } from '../middleware/geoVerify';
 import { validateImageFile, moderateImage, generateImageHash } from '../services/moderationService';
 import { uploadPhoto, isR2Configured } from '../services/storageService';
+
+function generateAnonymousId(req: Request): string {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const ua = req.headers['user-agent'] || 'unknown';
+  const hash = crypto.createHash('sha256').update(`${ip}-${ua}`).digest('hex').substring(0, 16);
+  return `anon-${hash}`;
+}
 
 const router = Router();
 
@@ -27,7 +36,7 @@ router.post('/verify-location', async (req: Request, res: Response): Promise<voi
     const { restaurant_id } = req.body;
     const userLatStr = req.headers['x-user-lat'] as string | undefined;
     const userLngStr = req.headers['x-user-lng'] as string | undefined;
-    const maxDistance = 200;
+    const maxDistance = 500;
 
     if (!restaurant_id || !userLatStr || !userLngStr) {
       res.status(400).json({ error: 'restaurant_id, X-User-Lat, and X-User-Lng are required' });
@@ -68,14 +77,9 @@ router.post('/verify-location', async (req: Request, res: Response): Promise<voi
   }
 });
 
-// POST /api/ratings — create rating (auth required, geo-verified)
-router.post('/', authenticate, geoVerify({ maxDistanceMeters: 200 }), async (req: AuthRequest, res: Response): Promise<void> => {
+// POST /api/ratings — create rating (anonymous or authenticated, geo-verified)
+router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
-      return;
-    }
-
     const { restaurant_id, cleanliness, smell, supplies, condition, accessibility, comment, visited_at } = req.body;
 
     if (!restaurant_id || !cleanliness || !smell || !supplies || !condition || !accessibility) {
@@ -109,26 +113,42 @@ router.post('/', authenticate, geoVerify({ maxDistanceMeters: 200 }), async (req
       return;
     }
 
-    // Duplicate rating check — one rating per user per restaurant per day
-    const visitDate = visited_at || new Date().toISOString().split('T')[0];
-    const duplicateCheck = await query(
-      `SELECT id FROM ratings WHERE user_id = $1 AND restaurant_id = $2 AND visited_at = $3`,
-      [req.user.id, restaurant_id, visitDate]
-    );
+    const isAnonymous = !req.user;
+    const userId = req.user?.id || null;
+    const anonymousId = isAnonymous ? generateAnonymousId(req) : null;
 
-    if (duplicateCheck.rows.length > 0) {
-      res.status(409).json({ error: 'You already rated this restaurant today' });
-      return;
+    // Duplicate rating check — one rating per user/anonymous per restaurant per day
+    const visitDate = visited_at || new Date().toISOString().split('T')[0];
+
+    if (isAnonymous) {
+      const dupCheck = await query(
+        `SELECT id FROM ratings WHERE anonymous_id = $1 AND restaurant_id = $2 AND visited_at = $3`,
+        [anonymousId, restaurant_id, visitDate]
+      );
+      if (dupCheck.rows.length > 0) {
+        res.status(409).json({ error: 'You already rated this restaurant today' });
+        return;
+      }
+    } else {
+      const duplicateCheck = await query(
+        `SELECT id FROM ratings WHERE user_id = $1 AND restaurant_id = $2 AND visited_at = $3`,
+        [userId, restaurant_id, visitDate]
+      );
+      if (duplicateCheck.rows.length > 0) {
+        res.status(409).json({ error: 'You already rated this restaurant today' });
+        return;
+      }
     }
 
     const overall_score = calculateOverallScore({ cleanliness, smell, supplies, condition, accessibility });
 
     const result = await query(
-      `INSERT INTO ratings (user_id, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment, visited_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO ratings (user_id, anonymous_id, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment, visited_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
-        req.user.id,
+        userId,
+        anonymousId,
         restaurant_id,
         cleanliness,
         smell,
@@ -144,8 +164,11 @@ router.post('/', authenticate, geoVerify({ maxDistanceMeters: 200 }), async (req
     // Recalculate restaurant clean_score
     const newScore = await recalculateRestaurantScore(restaurant_id);
 
-    // Check for new badges
-    const newBadges = await checkAndAwardBadges(req.user.id);
+    // Check for new badges (only for authenticated users)
+    let newBadges: any[] = [];
+    if (req.user) {
+      newBadges = await checkAndAwardBadges(req.user.id);
+    }
 
     res.status(201).json({
       rating: result.rows[0],

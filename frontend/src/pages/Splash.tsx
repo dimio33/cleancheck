@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,6 +22,15 @@ export default function Splash() {
     localStorage.setItem('cleancheck_onboarded', 'true');
     navigate('/');
   };
+
+  // Auto-skip splash after 8 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem('cleancheck_onboarded', 'true');
+      navigate('/');
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [navigate]);
 
   const handleGuestContinue = () => {
     loginAsGuest();

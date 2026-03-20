@@ -35,7 +35,8 @@
     "ratings": "Bewertungen",
     "away": "entfernt",
     "range": "Umkreis",
-    "restaurantCount": "{{count}} Restaurants"
+    "restaurantCount": "{{count}} Restaurants",
+    "sortBy": "Sortieren"
   },
   "search": {
     "placeholder": "Restaurant suchen...",
@@ -144,7 +145,7 @@
   },
   "geo": {
     "tooFar": "Du bist zu weit entfernt",
-    "tooFarDesc": "Du musst innerhalb von 200m des Restaurants sein, um bewerten zu können.",
+    "tooFarDesc": "Du musst innerhalb von 500m des Restaurants sein, um bewerten zu können.",
     "currentDistance": "Aktuelle Entfernung",
     "maxDistance": "Max. Entfernung",
     "updateLocation": "Standort aktualisieren",

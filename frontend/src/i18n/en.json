@@ -35,7 +35,8 @@
     "ratings": "ratings",
     "away": "away",
     "range": "Range",
-    "restaurantCount": "{{count}} restaurants"
+    "restaurantCount": "{{count}} restaurants",
+    "sortBy": "Sort by"
   },
   "search": {
     "placeholder": "Search restaurants...",
@@ -144,7 +145,7 @@
   },
   "geo": {
     "tooFar": "You are too far away",
-    "tooFarDesc": "You must be within 200m of the restaurant to rate.",
+    "tooFarDesc": "You must be within 500m of the restaurant to rate.",
     "currentDistance": "Current distance",
     "maxDistance": "Max. distance",
     "updateLocation": "Update Location",
