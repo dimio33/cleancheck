@@ -136,11 +136,33 @@ export default function RatingFlow() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedRestaurant || !token) return;
+    if (!selectedRestaurant) return;
+
+    // Guest users: redirect to login
+    if (!token) {
+      addToast(t('profile.loginPrompt'), 'info');
+      navigate('/auth');
+      return;
+    }
 
     try {
+      // If restaurant is from OSM (not in our DB), create it first
+      let restaurantId = selectedRestaurant.id;
+      if (restaurantId.startsWith('osm-')) {
+        const osmId = parseInt(restaurantId.replace('osm-', ''), 10);
+        const { data } = await api.post('/restaurants', {
+          name: selectedRestaurant.name,
+          lat: selectedRestaurant.lat,
+          lng: selectedRestaurant.lng,
+          address: selectedRestaurant.address,
+          cuisine_type: selectedRestaurant.cuisine,
+          osm_id: osmId,
+        });
+        restaurantId = data.restaurant.id;
+      }
+
       await api.post('/ratings', {
-        restaurant_id: selectedRestaurant.id,
+        restaurant_id: restaurantId,
         cleanliness: scores.cleanliness,
         smell: scores.smell,
         supplies: scores.supplies,
@@ -156,9 +178,10 @@ export default function RatingFlow() {
 
       setStep(4);
       addToast(t('rating.thankYou'), 'success');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Rating failed:', err);
-      addToast('Rating failed. Please try again.', 'error');
+      const msg = err.response?.data?.error || 'Rating failed';
+      addToast(msg, 'error');
     }
   };
 
