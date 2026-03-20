@@ -61,7 +61,8 @@
     },
     "reviews": "Reviews",
     "noReviews": "No reviews yet. Be the first!",
-    "photos": "Photos"
+    "photos": "Photos",
+    "notFound": "Restaurant not found"
   },
   "rating": {
     "title": "Rate",

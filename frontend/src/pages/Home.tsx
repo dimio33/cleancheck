@@ -237,7 +237,7 @@ export default function Home() {
         </div>
 
         <div className="overflow-y-auto px-4 pb-24" style={{ height: 'calc(100% - 56px)' }}>
-          {loading ? (
+          {(loading || geo.loading) ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
               <span className="ml-3 text-sm text-stone-400">{t('common.loading')}</span>

@@ -32,14 +32,46 @@ export default function RestaurantDetail() {
   const restaurant = useRestaurantStore((s) => s.getById(id || ''));
 
   const [apiRatings, setApiRatings] = useState<any[]>([]);
+  const [apiRestaurant, setApiRestaurant] = useState<any>(null);
 
   useEffect(() => {
-    if (id && !id.startsWith('osm-')) {
-      api.get(`/restaurants/${id}`)
-        .then(({ data }) => {
-          setApiRatings(data.ratings || []);
-        })
-        .catch(() => {});
+    if (id) {
+      // Try to fetch from API - works for both UUID and OSM IDs
+      // For OSM IDs, search by coordinates of the restaurant from the store
+      if (id.startsWith('osm-')) {
+        const storeRestaurant = useRestaurantStore.getState().getById(id);
+        if (storeRestaurant) {
+          api.get(`/restaurants?lat=${storeRestaurant.lat}&lng=${storeRestaurant.lng}&radius=0.05`)
+            .then(({ data }) => {
+              const match = data.restaurants?.find((r: any) => {
+                const osmId = parseInt(id.replace('osm-', ''), 10);
+                return r.osm_id === osmId;
+              });
+              if (match) {
+                return api.get(`/restaurants/${match.id}`);
+              }
+              return null;
+            })
+            .then((res) => {
+              if (res?.data) {
+                setApiRatings(res.data.ratings || []);
+                if (res.data.restaurant) {
+                  setApiRestaurant(res.data.restaurant);
+                }
+              }
+            })
+            .catch(() => {});
+        }
+      } else {
+        api.get(`/restaurants/${id}`)
+          .then(({ data }) => {
+            setApiRatings(data.ratings || []);
+            if (data.restaurant) {
+              setApiRestaurant(data.restaurant);
+            }
+          })
+          .catch(() => {});
+      }
     }
   }, [id]);
 
@@ -49,12 +81,16 @@ export default function RestaurantDetail() {
   if (!restaurant) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p className="text-stone-400 text-sm">Restaurant not found</p>
+        <p className="text-stone-400 text-sm">{t('restaurant.notFound')}</p>
       </div>
     );
   }
 
-  const kitchen = getKitchenConfidence(restaurant.clean_score);
+  const displayRestaurant = apiRestaurant
+    ? { ...restaurant, clean_score: parseFloat(apiRestaurant.clean_score), rating_count: apiRestaurant.total_ratings }
+    : restaurant;
+
+  const kitchen = getKitchenConfidence(displayRestaurant.clean_score);
 
   return (
     <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
@@ -75,7 +111,7 @@ export default function RestaurantDetail() {
       <div className="px-4 -mt-6">
         <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 p-6 text-center">
           <div className="flex justify-center mb-3">
-            <ScoreGauge score={restaurant.clean_score} size={140} strokeWidth={10} />
+            <ScoreGauge score={displayRestaurant.clean_score} size={140} strokeWidth={10} />
           </div>
           <p className="text-sm font-medium text-stone-500">{t('restaurant.cleanScore')}</p>
 

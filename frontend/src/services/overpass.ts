@@ -54,6 +54,7 @@ export async function fetchNearbyRestaurants(
         // Capitalize first letter of cuisine
         let cuisine = tags.cuisine?.split(';')[0]?.trim();
         if (cuisine) {
+          cuisine = cuisine.replace(/_/g, ' ');
           cuisine = cuisine.charAt(0).toUpperCase() + cuisine.slice(1);
         } else {
           // Fallback to amenity type

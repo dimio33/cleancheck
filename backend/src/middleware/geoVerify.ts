@@ -86,7 +86,8 @@ export function geoVerify(options?: GeoVerifyOptions): RequestHandler {
 
       if (distance > maxDistance) {
         res.status(403).json({
-          error: 'Du musst in der Naehe des Restaurants sein um zu bewerten / You must be near the restaurant to rate',
+          error: 'TOO_FAR',
+          message: 'You must be near the restaurant to rate',
           distance: Math.round(distance),
           maxDistance,
         });

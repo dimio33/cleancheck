@@ -142,15 +142,30 @@ export default function RatingFlow() {
       let restaurantId = selectedRestaurant.id;
       if (restaurantId.startsWith('osm-')) {
         const osmId = parseInt(restaurantId.replace('osm-', ''), 10);
-        const { data } = await api.post('/restaurants', {
-          name: selectedRestaurant.name,
-          lat: selectedRestaurant.lat,
-          lng: selectedRestaurant.lng,
-          address: selectedRestaurant.address,
-          cuisine_type: selectedRestaurant.cuisine,
-          osm_id: osmId,
-        });
-        restaurantId = data.restaurant.id;
+        try {
+          const { data } = await api.post('/restaurants', {
+            name: selectedRestaurant.name,
+            lat: selectedRestaurant.lat,
+            lng: selectedRestaurant.lng,
+            address: selectedRestaurant.address,
+            cuisine_type: selectedRestaurant.cuisine,
+            osm_id: osmId,
+          });
+          restaurantId = data.restaurant.id;
+        } catch (createErr: any) {
+          if (createErr.response?.status === 409) {
+            // Restaurant already exists — look it up by searching nearby
+            const { data: searchData } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=0.1`);
+            const existing = searchData.restaurants?.find((r: any) => r.osm_id === osmId);
+            if (existing) {
+              restaurantId = existing.id;
+            } else {
+              throw createErr;
+            }
+          } else {
+            throw createErr;
+          }
+        }
       }
 
       await api.post('/ratings', {

@@ -14,6 +14,19 @@ function HomeOrSplash() {
   return <Home />;
 }
 
+function NotFound() {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center px-8 text-center pb-24">
+      <span className="text-5xl mb-4">🚽</span>
+      <h2 className="text-lg font-semibold text-stone-800 mb-2">404</h2>
+      <p className="text-sm text-stone-500 mb-6">Diese Seite wurde nicht gefunden.</p>
+      <a href="/" className="px-6 py-2.5 rounded-xl bg-teal-500 text-white text-sm font-medium">
+        Zurück zur Karte
+      </a>
+    </div>
+  );
+}
+
 export default function AppRouter() {
   return (
     <Routes>
@@ -24,6 +37,7 @@ export default function AppRouter() {
       <Route path="/restaurant/:id" element={<RestaurantDetail />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
