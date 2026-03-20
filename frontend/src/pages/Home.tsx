@@ -48,11 +48,11 @@ const RADIUS_OPTIONS = [
 ];
 
 function zoomForRadius(r: number): number {
-  if (r <= 1000) return 16;
-  if (r <= 2000) return 15;
-  if (r <= 5000) return 14;
-  if (r <= 10000) return 13;
-  return 12;
+  if (r <= 1000) return 15;
+  if (r <= 2000) return 14;
+  if (r <= 5000) return 13;
+  if (r <= 10000) return 12;
+  return 11;
 }
 
 function UserLocationMarker({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
@@ -116,11 +116,11 @@ export default function Home() {
             center={[lat, lng]}
             radius={radius}
             pathOptions={{
-              color: '#14b8a6',
-              weight: 1.5,
+              color: '#0d9488',
+              weight: 2.5,
               fillColor: '#14b8a6',
-              fillOpacity: 0.06,
-              dashArray: '6 4',
+              fillOpacity: 0.1,
+              dashArray: '10 6',
             }}
           />
           {restaurantsWithDistance.map((r) => (
