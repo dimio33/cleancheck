@@ -197,7 +197,7 @@ export default function RatingFlow() {
       {/* Progress bar */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex gap-1.5">
-          {[1, 2, 3, 4].map((s) => (
+          {(preselected ? [2, 4] : [1, 2, 3, 4]).map((s) => (
             <div
               key={s}
               className={`h-0.5 rounded-full flex-1 transition-all duration-300 ${
