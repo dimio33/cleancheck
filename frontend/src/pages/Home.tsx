@@ -77,15 +77,18 @@ function UserLocationMarker({ lat, lng, zoom }: { lat: number; lng: number; zoom
 }
 
 export default function Home() {
-  const { lat, lng } = useGeolocation();
+  const geo = useGeolocation();
+  const { lat, lng } = geo;
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = useState(true);
   const { restaurants, loading, fetchRestaurants, radius, setRadius } = useRestaurantStore();
 
   useEffect(() => {
-    fetchRestaurants(lat, lng);
-  }, [lat, lng, radius, fetchRestaurants]);
+    if (!geo.loading) {
+      fetchRestaurants(lat, lng);
+    }
+  }, [lat, lng, radius, geo.loading, fetchRestaurants]);
 
   const restaurantsWithDistance = useMemo(() => {
     return restaurants.map((r) => ({

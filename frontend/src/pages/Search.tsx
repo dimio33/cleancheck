@@ -16,14 +16,15 @@ const RADIUS_OPTIONS = [
 
 export default function Search() {
   const { t } = useTranslation();
-  const { lat, lng } = useGeolocation();
+  const geo = useGeolocation();
+  const { lat, lng } = geo;
   const { restaurants, fetchRestaurants, radius, setRadius } = useRestaurantStore();
   const [query, setQuery] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState('All');
   const [minScore, setMinScore] = useState(0);
 
   useEffect(() => {
-    fetchRestaurants(lat, lng);
+    if (!geo.loading) fetchRestaurants(lat, lng);
   }, [lat, lng, radius, fetchRestaurants]);
 
   // Build cuisine list dynamically from actual restaurants
