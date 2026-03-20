@@ -17,13 +17,11 @@ export async function fetchNearbyRestaurants(
   const maxResults = getMaxResults(radius);
 
   const query = `
-    [out:json][timeout:10];
+    [out:json][timeout:15];
     (
-      node["amenity"="restaurant"]["name"](around:${radius},${lat},${lng});
-      node["amenity"="fast_food"]["name"](around:${radius},${lat},${lng});
-      node["amenity"="cafe"]["name"](around:${radius},${lat},${lng});
+      nwr["amenity"~"restaurant|fast_food|cafe|bar|pub"]["name"](around:${radius},${lat},${lng});
     );
-    out body;
+    out center;
   `;
 
   try {
@@ -65,11 +63,17 @@ export async function fetchNearbyRestaurants(
           else cuisine = 'Restaurant';
         }
 
+        // For ways/relations, coordinates are in center property
+        const center = (el.center || {}) as Record<string, number>;
+        const elLat = (el.lat as number) || center.lat;
+        const elLng = (el.lon as number) || center.lon;
+        if (!elLat || !elLng) return null;
+
         return {
           id: `osm-${el.id}`,
           name,
-          lat: el.lat as number,
-          lng: el.lon as number,
+          lat: elLat,
+          lng: elLng,
           address: [tags['addr:street'], tags['addr:housenumber'], tags['addr:city']]
             .filter(Boolean)
             .join(' ') || undefined,

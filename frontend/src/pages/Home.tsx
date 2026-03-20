@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -109,6 +109,17 @@ export default function Home() {
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <UserLocationMarker lat={lat} lng={lng} zoom={mapZoom} />
+          <Circle
+            center={[lat, lng]}
+            radius={radius}
+            pathOptions={{
+              color: '#14b8a6',
+              weight: 1.5,
+              fillColor: '#14b8a6',
+              fillOpacity: 0.06,
+              dashArray: '6 4',
+            }}
+          />
           {restaurantsWithDistance.map((r) => (
             <Marker
               key={r.id}
