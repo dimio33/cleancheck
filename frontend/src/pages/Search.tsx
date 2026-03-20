@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { getDistance } from '../data/mockData';
+import { getDistance } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import RestaurantCard from '../components/ui/RestaurantCard';
 

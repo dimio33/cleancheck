@@ -48,9 +48,14 @@ export interface User {
 
 export interface Badge {
   id: string;
-  key: string;
+  key?: string;
+  slug?: string;
   name: string;
+  name_de?: string;
+  name_en?: string;
   description: string;
+  description_de?: string;
+  description_en?: string;
   icon: string;
   earned: boolean;
   earned_at?: string;

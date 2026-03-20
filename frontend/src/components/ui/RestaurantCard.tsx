@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import type { Restaurant } from '../../types';
-import { getScoreLabel, formatDistance } from '../../data/mockData';
+import { getScoreLabel, formatDistance } from '../../utils/geo';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;

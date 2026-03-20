@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import type { Restaurant } from '../types';
 import { fetchNearbyRestaurants } from '../services/overpass';
-import { MOCK_RESTAURANTS } from '../data/mockData';
 
 interface RestaurantStore {
   restaurants: Restaurant[];
@@ -53,21 +52,19 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
       if (results.length > 0) {
         set({ restaurants: results, loading: false, lastFetchLocation: { lat, lng } });
       } else {
-        // Fallback to mock data if no results (e.g. rural area)
         set({
-          restaurants: MOCK_RESTAURANTS,
+          restaurants: [],
           loading: false,
           lastFetchLocation: { lat, lng },
-          error: 'no_results_fallback',
+          error: 'no_results',
         });
       }
     } catch {
-      // Fallback to mock data on error
       set({
-        restaurants: MOCK_RESTAURANTS,
+        restaurants: [],
         loading: false,
         lastFetchLocation: { lat, lng },
-        error: 'fetch_error_fallback',
+        error: 'fetch_error',
       });
     }
   },

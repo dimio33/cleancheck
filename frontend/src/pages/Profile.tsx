@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../stores/authStore';
 import BadgeCard from '../components/ui/BadgeCard';
-import { MOCK_USER, MOCK_BADGES, getUserRatings, getScoreColor } from '../data/mockData';
+import { getScoreColor } from '../utils/geo';
 import api from '../services/api';
-import type { Badge } from '../types';
+import type { Badge, Rating } from '../types';
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
@@ -14,37 +14,33 @@ export default function Profile() {
   const { user, isAuthenticated, logout } = useAuthStore();
 
   const [profileData, setProfileData] = useState<any>(null);
+  const [userRatings, setUserRatings] = useState<Rating[]>([]);
   const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     if (user && user.id !== 'guest' && isAuthenticated) {
       setProfileLoading(true);
-      api.get(`/users/${user.id}/profile`)
-        .then(({ data }) => setProfileData(data))
-        .catch(() => {}) // fallback to mock data
-        .finally(() => setProfileLoading(false));
+      Promise.all([
+        api.get(`/users/${user.id}/profile`).then(({ data }) => setProfileData(data)).catch(() => {}),
+        api.get(`/ratings/user/${user.id}`).then(({ data }) => setUserRatings(data.ratings || [])).catch(() => {}),
+      ]).finally(() => setProfileLoading(false));
     }
   }, [user, isAuthenticated]);
 
-  // Use mock data for display
   const displayUser = profileData?.user
     ? {
-        ...MOCK_USER,
-        id: profileData.user.id,
         username: profileData.user.username,
         email: profileData.user.email,
         created_at: profileData.user.created_at,
-        rating_count: profileData.stats?.total_ratings || profileData.user.total_ratings || 0,
-        restaurant_count: profileData.stats?.restaurant_count || 0,
-        average_score: profileData.stats?.average_score || 0,
-        badges: profileData.badges || [],
+        rating_count: profileData.stats?.total_ratings || 0,
+        restaurant_count: profileData.stats?.cities_visited || 0,
+        average_score: profileData.stats?.avg_score || 0,
       }
-    : user?.id === 'guest' || !user
-      ? MOCK_USER
-      : { ...MOCK_USER, ...user };
+    : user
+      ? { username: user.username, email: user.email, created_at: user.created_at, rating_count: 0, restaurant_count: 0, average_score: 0 }
+      : null;
 
-  const badges = displayUser.badges.length > 0 ? displayUser.badges : MOCK_BADGES;
-  const userRatings = getUserRatings(displayUser.id);
+  const badges: Badge[] = profileData?.badges || [];
 
   if (!user) {
     return (
@@ -82,12 +78,12 @@ export default function Profile() {
           transition={{ type: 'spring', damping: 12 }}
         >
           <span className="text-xl text-white font-semibold">
-            {displayUser.username.charAt(0).toUpperCase()}
+            {displayUser?.username.charAt(0).toUpperCase()}
           </span>
         </motion.div>
-        <h2 className="text-lg font-semibold text-stone-800">{displayUser.username}</h2>
+        <h2 className="text-lg font-semibold text-stone-800">{displayUser?.username}</h2>
         <p className="text-xs text-stone-400 mt-0.5">
-          {t('profile.memberSince')} {new Date(displayUser.created_at).toLocaleDateString()}
+          {t('profile.memberSince')} {displayUser && new Date(displayUser.created_at).toLocaleDateString()}
         </p>
       </div>
 
@@ -101,9 +97,9 @@ export default function Profile() {
           ) : (
             <div className="grid grid-cols-3 divide-x divide-stone-100">
               {[
-                { value: displayUser.rating_count, label: t('profile.totalRatings') },
-                { value: displayUser.restaurant_count, label: t('profile.restaurants') },
-                { value: displayUser.average_score.toFixed(1), label: t('profile.avgScore') },
+                { value: displayUser?.rating_count || 0, label: t('profile.totalRatings') },
+                { value: displayUser?.restaurant_count || 0, label: t('profile.restaurants') },
+                { value: (displayUser?.average_score || 0).toFixed(1), label: t('profile.avgScore') },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}
@@ -122,58 +118,65 @@ export default function Profile() {
       </div>
 
       {/* Badges */}
-      <div className="px-4 mb-6">
-        <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.badges')}</h3>
-        <div className="grid grid-cols-2 gap-2.5">
-          {badges.map((badge: Badge, i: number) => (
-            <BadgeCard key={badge.id} badge={badge} index={i} />
-          ))}
+      {badges.length > 0 && (
+        <div className="px-4 mb-6">
+          <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.badges')}</h3>
+          <div className="grid grid-cols-2 gap-2.5">
+            {badges.map((badge: Badge, i: number) => (
+              <BadgeCard key={badge.id || badge.slug} badge={badge} index={i} />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Rating History */}
       <div className="px-4 mb-6">
         <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.history')}</h3>
-        <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 overflow-hidden">
-          {userRatings.slice(0, 5).map((rating, i) => (
-            <motion.div
-              key={rating.id}
-              className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-stone-50 transition-colors ${
-                i < Math.min(userRatings.length, 5) - 1 ? 'border-b border-stone-50' : ''
-              }`}
-              onClick={() => navigate(`/restaurant/${rating.restaurant_id}`)}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 + i * 0.05 }}
-            >
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                style={{
-                  backgroundColor: `${getScoreColor(rating.overall_score)}12`,
-                }}
+        {userRatings.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 p-8 text-center">
+            <p className="text-sm text-stone-400">{t('home.noRatings')}</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 overflow-hidden">
+            {userRatings.slice(0, 5).map((rating, i) => (
+              <motion.div
+                key={rating.id}
+                className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-stone-50 transition-colors ${
+                  i < Math.min(userRatings.length, 5) - 1 ? 'border-b border-stone-50' : ''
+                }`}
+                onClick={() => navigate(`/restaurant/${rating.restaurant_id}`)}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 + i * 0.05 }}
               >
-                <span className="text-[11px] font-semibold" style={{ color: getScoreColor(rating.overall_score) }}>
-                  {rating.overall_score.toFixed(1)}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium text-stone-800 block truncate">
-                  {rating.restaurant_name}
-                </span>
-                <span className="text-xs text-stone-400">
-                  {new Date(rating.created_at).toLocaleDateString()}
-                </span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                  style={{
+                    backgroundColor: `${getScoreColor(rating.overall_score)}12`,
+                  }}
+                >
+                  <span className="text-[11px] font-semibold" style={{ color: getScoreColor(rating.overall_score) }}>
+                    {rating.overall_score.toFixed(1)}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium text-stone-800 block truncate">
+                    {rating.restaurant_name}
+                  </span>
+                  <span className="text-xs text-stone-400">
+                    {new Date(rating.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Settings */}
       <div className="px-4">
         <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.settings')}</h3>
         <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 overflow-hidden">
-          {/* Language */}
           <button
             onClick={toggleLanguage}
             className="flex items-center justify-between w-full p-4 hover:bg-stone-50 transition-colors"
@@ -183,8 +186,6 @@ export default function Profile() {
               {i18n.language.startsWith('de') ? 'Deutsch' : 'English'}
             </span>
           </button>
-
-          {/* Logout */}
           {isAuthenticated && (
             <>
               <div className="h-px bg-stone-50" />

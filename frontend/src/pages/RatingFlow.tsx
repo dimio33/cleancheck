@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CriteriaSlider from '../components/ui/CriteriaSlider';
 import ScoreGauge from '../components/ui/ScoreGauge';
 import { useGeolocation, getHighAccuracyPosition } from '../hooks/useGeolocation';
-import { getDistance, formatDistance } from '../data/mockData';
+import { getDistance, formatDistance } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useAuthStore } from '../stores/authStore';
 import { useToastStore } from '../components/ui/Toast';

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import ScoreGauge from '../components/ui/ScoreGauge';
-import { getRestaurantRatings, getScoreColor } from '../data/mockData';
+import { getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import api from '../services/api';
 
@@ -44,7 +44,7 @@ export default function RestaurantDetail() {
   }, [id]);
 
   // Use apiRatings when available, otherwise fall back to mock
-  const ratings = apiRatings.length > 0 ? apiRatings : (id ? getRestaurantRatings(id) : []);
+  const ratings = apiRatings;
 
   if (!restaurant) {
     return (

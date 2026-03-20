@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { getDistance, getScoreColor, getScoreLabel } from '../data/mockData';
+import { getDistance, getScoreColor, getScoreLabel } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import RestaurantCard from '../components/ui/RestaurantCard';
 import 'leaflet/dist/leaflet.css';
@@ -177,6 +177,12 @@ export default function Home() {
                 <div className="flex items-center justify-center py-12">
                   <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
                   <span className="ml-3 text-sm text-stone-400">{t('common.loading')}</span>
+                </div>
+              ) : restaurantsWithDistance.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <span className="text-3xl mb-3">🍽️</span>
+                  <p className="text-sm text-stone-400">{t('search.noResults')}</p>
+                  <p className="text-xs text-stone-300 mt-1">{t('search.noResultsDesc')}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
