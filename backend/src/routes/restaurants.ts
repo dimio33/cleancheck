@@ -109,6 +109,26 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
+    // Validate name length
+    if (typeof name !== 'string' || name.length < 2 || name.length > 200) {
+      res.status(400).json({ error: 'Name must be between 2 and 200 characters' });
+      return;
+    }
+
+    // Validate lat/lng ranges
+    const parsedLat = parseFloat(lat);
+    const parsedLng = parseFloat(lng);
+
+    if (isNaN(parsedLat) || parsedLat < -90 || parsedLat > 90) {
+      res.status(400).json({ error: 'Latitude must be between -90 and 90' });
+      return;
+    }
+
+    if (isNaN(parsedLng) || parsedLng < -180 || parsedLng > 180) {
+      res.status(400).json({ error: 'Longitude must be between -180 and 180' });
+      return;
+    }
+
     const result = await query(
       `INSERT INTO restaurants (name, address, lat, lng, city, cuisine_type, osm_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7)

@@ -1,17 +1,48 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../stores/authStore';
 import BadgeCard from '../components/ui/BadgeCard';
 import { MOCK_USER, MOCK_BADGES, getUserRatings, getScoreColor } from '../data/mockData';
+import api from '../services/api';
+import type { Badge } from '../types';
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuthStore();
 
+  const [profileData, setProfileData] = useState<any>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && user.id !== 'guest' && isAuthenticated) {
+      setProfileLoading(true);
+      api.get(`/users/${user.id}/profile`)
+        .then(({ data }) => setProfileData(data))
+        .catch(() => {}) // fallback to mock data
+        .finally(() => setProfileLoading(false));
+    }
+  }, [user, isAuthenticated]);
+
   // Use mock data for display
-  const displayUser = user?.id === 'guest' || !user ? MOCK_USER : { ...MOCK_USER, ...user };
+  const displayUser = profileData?.user
+    ? {
+        ...MOCK_USER,
+        id: profileData.user.id,
+        username: profileData.user.username,
+        email: profileData.user.email,
+        created_at: profileData.user.created_at,
+        rating_count: profileData.stats?.total_ratings || profileData.user.total_ratings || 0,
+        restaurant_count: profileData.stats?.restaurant_count || 0,
+        average_score: profileData.stats?.average_score || 0,
+        badges: profileData.badges || [],
+      }
+    : user?.id === 'guest' || !user
+      ? MOCK_USER
+      : { ...MOCK_USER, ...user };
+
   const badges = displayUser.badges.length > 0 ? displayUser.badges : MOCK_BADGES;
   const userRatings = getUserRatings(displayUser.id);
 
@@ -63,24 +94,30 @@ export default function Profile() {
       {/* Stats */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 p-4">
-          <div className="grid grid-cols-3 divide-x divide-stone-100">
-            {[
-              { value: displayUser.rating_count, label: t('profile.totalRatings') },
-              { value: displayUser.restaurant_count, label: t('profile.restaurants') },
-              { value: displayUser.average_score.toFixed(1), label: t('profile.avgScore') },
-            ].map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                className="text-center px-2"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.1 }}
-              >
-                <span className="text-2xl font-light text-stone-800 block">{stat.value}</span>
-                <span className="text-[10px] uppercase tracking-widest text-stone-400">{stat.label}</span>
-              </motion.div>
-            ))}
-          </div>
+          {profileLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 divide-x divide-stone-100">
+              {[
+                { value: displayUser.rating_count, label: t('profile.totalRatings') },
+                { value: displayUser.restaurant_count, label: t('profile.restaurants') },
+                { value: displayUser.average_score.toFixed(1), label: t('profile.avgScore') },
+              ].map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  className="text-center px-2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + i * 0.1 }}
+                >
+                  <span className="text-2xl font-light text-stone-800 block">{stat.value}</span>
+                  <span className="text-[10px] uppercase tracking-widest text-stone-400">{stat.label}</span>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -88,7 +125,7 @@ export default function Profile() {
       <div className="px-4 mb-6">
         <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.badges')}</h3>
         <div className="grid grid-cols-2 gap-2.5">
-          {badges.map((badge, i) => (
+          {badges.map((badge: Badge, i: number) => (
             <BadgeCard key={badge.id} badge={badge} index={i} />
           ))}
         </div>

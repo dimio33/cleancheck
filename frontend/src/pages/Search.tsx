@@ -1,21 +1,39 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { MOCK_RESTAURANTS, getDistance } from '../data/mockData';
+import { getDistance } from '../data/mockData';
+import { useRestaurantStore } from '../stores/restaurantStore';
 import RestaurantCard from '../components/ui/RestaurantCard';
 
-const CUISINES = ['All', 'German', 'Italian', 'Japanese', 'Thai', 'Mexican', 'French', 'Turkish', 'Indian', 'Vietnamese', 'Chinese', 'American', 'Cafe'];
+const RADIUS_OPTIONS = [
+  { label: '1 km', value: 1000 },
+  { label: '2 km', value: 2000 },
+  { label: '5 km', value: 5000 },
+  { label: '10 km', value: 10000 },
+  { label: '25 km', value: 25000 },
+];
 
 export default function Search() {
   const { t } = useTranslation();
   const { lat, lng } = useGeolocation();
+  const { restaurants, fetchRestaurants, radius, setRadius } = useRestaurantStore();
   const [query, setQuery] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState('All');
   const [minScore, setMinScore] = useState(0);
 
+  useEffect(() => {
+    fetchRestaurants(lat, lng);
+  }, [lat, lng, radius, fetchRestaurants]);
+
+  // Build cuisine list dynamically from actual restaurants
+  const cuisines = useMemo(() => {
+    const set = new Set(restaurants.map((r) => r.cuisine).filter((c): c is string => !!c));
+    return ['All', ...Array.from(set).sort()];
+  }, [restaurants]);
+
   const results = useMemo(() => {
-    return MOCK_RESTAURANTS.map((r) => ({
+    return restaurants.map((r) => ({
       ...r,
       distance: getDistance(lat, lng, r.lat, r.lng),
     }))
@@ -26,7 +44,7 @@ export default function Search() {
         return matchesQuery && matchesCuisine && matchesScore;
       })
       .sort((a, b) => a.distance - b.distance);
-  }, [query, selectedCuisine, minScore, lat, lng]);
+  }, [query, selectedCuisine, minScore, lat, lng, restaurants]);
 
   return (
     <div className="flex-1 px-4 pt-4 pb-24 max-w-lg mx-auto w-full">
@@ -46,7 +64,7 @@ export default function Search() {
 
       {/* Cuisine chips */}
       <div className="flex gap-2 overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide mb-2">
-        {CUISINES.map((cuisine) => (
+        {cuisines.map((cuisine) => (
           <button
             key={cuisine}
             onClick={() => setSelectedCuisine(cuisine)}
@@ -59,6 +77,26 @@ export default function Search() {
             {cuisine === 'All' ? t('search.allCuisines') : cuisine}
           </button>
         ))}
+      </div>
+
+      {/* Radius filter */}
+      <div className="flex items-center gap-3 mb-3 px-1">
+        <span className="text-xs text-stone-400 shrink-0">{t('search.distance')}:</span>
+        <div className="flex gap-1.5">
+          {RADIUS_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setRadius(opt.value)}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                radius === opt.value
+                  ? 'bg-teal-500 text-white'
+                  : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Min score filter */}

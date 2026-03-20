@@ -2,17 +2,26 @@ import type { Restaurant } from '../types';
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 
+function getMaxResults(radius: number): number {
+  if (radius <= 1000) return 30;
+  if (radius <= 3000) return 50;
+  if (radius <= 5000) return 80;
+  return 100;
+}
+
 export async function fetchNearbyRestaurants(
   lat: number,
   lng: number,
-  radius: number = 1000
+  radius: number = 5000
 ): Promise<Restaurant[]> {
+  const maxResults = getMaxResults(radius);
+
   const query = `
     [out:json][timeout:10];
     (
-      node["amenity"="restaurant"](around:${radius},${lat},${lng});
-      node["amenity"="fast_food"](around:${radius},${lat},${lng});
-      node["amenity"="cafe"](around:${radius},${lat},${lng});
+      node["amenity"="restaurant"]["name"](around:${radius},${lat},${lng});
+      node["amenity"="fast_food"]["name"](around:${radius},${lat},${lng});
+      node["amenity"="cafe"]["name"](around:${radius},${lat},${lng});
     );
     out body;
   `;
@@ -28,21 +37,52 @@ export async function fetchNearbyRestaurants(
 
     const data = await response.json();
 
-    return data.elements.map((el: Record<string, unknown>) => {
-      const tags = (el.tags || {}) as Record<string, string>;
-      return {
-        id: `osm-${el.id}`,
-        name: tags.name || 'Unknown Restaurant',
-        lat: el.lat as number,
-        lng: el.lon as number,
-        address: [tags['addr:street'], tags['addr:housenumber'], tags['addr:city']]
-          .filter(Boolean)
-          .join(' ') || undefined,
-        cuisine: tags.cuisine?.split(';')[0] || tags.amenity as string || undefined,
-        clean_score: null,
-        rating_count: 0,
-      } satisfies Restaurant;
-    });
+    // Haversine for sorting by distance
+    const toRad = (x: number) => (x * Math.PI) / 180;
+    const haversine = (lat2: number, lng2: number) => {
+      const R = 6371e3;
+      const dp = toRad(lat2 - lat);
+      const dl = toRad(lng2 - lng);
+      const a = Math.sin(dp / 2) ** 2 + Math.cos(toRad(lat)) * Math.cos(toRad(lat2)) * Math.sin(dl / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+
+    const restaurants: Restaurant[] = data.elements
+      .map((el: Record<string, unknown>) => {
+        const tags = (el.tags || {}) as Record<string, string>;
+        const name = tags.name;
+        if (!name) return null;
+
+        // Capitalize first letter of cuisine
+        let cuisine = tags.cuisine?.split(';')[0]?.trim();
+        if (cuisine) {
+          cuisine = cuisine.charAt(0).toUpperCase() + cuisine.slice(1);
+        } else {
+          // Fallback to amenity type
+          const amenity = tags.amenity;
+          if (amenity === 'cafe') cuisine = 'Cafe';
+          else if (amenity === 'fast_food') cuisine = 'Fast Food';
+          else cuisine = 'Restaurant';
+        }
+
+        return {
+          id: `osm-${el.id}`,
+          name,
+          lat: el.lat as number,
+          lng: el.lon as number,
+          address: [tags['addr:street'], tags['addr:housenumber'], tags['addr:city']]
+            .filter(Boolean)
+            .join(' ') || undefined,
+          cuisine,
+          clean_score: null,
+          rating_count: 0,
+        } satisfies Restaurant;
+      })
+      .filter((r: Restaurant | null): r is Restaurant => r !== null)
+      .sort((a: Restaurant, b: Restaurant) => haversine(a.lat, a.lng) - haversine(b.lat, b.lng))
+      .slice(0, maxResults);
+
+    return restaurants;
   } catch (error) {
     console.error('Failed to fetch from Overpass:', error);
     return [];

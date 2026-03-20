@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { MOCK_RESTAURANTS, getDistance, getScoreColor, getScoreLabel } from '../data/mockData';
+import { getDistance, getScoreColor, getScoreLabel } from '../data/mockData';
+import { useRestaurantStore } from '../stores/restaurantStore';
 import RestaurantCard from '../components/ui/RestaurantCard';
 import 'leaflet/dist/leaflet.css';
 
@@ -38,12 +39,28 @@ function createScoreIcon(score: number | null) {
   });
 }
 
-function UserLocationMarker({ lat, lng }: { lat: number; lng: number }) {
+const RADIUS_OPTIONS = [
+  { label: '1 km', value: 1000 },
+  { label: '2 km', value: 2000 },
+  { label: '5 km', value: 5000 },
+  { label: '10 km', value: 10000 },
+  { label: '25 km', value: 25000 },
+];
+
+function zoomForRadius(r: number): number {
+  if (r <= 1000) return 16;
+  if (r <= 2000) return 15;
+  if (r <= 5000) return 14;
+  if (r <= 10000) return 13;
+  return 12;
+}
+
+function UserLocationMarker({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
   const map = useMap();
 
   useMemo(() => {
-    map.setView([lat, lng], 15);
-  }, [lat, lng, map]);
+    map.setView([lat, lng], zoom);
+  }, [lat, lng, zoom, map]);
 
   const userIcon = L.divIcon({
     className: 'user-marker',
@@ -64,13 +81,20 @@ export default function Home() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = useState(true);
+  const { restaurants, loading, fetchRestaurants, radius, setRadius } = useRestaurantStore();
+
+  useEffect(() => {
+    fetchRestaurants(lat, lng);
+  }, [lat, lng, radius, fetchRestaurants]);
 
   const restaurantsWithDistance = useMemo(() => {
-    return MOCK_RESTAURANTS.map((r) => ({
+    return restaurants.map((r) => ({
       ...r,
       distance: getDistance(lat, lng, r.lat, r.lng),
     })).sort((a, b) => a.distance - b.distance);
-  }, [lat, lng]);
+  }, [lat, lng, restaurants]);
+
+  const mapZoom = zoomForRadius(radius);
 
   return (
     <div className="flex-1 relative" style={{ marginBottom: '-64px' }}>
@@ -78,13 +102,13 @@ export default function Home() {
       <div className="absolute inset-0">
         <MapContainer
           center={[lat, lng]}
-          zoom={15}
+          zoom={mapZoom}
           className="h-full w-full"
           zoomControl={false}
           attributionControl={false}
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          <UserLocationMarker lat={lat} lng={lng} />
+          <UserLocationMarker lat={lat} lng={lng} zoom={mapZoom} />
           {restaurantsWithDistance.map((r) => (
             <Marker
               key={r.id}
@@ -128,15 +152,39 @@ export default function Home() {
             </div>
 
             <div className="px-4 pb-2">
-              <h2 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('home.nearby')}</h2>
+              <div className="flex gap-1.5 mb-3">
+                {RADIUS_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setRadius(opt.value)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                      radius === opt.value
+                        ? 'bg-teal-500 text-white'
+                        : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <h2 className="text-xs uppercase tracking-widest text-stone-400 font-medium">
+                {t('home.nearby')}
+              </h2>
             </div>
 
             <div className="overflow-y-auto px-4 pb-24" style={{ height: 'calc(100% - 56px)' }}>
-              <div className="space-y-2">
-                {restaurantsWithDistance.map((r, i) => (
-                  <RestaurantCard key={r.id} restaurant={r} distance={r.distance} index={i} />
-                ))}
-              </div>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="ml-3 text-sm text-stone-400">{t('common.loading')}</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {restaurantsWithDistance.map((r, i) => (
+                    <RestaurantCard key={r.id} restaurant={r} distance={r.distance} index={i} />
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
         )}

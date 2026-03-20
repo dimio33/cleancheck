@@ -1,12 +1,25 @@
 import { Router, Request, Response } from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { query } from '../utils/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { calculateOverallScore, recalculateRestaurantScore } from '../services/scoreService';
 import { checkAndAwardBadges } from '../services/badgeService';
 import { geoVerify, calculateDistance } from '../middleware/geoVerify';
 import { validateImageFile, moderateImage, generateImageHash } from '../services/moderationService';
+import { uploadPhoto, isR2Configured } from '../services/storageService';
 
 const router = Router();
+
+// ============================================================
+// Multer setup for photo uploads (memoryStorage for R2 + moderation)
+// ============================================================
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+});
 
 // POST /api/ratings/verify-location — check if user is close enough
 router.post('/verify-location', async (req: Request, res: Response): Promise<void> => {
@@ -70,6 +83,12 @@ router.post('/', authenticate, geoVerify({ maxDistanceMeters: 200 }), async (req
       return;
     }
 
+    // Validate comment length
+    if (comment && typeof comment === 'string' && comment.length > 1000) {
+      res.status(400).json({ error: 'Comment must be 1000 characters or fewer' });
+      return;
+    }
+
     // Validate ranges
     const scores = [cleanliness, smell, supplies, condition, accessibility];
     for (const score of scores) {
@@ -90,6 +109,18 @@ router.post('/', authenticate, geoVerify({ maxDistanceMeters: 200 }), async (req
       return;
     }
 
+    // Duplicate rating check — one rating per user per restaurant per day
+    const visitDate = visited_at || new Date().toISOString().split('T')[0];
+    const duplicateCheck = await query(
+      `SELECT id FROM ratings WHERE user_id = $1 AND restaurant_id = $2 AND visited_at = $3`,
+      [req.user.id, restaurant_id, visitDate]
+    );
+
+    if (duplicateCheck.rows.length > 0) {
+      res.status(409).json({ error: 'You already rated this restaurant today' });
+      return;
+    }
+
     const overall_score = calculateOverallScore({ cleanliness, smell, supplies, condition, accessibility });
 
     const result = await query(
@@ -106,7 +137,7 @@ router.post('/', authenticate, geoVerify({ maxDistanceMeters: 200 }), async (req
         accessibility,
         overall_score,
         comment || null,
-        visited_at || new Date().toISOString().split('T')[0],
+        visitDate,
       ]
     );
 
@@ -124,6 +155,86 @@ router.post('/', authenticate, geoVerify({ maxDistanceMeters: 200 }), async (req
   } catch (err) {
     console.error('Create rating error:', err);
     res.status(500).json({ error: 'Failed to create rating' });
+  }
+});
+
+// POST /api/ratings/:id/photos — upload photo for a rating (auth required)
+router.post('/:id/photos', authenticate, upload.single('photo'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+
+    // Check the rating exists and belongs to the authenticated user
+    const ratingResult = await query<{ user_id: string }>(
+      `SELECT user_id FROM ratings WHERE id = $1`,
+      [id]
+    );
+
+    if (ratingResult.rows.length === 0) {
+      res.status(404).json({ error: 'Rating not found' });
+      return;
+    }
+
+    if (ratingResult.rows[0].user_id !== req.user.id) {
+      res.status(403).json({ error: 'You can only upload photos for your own ratings' });
+      return;
+    }
+
+    if (!req.file) {
+      res.status(400).json({ error: 'No photo file provided' });
+      return;
+    }
+
+    // Validate image file
+    const validation = validateImageFile({
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
+
+    if (!validation.valid) {
+      res.status(400).json({ error: validation.reason || 'Invalid image file' });
+      return;
+    }
+
+    const buffer = req.file.buffer;
+
+    // Run content moderation
+    const moderationResult = await moderateImage(buffer, req.file.mimetype);
+    if (!moderationResult.allowed) {
+      res.status(400).json({ error: 'Image did not pass content moderation', reason: moderationResult.reason });
+      return;
+    }
+
+    // Upload to R2 or save locally
+    let photoUrl: string;
+    if (isR2Configured()) {
+      photoUrl = await uploadPhoto(buffer, req.file.mimetype, id as string);
+    } else {
+      // Local fallback for development
+      const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
+      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+      const ext = req.file.mimetype.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
+      const filename = `${id}-${Date.now()}.${ext}`;
+      fs.writeFileSync(path.join(uploadsDir, filename), buffer);
+      photoUrl = `/uploads/${filename}`;
+    }
+
+    // Store in rating_photos table
+    const photoResult = await query(
+      `INSERT INTO rating_photos (rating_id, url, hash)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [id, photoUrl, await generateImageHash(buffer)]
+    );
+
+    res.status(201).json({ photo: photoResult.rows[0] });
+  } catch (err) {
+    console.error('Upload photo error:', err);
+    res.status(500).json({ error: 'Failed to upload photo' });
   }
 });
 

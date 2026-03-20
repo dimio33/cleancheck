@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { User } from '../types';
+import api from '../services/api';
 
 interface AuthState {
   user: User | null;
@@ -24,39 +25,40 @@ export const useAuthStore = create<AuthState>((set) => ({
   token: localStorage.getItem('cleancheck_token'),
   isAuthenticated: !!localStorage.getItem('cleancheck_token'),
 
-  login: async (email: string, _password: string) => {
-    // Mock login for now
-    const mockUser: User = {
-      id: '1',
-      username: email.split('@')[0],
-      email,
-      created_at: new Date().toISOString(),
-      rating_count: 12,
-      restaurant_count: 8,
-      average_score: 3.7,
-      badges: [],
-    };
-    const mockToken = 'mock-jwt-token';
-    localStorage.setItem('cleancheck_token', mockToken);
-    localStorage.setItem('cleancheck_user', JSON.stringify(mockUser));
-    set({ user: mockUser, token: mockToken, isAuthenticated: true });
-  },
-
-  register: async (username: string, email: string, _password: string) => {
-    const mockUser: User = {
-      id: '1',
-      username,
-      email,
-      created_at: new Date().toISOString(),
-      rating_count: 0,
+  login: async (email: string, password: string) => {
+    const { data } = await api.post('/auth/login', { email, password });
+    localStorage.setItem('cleancheck_token', data.token);
+    const user: User = {
+      id: data.user.id,
+      username: data.user.username,
+      email: data.user.email,
+      avatar: data.user.avatar_url || undefined,
+      created_at: data.user.created_at,
+      rating_count: data.user.total_ratings || 0,
       restaurant_count: 0,
       average_score: 0,
       badges: [],
     };
-    const mockToken = 'mock-jwt-token';
-    localStorage.setItem('cleancheck_token', mockToken);
-    localStorage.setItem('cleancheck_user', JSON.stringify(mockUser));
-    set({ user: mockUser, token: mockToken, isAuthenticated: true });
+    localStorage.setItem('cleancheck_user', JSON.stringify(user));
+    set({ user, token: data.token, isAuthenticated: true });
+  },
+
+  register: async (username: string, email: string, password: string) => {
+    const { data } = await api.post('/auth/register', { username, email, password });
+    localStorage.setItem('cleancheck_token', data.token);
+    const user: User = {
+      id: data.user.id,
+      username: data.user.username,
+      email: data.user.email,
+      avatar: data.user.avatar_url || undefined,
+      created_at: data.user.created_at,
+      rating_count: data.user.total_ratings || 0,
+      restaurant_count: 0,
+      average_score: 0,
+      badges: [],
+    };
+    localStorage.setItem('cleancheck_user', JSON.stringify(user));
+    set({ user, token: data.token, isAuthenticated: true });
   },
 
   logout: () => {

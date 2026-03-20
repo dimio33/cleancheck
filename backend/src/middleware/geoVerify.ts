@@ -48,9 +48,9 @@ export function geoVerify(options?: GeoVerifyOptions): RequestHandler {
       const userLatStr = req.headers['x-user-lat'] as string | undefined;
       const userLngStr = req.headers['x-user-lng'] as string | undefined;
 
-      // If no location headers, skip geo-check (backwards-compatible)
+      // Geo headers are required when this middleware is used
       if (!userLatStr || !userLngStr) {
-        next();
+        res.status(400).json({ error: 'X-User-Lat and X-User-Lng headers are required' });
         return;
       }
 
@@ -65,8 +65,7 @@ export function geoVerify(options?: GeoVerifyOptions): RequestHandler {
       // Get restaurant_id from body
       const restaurantId = req.body?.restaurant_id;
       if (!restaurantId) {
-        // No restaurant_id yet — let the route handler deal with validation
-        next();
+        res.status(400).json({ error: 'restaurant_id is required for geo verification' });
         return;
       }
 
@@ -97,8 +96,7 @@ export function geoVerify(options?: GeoVerifyOptions): RequestHandler {
       next();
     } catch (err) {
       console.error('Geo-verify error:', err);
-      // On error, allow through — don't block legitimate users
-      next();
+      res.status(500).json({ error: 'Location verification failed' });
     }
   };
 }

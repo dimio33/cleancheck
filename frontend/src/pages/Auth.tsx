@@ -10,6 +10,7 @@ export default function Auth() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { login, register, loginAsGuest } = useAuthStore();
@@ -17,6 +18,7 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     try {
       if (mode === 'login') {
         await login(email, password);
@@ -25,8 +27,8 @@ export default function Auth() {
       }
       localStorage.setItem('cleancheck_onboarded', 'true');
       navigate('/');
-    } catch {
-      // Handle error
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -55,7 +57,7 @@ export default function Auth() {
         {(['login', 'register'] as const).map((m) => (
           <button
             key={m}
-            onClick={() => setMode(m)}
+            onClick={() => { setMode(m); setError(''); }}
             className={`flex-1 pb-2.5 text-sm font-medium transition-all border-b-2 ${
               mode === m
                 ? 'text-stone-800 border-teal-500'
@@ -66,6 +68,17 @@ export default function Auth() {
           </button>
         ))}
       </div>
+
+      {/* Error message */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full mb-4 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl"
+        >
+          <p className="text-sm text-rose-600 text-center">{error}</p>
+        </motion.div>
+      )}
 
       {/* Form */}
       <motion.form
@@ -117,7 +130,7 @@ export default function Auth() {
       <p className="text-sm text-stone-400 mt-5">
         {mode === 'login' ? t('auth.noAccount') : t('auth.hasAccount')}{' '}
         <button
-          onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+          onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
           className="text-teal-600 font-medium"
         >
           {t(`auth.${mode === 'login' ? 'register' : 'login'}`)}

@@ -9,15 +9,45 @@ import restaurantRoutes from './routes/restaurants';
 import ratingRoutes from './routes/ratings';
 import userRoutes from './routes/users';
 import { initModeration } from './services/moderationService';
+import { apiLimiter, authLimiter, ratingLimiter } from './middleware/rateLimiter';
+
+// ============================================================
+// Env validation
+// ============================================================
+
+if (process.env.NODE_ENV !== 'test') {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is required');
+  }
+
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+}
+
+// ============================================================
+// App setup
+// ============================================================
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 
 // Middleware
 app.use(helmet());
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(cors({
+  origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'],
+  credentials: true,
+}));
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Rate limiters
+app.use('/api', apiLimiter);
+app.use('/api/auth', authLimiter);
+app.use('/api/ratings', ratingLimiter);
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -34,7 +64,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // SPA fallback — serve index.html for non-API routes
-app.get('*', (req: Request, res: Response) => {
+app.get('{*path}', (req: Request, res: Response) => {
   if (req.path.startsWith('/api')) {
     res.status(404).json({ error: 'API route not found' });
     return;
@@ -53,16 +83,18 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, async () => {
-  console.log(`CleanCheck API running on port ${PORT}`);
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, async () => {
+    console.log(`CleanCheck API running on port ${PORT}`);
 
-  // Pre-load content moderation model (non-blocking)
-  try {
-    await initModeration();
-    console.log('Content moderation ready');
-  } catch (err) {
-    console.warn('Content moderation failed to initialize — uploads will still work but without NSFW scanning');
-  }
-});
+    // Pre-load content moderation model (non-blocking)
+    try {
+      await initModeration();
+      console.log('Content moderation ready');
+    } catch (err) {
+      console.warn('Content moderation failed to initialize — uploads will still work but without NSFW scanning');
+    }
+  });
+}
 
 export default app;

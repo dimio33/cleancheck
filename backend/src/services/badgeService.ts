@@ -106,8 +106,8 @@ async function getUserCityCount(userId: string): Promise<number> {
 }
 
 async function getUserStreak(userId: string): Promise<number> {
-  const result = await query<{ visited_at: Date }>(
-    `SELECT DISTINCT visited_at FROM ratings
+  const result = await query<{ visited_at: string }>(
+    `SELECT DISTINCT visited_at::text FROM ratings
      WHERE user_id = $1
      ORDER BY visited_at DESC
      LIMIT 30`,
@@ -117,13 +117,13 @@ async function getUserStreak(userId: string): Promise<number> {
   if (result.rows.length === 0) return 0;
 
   let streak = 1;
-  const dates = result.rows.map((r) => new Date(r.visited_at));
 
-  for (let i = 1; i < dates.length; i++) {
-    const diff = dates[i - 1].getTime() - dates[i].getTime();
-    const daysDiff = diff / (1000 * 60 * 60 * 24);
+  for (let i = 1; i < result.rows.length; i++) {
+    const current = new Date(result.rows[i - 1].visited_at);
+    const previous = new Date(result.rows[i].visited_at);
+    const diffDays = Math.round((current.getTime() - previous.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (Math.abs(daysDiff - 1) < 0.1) {
+    if (diffDays === 1) {
       streak++;
     } else {
       break;

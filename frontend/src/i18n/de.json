@@ -33,7 +33,9 @@
     "nearby": "Restaurants in der Nähe",
     "noRatings": "Noch keine Bewertungen",
     "ratings": "Bewertungen",
-    "away": "entfernt"
+    "away": "entfernt",
+    "range": "Umkreis",
+    "restaurantCount": "{{count}} Restaurants"
   },
   "search": {
     "placeholder": "Restaurant suchen...",
@@ -42,7 +44,8 @@
     "noResultsDesc": "Versuche einen anderen Suchbegriff oder erweitere die Filter.",
     "allCuisines": "Alle",
     "minScore": "Min. Score",
-    "distance": "Entfernung"
+    "distance": "Entfernung",
+    "all": "Alle"
   },
   "restaurant": {
     "cleanScore": "CleanScore",
@@ -80,7 +83,9 @@
     "share": "Teilen",
     "thankYou": "Danke für deine Bewertung!",
     "badgeEarned": "Abzeichen verdient!",
-    "overall": "Gesamt"
+    "overall": "Gesamt",
+    "submitFailed": "Bewertung konnte nicht gesendet werden",
+    "alreadyRated": "Du hast dieses Restaurant heute bereits bewertet"
   },
   "profile": {
     "title": "Profil",
@@ -106,7 +111,10 @@
     "continueAsGuest": "Als Gast fortfahren",
     "forgotPassword": "Passwort vergessen?",
     "noAccount": "Noch kein Konto?",
-    "hasAccount": "Bereits ein Konto?"
+    "hasAccount": "Bereits ein Konto?",
+    "loginFailed": "Anmeldung fehlgeschlagen",
+    "registerFailed": "Registrierung fehlgeschlagen",
+    "invalidCredentials": "E-Mail oder Passwort falsch"
   },
   "badges": {
     "firstRating": {
@@ -152,6 +160,9 @@
     "error": "Fehler",
     "retry": "Erneut versuchen",
     "km": "km",
-    "m": "m"
+    "m": "m",
+    "errorOccurred": "Ein Fehler ist aufgetreten",
+    "tryAgain": "Erneut versuchen",
+    "noConnection": "Keine Verbindung zum Server"
   }
 }

@@ -5,7 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CriteriaSlider from '../components/ui/CriteriaSlider';
 import ScoreGauge from '../components/ui/ScoreGauge';
 import { useGeolocation, getHighAccuracyPosition } from '../hooks/useGeolocation';
-import { MOCK_RESTAURANTS, getDistance, formatDistance } from '../data/mockData';
+import { getDistance, formatDistance } from '../data/mockData';
+import { useRestaurantStore } from '../stores/restaurantStore';
+import { useAuthStore } from '../stores/authStore';
+import { useToastStore } from '../components/ui/Toast';
+import api from '../services/api';
 import type { Restaurant, CriteriaScores } from '../types';
 
 // Geo-verification constants
@@ -25,9 +29,13 @@ export default function RatingFlow() {
   const location = useLocation();
   const { t } = useTranslation();
   const { lat, lng } = useGeolocation();
+  const { token } = useAuthStore();
+  const addToast = useToastStore((s) => s.addToast);
+
+  const { restaurants } = useRestaurantStore();
 
   const preselectedId = (location.state as { restaurantId?: string } | null)?.restaurantId;
-  const preselected = preselectedId ? MOCK_RESTAURANTS.find((r) => r.id === preselectedId) : undefined;
+  const preselected = preselectedId ? restaurants.find((r) => r.id === preselectedId) : undefined;
 
   const [step, setStep] = useState(preselected ? 2 : 1);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(preselected || null);
@@ -53,7 +61,7 @@ export default function RatingFlow() {
   }, [scores]);
 
   const nearbyRestaurants = useMemo(() => {
-    return MOCK_RESTAURANTS.map((r) => ({
+    return restaurants.map((r) => ({
       ...r,
       distance: getDistance(lat, lng, r.lat, r.lng),
     }))
@@ -63,7 +71,7 @@ export default function RatingFlow() {
       })
       .sort((a, b) => a.distance - b.distance)
       .slice(0, searchQuery ? 10 : 3);
-  }, [lat, lng, searchQuery]);
+  }, [lat, lng, searchQuery, restaurants]);
 
   const updateScore = useCallback((key: keyof CriteriaScores, value: number) => {
     setScores((prev) => ({ ...prev, [key]: value }));
@@ -127,15 +135,31 @@ export default function RatingFlow() {
     // If not allowed, geoBlocked state is set and we stay on step 1 showing the blocker
   };
 
-  const handleSubmit = () => {
-    // Mock submit - in real app, would call API with geo headers
-    console.log('Rating submitted:', {
-      restaurant: selectedRestaurant?.id,
-      scores,
-      overall: overallScore,
-      comment,
-    });
-    setStep(4);
+  const handleSubmit = async () => {
+    if (!selectedRestaurant || !token) return;
+
+    try {
+      await api.post('/ratings', {
+        restaurant_id: selectedRestaurant.id,
+        cleanliness: scores.cleanliness,
+        smell: scores.smell,
+        supplies: scores.supplies,
+        condition: scores.maintenance,
+        accessibility: scores.accessibility,
+        comment: comment || undefined,
+      }, {
+        headers: {
+          'X-User-Lat': String(lat),
+          'X-User-Lng': String(lng),
+        },
+      });
+
+      setStep(4);
+      addToast(t('rating.thankYou'), 'success');
+    } catch (err) {
+      console.error('Rating failed:', err);
+      addToast('Rating failed. Please try again.', 'error');
+    }
   };
 
   return (

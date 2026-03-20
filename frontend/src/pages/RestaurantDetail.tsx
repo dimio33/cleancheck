@@ -1,8 +1,11 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import ScoreGauge from '../components/ui/ScoreGauge';
-import { MOCK_RESTAURANTS, getRestaurantRatings, getScoreColor } from '../data/mockData';
+import { getRestaurantRatings, getScoreColor } from '../data/mockData';
+import { useRestaurantStore } from '../stores/restaurantStore';
+import api from '../services/api';
 
 const CRITERIA_KEYS = ['cleanliness', 'smell', 'supplies', 'maintenance', 'accessibility'] as const;
 const CRITERIA_ICONS: Record<string, string> = {
@@ -14,7 +17,7 @@ const CRITERIA_ICONS: Record<string, string> = {
 };
 
 function getKitchenConfidence(score: number | null): { label: string; color: string; emoji: string } {
-  if (score === null) return { label: 'Unknown', color: '#9ca3af', emoji: '❓' };
+  if (score === null) return { label: 'Unknown', color: '#9ca3af', emoji: '?' };
   if (score >= 8.5) return { label: 'Excellent', color: '#10b981', emoji: '👨‍🍳' };
   if (score >= 7) return { label: 'Good', color: '#22c55e', emoji: '👍' };
   if (score >= 5) return { label: 'Moderate', color: '#f59e0b', emoji: '🤔' };
@@ -26,8 +29,22 @@ export default function RestaurantDetail() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const restaurant = MOCK_RESTAURANTS.find((r) => r.id === id);
-  const ratings = id ? getRestaurantRatings(id) : [];
+  const restaurant = useRestaurantStore((s) => s.getById(id || ''));
+
+  const [apiRatings, setApiRatings] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (id && !id.startsWith('osm-')) {
+      api.get(`/restaurants/${id}`)
+        .then(({ data }) => {
+          setApiRatings(data.ratings || []);
+        })
+        .catch(() => {});
+    }
+  }, [id]);
+
+  // Use apiRatings when available, otherwise fall back to mock
+  const ratings = apiRatings.length > 0 ? apiRatings : (id ? getRestaurantRatings(id) : []);
 
   if (!restaurant) {
     return (
@@ -150,10 +167,10 @@ export default function RestaurantDetail() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 text-xs font-medium">
-                      {rating.user_name.charAt(0).toUpperCase()}
+                      {(rating.user_name || rating.username || '?').charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-stone-800">{rating.user_name}</span>
+                      <span className="text-sm font-medium text-stone-800">{rating.user_name || rating.username}</span>
                       <span className="text-[10px] text-stone-400 block">
                         {new Date(rating.created_at).toLocaleDateString()}
                       </span>
@@ -166,7 +183,7 @@ export default function RestaurantDetail() {
                       color: getScoreColor(rating.overall_score),
                     }}
                   >
-                    {rating.overall_score.toFixed(1)}
+                    {Number(rating.overall_score).toFixed(1)}
                   </div>
                 </div>
                 {rating.comment && (

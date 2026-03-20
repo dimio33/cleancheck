@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: cleancheck
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/src/migrations/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/cleancheck
+      JWT_SECRET: dev-secret-change-in-production
+      PORT: "3001"
+      CORS_ORIGINS: http://localhost:5173,http://localhost:3001
+      R2_ACCOUNT_ID: ""
+      R2_KEY_ID: ""
+      R2_SECRET_ACCESS_KEY: ""
+      R2_BUCKET_NAME: cleancheck-photos
+      R2_PUBLIC_URL: ""
+    depends_on:
+      - db
+    volumes:
+      - uploads:/app/uploads
+
+volumes:
+  pgdata:
+  uploads:
