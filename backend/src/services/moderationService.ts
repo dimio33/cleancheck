@@ -15,6 +15,7 @@ export interface ModerationResult {
     porn: number;
     sexy: number;
   };
+  visionFlags?: string[];
 }
 
 interface FileInfo {
@@ -43,12 +44,41 @@ const PORN_THRESHOLD = 0.3;
 const HENTAI_THRESHOLD = 0.3;
 const SEXY_THRESHOLD = 0.5;
 
+// Google Vision SafeSearch — block LIKELY and VERY_LIKELY
+const VISION_BLOCK_LEVELS = ['LIKELY', 'VERY_LIKELY'];
+
+// Blocked text patterns in OCR (case-insensitive)
+const BLOCKED_TEXT_PATTERNS = [
+  /fuck/i, /shit/i, /dick/i, /penis/i, /pussy/i, /nazi/i,
+  /heil\s*hitler/i, /arsch/i, /fotze/i, /hurensohn/i, /wichser/i,
+  /nigger/i, /faggot/i,
+];
+
 // ============================================================
-// Module state — lazy-loaded NSFW model
+// Module state
 // ============================================================
 
 let nsfwModel: any = null;
 let modelLoadFailed = false;
+let modelLoadError: string | null = null;
+
+/**
+ * Check if content moderation is operational.
+ */
+export function getModerationStatus(): {
+  nsfw: { ready: boolean; error: string | null };
+  vision: { ready: boolean; error: string | null };
+} {
+  const visionKey = process.env.GOOGLE_VISION_API_KEY;
+  return {
+    nsfw: nsfwModel
+      ? { ready: true, error: null }
+      : { ready: false, error: modelLoadError || 'Model not yet loaded' },
+    vision: visionKey
+      ? { ready: true, error: null }
+      : { ready: false, error: 'GOOGLE_VISION_API_KEY not set' },
+  };
+}
 
 // ============================================================
 // Public API
@@ -56,23 +86,19 @@ let modelLoadFailed = false;
 
 /**
  * Pre-load the NSFW.js model so first request is not slow.
- * Call once at server startup; gracefully degrades if model fails.
  */
 export async function initModeration(): Promise<void> {
   try {
-    // Dynamic imports so the server starts even if these packages
-    // are missing or the model download fails.
     const tf = await import('@tensorflow/tfjs');
     const nsfwjs = await import('nsfwjs');
-
-    // Use the default hosted model (MobileNetV2 Mid)
     nsfwModel = await nsfwjs.load();
     console.log('NSFW moderation model loaded successfully');
   } catch (err) {
     modelLoadFailed = true;
-    console.warn(
-      'WARNING: NSFW moderation model failed to load. Image uploads will still be allowed but not scanned.',
-      err instanceof Error ? err.message : err
+    modelLoadError = err instanceof Error ? err.message : String(err);
+    console.error(
+      'CRITICAL: NSFW moderation model failed to load.',
+      modelLoadError
     );
   }
 }
@@ -104,8 +130,176 @@ export function validateImageFile(file: FileInfo): { valid: boolean; reason?: st
 
 /**
  * Layer 2 — run NSFW.js classification on the image buffer.
- * Returns allowed=true if image passes, allowed=false with reason
- * if flagged. Gracefully allows if model is unavailable.
+ */
+async function classifyNsfw(buffer: Buffer): Promise<ModerationResult> {
+  if (!nsfwModel) {
+    if (modelLoadFailed) {
+      console.error('STRICT MODE: NSFW model not available');
+      return { allowed: false, reason: 'Content moderation is temporarily unavailable. Please try again later.' };
+    }
+    return { allowed: false, reason: 'Content moderation is initializing. Please try again in a moment.' };
+  }
+
+  try {
+    const tf = await import('@tensorflow/tfjs');
+
+    const { data, info } = await sharp(buffer)
+      .resize(224, 224, { fit: 'cover' })
+      .removeAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    const tensor = tf.tensor3d(
+      new Uint8Array(data),
+      [info.height, info.width, info.channels as number],
+      'int32'
+    );
+
+    const predictions = await nsfwModel.classify(tensor);
+    tensor.dispose();
+
+    const scoreMap: Record<string, number> = {};
+    for (const p of predictions) {
+      scoreMap[p.className.toLowerCase()] = p.probability;
+    }
+
+    const scores = {
+      drawing: scoreMap['drawing'] ?? 0,
+      hentai: scoreMap['hentai'] ?? 0,
+      neutral: scoreMap['neutral'] ?? 0,
+      porn: scoreMap['porn'] ?? 0,
+      sexy: scoreMap['sexy'] ?? 0,
+    };
+
+    if (scores.porn > PORN_THRESHOLD) {
+      return { allowed: false, reason: 'Image flagged as inappropriate content (explicit)', scores };
+    }
+    if (scores.hentai > HENTAI_THRESHOLD) {
+      return { allowed: false, reason: 'Image flagged as inappropriate content (illustration)', scores };
+    }
+    if (scores.sexy > SEXY_THRESHOLD) {
+      return { allowed: false, reason: 'Image flagged as inappropriate content (suggestive)', scores };
+    }
+
+    return { allowed: true, scores };
+  } catch (err) {
+    // STRICT: if classification fails, block the upload
+    console.error('NSFW classification failed:', err instanceof Error ? err.message : err);
+    return { allowed: false, reason: 'Content moderation check failed. Please try again.' };
+  }
+}
+
+/**
+ * Layer 3 — Google Cloud Vision API (SafeSearch + Face Detection + OCR).
+ * Requires GOOGLE_VISION_API_KEY env var.
+ */
+async function classifyVision(buffer: Buffer): Promise<ModerationResult> {
+  const apiKey = process.env.GOOGLE_VISION_API_KEY;
+  if (!apiKey) {
+    // Vision not configured — skip this layer (NSFW.js is primary)
+    return { allowed: true };
+  }
+
+  try {
+    const base64Image = buffer.toString('base64');
+
+    const requestBody = {
+      requests: [{
+        image: { content: base64Image },
+        features: [
+          { type: 'SAFE_SEARCH_DETECTION' },
+          { type: 'FACE_DETECTION', maxResults: 5 },
+          { type: 'TEXT_DETECTION', maxResults: 1 },
+        ],
+      }],
+    };
+
+    const response = await fetch(
+      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      }
+    );
+
+    if (!response.ok) {
+      console.error(`Google Vision API error: ${response.status} ${response.statusText}`);
+      // Don't block on Vision API failure if NSFW.js already passed
+      return { allowed: true };
+    }
+
+    const data = await response.json() as {
+      responses: [{
+        safeSearchAnnotation?: {
+          adult: string;
+          violence: string;
+          racy: string;
+          medical: string;
+        };
+        faceAnnotations?: { detectionConfidence: number }[];
+        textAnnotations?: { description: string }[];
+      }]
+    };
+
+    const result = data.responses?.[0];
+    if (!result) return { allowed: true };
+
+    const flags: string[] = [];
+
+    // --- SafeSearch ---
+    const safeSearch = result.safeSearchAnnotation;
+    if (safeSearch) {
+      if (VISION_BLOCK_LEVELS.includes(safeSearch.adult)) {
+        flags.push(`adult content (${safeSearch.adult})`);
+      }
+      if (VISION_BLOCK_LEVELS.includes(safeSearch.violence)) {
+        flags.push(`violence (${safeSearch.violence})`);
+      }
+      if (VISION_BLOCK_LEVELS.includes(safeSearch.racy)) {
+        flags.push(`racy content (${safeSearch.racy})`);
+      }
+    }
+
+    // --- Face Detection ---
+    const faces = result.faceAnnotations;
+    if (faces && faces.length > 0) {
+      // Photos of toilets shouldn't have faces — flag as privacy concern
+      const confidentFaces = faces.filter(f => f.detectionConfidence > 0.8);
+      if (confidentFaces.length > 0) {
+        flags.push(`${confidentFaces.length} face(s) detected — privacy concern`);
+      }
+    }
+
+    // --- OCR Text Detection ---
+    const text = result.textAnnotations?.[0]?.description;
+    if (text) {
+      for (const pattern of BLOCKED_TEXT_PATTERNS) {
+        if (pattern.test(text)) {
+          flags.push(`offensive text detected`);
+          break;
+        }
+      }
+    }
+
+    if (flags.length > 0) {
+      return {
+        allowed: false,
+        reason: `Image blocked: ${flags.join(', ')}`,
+        visionFlags: flags,
+      };
+    }
+
+    return { allowed: true };
+  } catch (err) {
+    console.error('Google Vision API call failed:', err instanceof Error ? err.message : err);
+    // Don't block on Vision failure if NSFW.js passed
+    return { allowed: true };
+  }
+}
+
+/**
+ * Full moderation pipeline — runs all layers.
  */
 export async function moderateImage(
   buffer: Buffer,
@@ -132,112 +326,40 @@ export async function moderateImage(
     }
   } catch (err) {
     console.warn('Could not read image dimensions:', err instanceof Error ? err.message : err);
-    // Allow through — dimension check is best-effort
   }
 
-  // --- NSFW classification ---
-  if (!nsfwModel) {
-    if (modelLoadFailed) {
-      console.warn('Skipping NSFW check — model not available');
-    }
-    return { allowed: true };
-  }
+  // --- Layer 2: NSFW.js (local, fast) ---
+  const nsfwResult = await classifyNsfw(buffer);
+  if (!nsfwResult.allowed) return nsfwResult;
 
-  try {
-    const tf = await import('@tensorflow/tfjs');
+  // --- Layer 3: Google Vision (remote, comprehensive) ---
+  const visionResult = await classifyVision(buffer);
+  if (!visionResult.allowed) return visionResult;
 
-    // Convert buffer to raw pixel data via sharp (resize to 224x224 for the model)
-    const { data, info } = await sharp(buffer)
-      .resize(224, 224, { fit: 'cover' })
-      .removeAlpha()
-      .raw()
-      .toBuffer({ resolveWithObject: true });
-
-    // Create a 3D tensor [height, width, channels]
-    const tensor = tf.tensor3d(
-      new Uint8Array(data),
-      [info.height, info.width, info.channels as number],
-      'int32'
-    );
-
-    const predictions = await nsfwModel.classify(tensor);
-    tensor.dispose();
-
-    // Convert array to keyed object
-    const scoreMap: Record<string, number> = {};
-    for (const p of predictions) {
-      scoreMap[p.className.toLowerCase()] = p.probability;
-    }
-
-    const scores = {
-      drawing: scoreMap['drawing'] ?? 0,
-      hentai: scoreMap['hentai'] ?? 0,
-      neutral: scoreMap['neutral'] ?? 0,
-      porn: scoreMap['porn'] ?? 0,
-      sexy: scoreMap['sexy'] ?? 0,
-    };
-
-    // Check thresholds
-    if (scores.porn > PORN_THRESHOLD) {
-      return {
-        allowed: false,
-        reason: 'Image flagged as inappropriate content (explicit)',
-        scores,
-      };
-    }
-    if (scores.hentai > HENTAI_THRESHOLD) {
-      return {
-        allowed: false,
-        reason: 'Image flagged as inappropriate content (illustration)',
-        scores,
-      };
-    }
-    if (scores.sexy > SEXY_THRESHOLD) {
-      return {
-        allowed: false,
-        reason: 'Image flagged as inappropriate content (suggestive)',
-        scores,
-      };
-    }
-
-    return { allowed: true, scores };
-  } catch (err) {
-    console.warn(
-      'NSFW classification failed — allowing image through:',
-      err instanceof Error ? err.message : err
-    );
-    return { allowed: true };
-  }
+  return { allowed: true, scores: nsfwResult.scores };
 }
 
 /**
- * Layer 3 — generate a perceptual hash of the image using sharp.
- * Returns a hex string that can be stored in the DB.
- * Similar images produce the same (or very similar) hashes.
+ * Generate a perceptual hash of the image.
  */
 export async function generateImageHash(buffer: Buffer): Promise<string> {
-  // Resize to a tiny grayscale image, then hash the raw pixel data.
-  // This acts as a simple perceptual hash (pHash-like).
   const rawPixels = await sharp(buffer)
     .resize(16, 16, { fit: 'fill' })
     .grayscale()
     .raw()
     .toBuffer();
 
-  // Compute average luminance
   let sum = 0;
   for (let i = 0; i < rawPixels.length; i++) {
     sum += rawPixels[i];
   }
   const avg = sum / rawPixels.length;
 
-  // Build a binary string: 1 if pixel >= avg, 0 otherwise
   let bits = '';
   for (let i = 0; i < rawPixels.length; i++) {
     bits += rawPixels[i] >= avg ? '1' : '0';
   }
 
-  // Convert binary string to hex
   let hex = '';
   for (let i = 0; i < bits.length; i += 4) {
     hex += parseInt(bits.substring(i, i + 4), 2).toString(16);

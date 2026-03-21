@@ -9,7 +9,7 @@ import restaurantRoutes from './routes/restaurants';
 import ratingRoutes from './routes/ratings';
 import userRoutes from './routes/users';
 import qrRoutes from './routes/qr';
-import { initModeration } from './services/moderationService';
+import { initModeration, getModerationStatus } from './services/moderationService';
 import { apiLimiter, authLimiter, ratingLimiter } from './middleware/rateLimiter';
 
 // ============================================================
@@ -59,7 +59,17 @@ app.use('/api/qr', qrRoutes);
 
 // Health check
 app.get('/api/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  const moderation = getModerationStatus();
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    moderation: {
+      nsfw: moderation.nsfw.ready ? 'active' : 'unavailable',
+      nsfw_error: moderation.nsfw.error,
+      vision: moderation.vision.ready ? 'active' : 'not configured',
+      vision_error: moderation.vision.error,
+    },
+  });
 });
 
 // Serve static files (frontend)
