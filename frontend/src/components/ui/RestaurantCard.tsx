@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import type { Restaurant } from '../../types';
 import { getScoreLabel, formatDistance } from '../../utils/geo';
+import { useFavoritesStore } from '../../stores/favoritesStore';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -81,22 +82,16 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
         </p>
       </div>
 
-      {/* Chevron */}
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 16 16"
-        fill="none"
-        className="flex-shrink-0 text-stone-300"
+      {/* Favorite heart */}
+      <button
+        onClick={(e) => { e.stopPropagation(); useFavoritesStore.getState().toggleFavorite(restaurant.id); }}
+        className="flex-shrink-0 w-8 h-8 flex items-center justify-center"
+        aria-label="Favorite"
       >
-        <path
-          d="M6 3L11 8L6 13"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill={useFavoritesStore.getState().isFavorite(restaurant.id) ? '#F43F5E' : 'none'} stroke={useFavoritesStore.getState().isFavorite(restaurant.id) ? '#F43F5E' : '#D6D3D1'} strokeWidth="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+        </svg>
+      </button>
     </motion.button>
   );
 }

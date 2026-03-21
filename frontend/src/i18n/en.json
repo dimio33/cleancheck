@@ -100,6 +100,10 @@
     "thankYou": "Thanks for your rating!",
     "badgeEarned": "Badge Earned!",
     "overall": "Overall",
+    "uploading": "Uploading photo...",
+    "photoAdded": "Photo added",
+    "photoUploadFailed": "Failed to upload photo",
+    "savedOffline": "Rating saved offline. Will sync when you're back online.",
     "submitFailed": "Could not submit rating",
     "alreadyRated": "You already rated this restaurant today"
   },
@@ -117,6 +121,7 @@
     "themeLight": "Light",
     "themeDark": "Dark",
     "themeSystem": "System",
+    "saved": "Saved",
     "logout": "Log out",
     "loginPrompt": "Log in to save your ratings",
     "login": "Log in",
@@ -210,6 +215,14 @@
     "scanToRate": "Scan to rate the cleanliness!",
     "download": "Download",
     "print": "Print"
+  },
+  "report": {
+    "title": "Report Review",
+    "spam": "Spam",
+    "offensive": "Offensive",
+    "incorrect": "Incorrect Info",
+    "other": "Other",
+    "thanks": "Thanks for reporting!"
   },
   "common": {
     "back": "Back",

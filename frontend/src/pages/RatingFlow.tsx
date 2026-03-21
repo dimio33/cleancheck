@@ -9,6 +9,7 @@ import { getDistance, formatDistance } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 // authStore import kept for potential future use
 import { useToastStore } from '../components/ui/Toast';
+import { useDraftStore } from '../stores/draftStore';
 import api from '../services/api';
 import type { Restaurant, CriteriaScores } from '../types';
 
@@ -49,6 +50,9 @@ export default function RatingFlow() {
   const [comment, setComment] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [honeypot, setHoneypot] = useState('');
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const loadedAtRef = useRef(Date.now());
 
   // Reset loaded_at timestamp when component mounts
@@ -189,7 +193,7 @@ export default function RatingFlow() {
         }
       }
 
-      await api.post('/ratings', {
+      const { data: ratingData } = await api.post('/ratings', {
         restaurant_id: restaurantId,
         cleanliness: scores.cleanliness,
         smell: scores.smell,
@@ -206,12 +210,42 @@ export default function RatingFlow() {
         },
       });
 
+      // Upload photo if selected
+      if (selectedPhoto && ratingData.rating?.id && ratingData.rating.id !== 'ok') {
+        try {
+          setUploading(true);
+          const formData = new FormData();
+          formData.append('photo', selectedPhoto);
+          await api.post(`/ratings/${ratingData.rating.id}/photos`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        } catch {
+          addToast(t('rating.photoUploadFailed'), 'error');
+        } finally {
+          setUploading(false);
+        }
+      }
+
       setStep(4);
       addToast(t('rating.thankYou'), 'success');
     } catch (err: any) {
       console.error('Rating failed:', err);
-      const msg = err.response?.data?.error || 'Rating failed';
-      addToast(msg, 'error');
+      // Offline: save as draft
+      if (!navigator.onLine || err.code === 'ERR_NETWORK') {
+        useDraftStore.getState().addDraft({
+          restaurantId: selectedRestaurant?.id || '',
+          scores,
+          comment: comment || undefined,
+          lat,
+          lng,
+          timestamp: loadedAtRef.current,
+        });
+        setStep(4);
+        addToast(t('rating.savedOffline'), 'success');
+      } else {
+        const msg = err.response?.data?.error || 'Rating failed';
+        addToast(msg, 'error');
+      }
     }
   };
 
@@ -418,19 +452,49 @@ export default function RatingFlow() {
             <p className="text-sm text-stone-500 mt-1 mb-6">{t('rating.step3Desc')}</p>
 
             {/* Photo upload */}
-            <label className="flex flex-col items-center justify-center w-full py-8 bg-white rounded-xl border border-dashed border-stone-200 cursor-pointer hover:border-teal-400 transition-colors mb-4">
-              <svg className="w-8 h-8 text-stone-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
-              </svg>
-              <span className="text-sm text-stone-400">{t('rating.addPhoto')}</span>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-              />
-            </label>
+            {photoPreview ? (
+              <div className="relative mb-4">
+                <img src={photoPreview} alt="" className="w-full h-48 object-cover rounded-xl" />
+                <button
+                  onClick={() => { setSelectedPhoto(null); setPhotoPreview(null); }}
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/50 rounded-lg text-xs text-white">
+                  {t('rating.photoAdded')}
+                </span>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-full py-8 bg-white dark:bg-stone-900 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 cursor-pointer hover:border-teal-400 transition-colors mb-4">
+                <svg className="w-8 h-8 text-stone-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                </svg>
+                <span className="text-sm text-stone-400">{t('rating.addPhoto')}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setSelectedPhoto(file);
+                      setPhotoPreview(URL.createObjectURL(file));
+                    }
+                  }}
+                />
+              </label>
+            )}
+            {uploading && (
+              <div className="flex items-center gap-2 mb-4 text-sm text-teal-600">
+                <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                {t('rating.uploading')}
+              </div>
+            )}
 
             {/* Honeypot - hidden from humans */}
             <div style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }}>

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
+import { useFavoritesStore } from '../stores/favoritesStore';
 import BadgeCard from '../components/ui/BadgeCard';
 import { getScoreColor } from '../utils/geo';
 import api from '../services/api';
@@ -138,6 +139,34 @@ export default function Profile() {
           <div className="grid grid-cols-2 gap-2.5">
             {badges.map((badge: Badge, i: number) => (
               <BadgeCard key={badge.id || badge.slug} badge={badge} index={i} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Saved Restaurants */}
+      {useFavoritesStore.getState().favorites.length > 0 && (
+        <div className="px-4 mb-6">
+          <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.saved')} ({useFavoritesStore.getState().favorites.length})</h3>
+          <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none overflow-hidden">
+            {useFavoritesStore.getState().favorites.slice(0, 5).map((id, i) => (
+              <motion.div
+                key={id}
+                className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors ${
+                  i < Math.min(useFavoritesStore.getState().favorites.length, 5) - 1 ? 'border-b border-stone-50 dark:border-stone-800' : ''
+                }`}
+                onClick={() => navigate(`/restaurant/${id}`)}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 + i * 0.03 }}
+              >
+                <div className="w-8 h-8 rounded-full bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-rose-400" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-stone-800 dark:text-stone-200 truncate flex-1">{id.startsWith('osm-') ? `Restaurant ${id.slice(4, 12)}...` : id.slice(0, 8) + '...'}</span>
+              </motion.div>
             ))}
           </div>
         </div>

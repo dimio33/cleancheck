@@ -6,6 +6,7 @@ import ScoreGauge from '../components/ui/ScoreGauge';
 import QRCodeModal from '../components/ui/QRCodeModal';
 import { getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
+import { useFavoritesStore } from '../stores/favoritesStore';
 import { useToastStore } from '../components/ui/Toast';
 import api from '../services/api';
 
@@ -164,6 +165,15 @@ export default function RestaurantDetail() {
           </div>
           <div className="flex gap-2 ml-2">
             <button
+              onClick={() => useFavoritesStore.getState().toggleFavorite(baseRestaurant.id)}
+              className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
+              aria-label="Favorite"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill={useFavoritesStore.getState().isFavorite(baseRestaurant.id) ? 'white' : 'none'} stroke="currentColor" strokeWidth={2}>
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+            </button>
+            <button
               onClick={handleShare}
               className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
               title={t('share.title')}
@@ -301,8 +311,8 @@ export default function RestaurantDetail() {
                 transition={{ delay: 0.05 + i * 0.04, duration: 0.25 }}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-500 dark:text-stone-400 text-xs font-medium">
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-500 dark:text-stone-400 text-xs font-medium shrink-0">
                       {(rating.username || '?').charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -320,14 +330,29 @@ export default function RestaurantDetail() {
                       </span>
                     </div>
                   </div>
-                  <div
-                    className="px-2.5 py-1 rounded-full text-xs font-semibold"
-                    style={{
-                      backgroundColor: `${getScoreColor(rating.overall_score)}12`,
-                      color: getScoreColor(rating.overall_score),
-                    }}
-                  >
-                    {Number(rating.overall_score).toFixed(1)}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div
+                      className="px-2.5 py-1 rounded-full text-xs font-semibold"
+                      style={{
+                        backgroundColor: `${getScoreColor(rating.overall_score)}12`,
+                        color: getScoreColor(rating.overall_score),
+                      }}
+                    >
+                      {Number(rating.overall_score).toFixed(1)}
+                    </div>
+                    <button
+                      onClick={() => {
+                        api.post(`/ratings/${rating.id}/report`, { reason: 'spam' })
+                          .then(() => addToast(t('report.thanks'), 'success'))
+                          .catch((err) => addToast(err.response?.data?.error || t('common.error'), 'error'));
+                      }}
+                      className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                      aria-label="Report"
+                    >
+                      <svg className="w-3.5 h-3.5 text-stone-300 dark:text-stone-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
                 {rating.comment && (

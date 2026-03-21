@@ -100,6 +100,10 @@
     "thankYou": "Danke für deine Bewertung!",
     "badgeEarned": "Abzeichen verdient!",
     "overall": "Gesamt",
+    "uploading": "Foto wird hochgeladen...",
+    "photoAdded": "Foto hinzugefügt",
+    "photoUploadFailed": "Foto konnte nicht hochgeladen werden",
+    "savedOffline": "Bewertung offline gespeichert. Wird gesendet sobald du online bist.",
     "submitFailed": "Bewertung konnte nicht gesendet werden",
     "alreadyRated": "Du hast dieses Restaurant heute bereits bewertet"
   },
@@ -117,6 +121,7 @@
     "themeLight": "Hell",
     "themeDark": "Dunkel",
     "themeSystem": "System",
+    "saved": "Gespeichert",
     "logout": "Abmelden",
     "loginPrompt": "Melde dich an, um deine Bewertungen zu speichern",
     "login": "Anmelden",
@@ -210,6 +215,14 @@
     "scanToRate": "Scannen, um die Sauberkeit zu bewerten!",
     "download": "Herunterladen",
     "print": "Drucken"
+  },
+  "report": {
+    "title": "Bewertung melden",
+    "spam": "Spam",
+    "offensive": "Beleidigung",
+    "incorrect": "Falsche Info",
+    "other": "Sonstiges",
+    "thanks": "Danke für die Meldung!"
   },
   "common": {
     "back": "Zurück",

@@ -354,4 +354,55 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response): Pro
   }
 });
 
+// POST /api/ratings/:id/report — report a rating
+router.post('/:id/report', optionalAuth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    const { reason, details } = req.body;
+
+    if (!reason || !['spam', 'offensive', 'incorrect', 'other'].includes(reason)) {
+      res.status(400).json({ error: 'Valid reason required: spam, offensive, incorrect, or other' });
+      return;
+    }
+
+    // Check rating exists
+    const ratingCheck = await query(`SELECT id FROM ratings WHERE id = $1`, [id]);
+    if (ratingCheck.rows.length === 0) {
+      res.status(404).json({ error: 'Rating not found' });
+      return;
+    }
+
+    // Rate limit: max 5 reports per IP per day
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    const reportCount = await query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM rating_reports WHERE reporter_ip = $1 AND created_at > NOW() - INTERVAL '24 hours'`,
+      [ip]
+    );
+    if (parseInt(reportCount.rows[0].count, 10) >= 5) {
+      res.status(429).json({ error: 'Too many reports. Please try again later.' });
+      return;
+    }
+
+    // Check duplicate report
+    const dupCheck = await query(
+      `SELECT id FROM rating_reports WHERE rating_id = $1 AND reporter_ip = $2`,
+      [id, ip]
+    );
+    if (dupCheck.rows.length > 0) {
+      res.status(409).json({ error: 'You already reported this rating' });
+      return;
+    }
+
+    await query(
+      `INSERT INTO rating_reports (rating_id, reporter_ip, reason, details) VALUES ($1, $2, $3, $4)`,
+      [id, ip, reason, (details && typeof details === 'string') ? details.slice(0, 500) : null]
+    );
+
+    res.status(201).json({ message: 'Report submitted' });
+  } catch (err) {
+    console.error('Report rating error:', err);
+    res.status(500).json({ error: 'Failed to report rating' });
+  }
+});
+
 export default router;

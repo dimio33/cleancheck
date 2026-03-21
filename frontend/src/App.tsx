@@ -9,14 +9,33 @@ import OfflineBanner from './components/ui/OfflineBanner';
 import LocationDeniedBanner from './components/ui/LocationDeniedBanner';
 import PWAUpdatePrompt from './components/ui/PWAUpdatePrompt';
 import { useThemeStore } from './stores/themeStore';
+import { useDraftStore } from './stores/draftStore';
+import { useToastStore } from './components/ui/Toast';
 import './App.css';
 
 function App() {
   const initTheme = useThemeStore((s) => s.init);
+  const addToast = useToastStore((s) => s.addToast);
 
   useEffect(() => {
     initTheme();
-  }, [initTheme]);
+
+    // Sync offline drafts when coming back online
+    const handleOnline = async () => {
+      const synced = await useDraftStore.getState().syncDrafts();
+      if (synced > 0) {
+        addToast(`${synced} offline rating(s) synced!`, 'success');
+      }
+    };
+    window.addEventListener('online', handleOnline);
+
+    // Also try syncing on app start
+    if (navigator.onLine && useDraftStore.getState().drafts.length > 0) {
+      handleOnline();
+    }
+
+    return () => window.removeEventListener('online', handleOnline);
+  }, [initTheme, addToast]);
 
   return (
     <BrowserRouter>
