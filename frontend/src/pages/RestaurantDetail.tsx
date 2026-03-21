@@ -42,45 +42,64 @@ export default function RestaurantDetail() {
 
   const [apiRatings, setApiRatings] = useState<any[]>([]);
   const [apiRestaurant, setApiRestaurant] = useState<any>(null);
+  const [apiLoading, setApiLoading] = useState(true);
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      if (id.startsWith('osm-')) {
-        const storeRestaurant = useRestaurantStore.getState().getById(id);
-        if (storeRestaurant) {
-          api.get(`/restaurants?lat=${storeRestaurant.lat}&lng=${storeRestaurant.lng}&radius=0.05`)
-            .then(({ data }) => {
-              const match = data.restaurants?.find((r: any) => {
-                const osmId = parseInt(id.replace('osm-', ''), 10);
-                return r.osm_id === osmId;
-              });
-              if (match) return api.get(`/restaurants/${match.id}`);
-              return null;
-            })
-            .then((res) => {
-              if (res?.data) {
-                setApiRatings(res.data.ratings || []);
-                if (res.data.restaurant) setApiRestaurant(res.data.restaurant);
-              }
-            })
-            .catch(() => {});
-        }
-      } else {
-        api.get(`/restaurants/${id}`)
+    if (!id) return;
+    setApiLoading(true);
+
+    if (id.startsWith('osm-')) {
+      const storeRestaurant = useRestaurantStore.getState().getById(id);
+      if (storeRestaurant) {
+        api.get(`/restaurants?lat=${storeRestaurant.lat}&lng=${storeRestaurant.lng}&radius=0.05`)
           .then(({ data }) => {
-            setApiRatings(data.ratings || []);
-            if (data.restaurant) setApiRestaurant(data.restaurant);
+            const match = data.restaurants?.find((r: any) => {
+              const osmId = parseInt(id.replace('osm-', ''), 10);
+              return r.osm_id === osmId;
+            });
+            if (match) return api.get(`/restaurants/${match.id}`);
+            return null;
           })
-          .catch(() => {});
+          .then((res) => {
+            if (res?.data) {
+              setApiRatings(res.data.ratings || []);
+              if (res.data.restaurant) setApiRestaurant(res.data.restaurant);
+            }
+          })
+          .catch(() => {})
+          .finally(() => setApiLoading(false));
+      } else {
+        setApiLoading(false);
       }
+    } else {
+      // UUID from DB (e.g. from Trending page)
+      api.get(`/restaurants/${id}`)
+        .then(({ data }) => {
+          setApiRatings(data.ratings || []);
+          if (data.restaurant) setApiRestaurant(data.restaurant);
+        })
+        .catch(() => {})
+        .finally(() => setApiLoading(false));
     }
   }, [id]);
 
   const ratings = apiRatings;
 
-  if (!restaurant) {
+  // Build display data: prefer store restaurant, fall back to API restaurant (for Trending/QR links)
+  const baseRestaurant = restaurant || (apiRestaurant ? {
+    id: apiRestaurant.id,
+    name: apiRestaurant.name,
+    lat: parseFloat(apiRestaurant.lat),
+    lng: parseFloat(apiRestaurant.lng),
+    address: apiRestaurant.address,
+    cuisine: apiRestaurant.cuisine_type,
+    clean_score: parseFloat(apiRestaurant.clean_score) || null,
+    rating_count: apiRestaurant.total_ratings || 0,
+  } : null) as (typeof restaurant) | null;
+
+  if (!baseRestaurant && !apiLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <p className="text-stone-400 dark:text-stone-500 text-sm">{t('restaurant.notFound')}</p>
@@ -88,15 +107,23 @@ export default function RestaurantDetail() {
     );
   }
 
+  if (!baseRestaurant) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   const displayRestaurant = apiRestaurant
-    ? { ...restaurant, clean_score: parseFloat(apiRestaurant.clean_score), rating_count: apiRestaurant.total_ratings }
-    : restaurant;
+    ? { ...baseRestaurant, clean_score: parseFloat(apiRestaurant.clean_score), rating_count: apiRestaurant.total_ratings }
+    : baseRestaurant;
 
   const kitchen = getKitchenConfidence(displayRestaurant.clean_score);
   const dbId = apiRestaurant?.id || (id && !id.startsWith('osm-') ? id : null);
 
   const handleShare = async () => {
-    const text = `${restaurant.name} — CleanScore: ${displayRestaurant.clean_score?.toFixed(1) || '?'}/10`;
+    const text = `${baseRestaurant.name} — CleanScore: ${displayRestaurant.clean_score?.toFixed(1) || '?'}/10`;
     const url = window.location.href;
 
     if (navigator.share) {
@@ -117,13 +144,13 @@ export default function RestaurantDetail() {
       <div className="bg-gradient-to-b from-teal-500 to-teal-600 px-6 pt-5 pb-10 rounded-b-3xl text-white">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold">{restaurant.name}</h1>
-            {restaurant.address && (
-              <p className="text-teal-100 text-sm mt-1">{restaurant.address}</p>
+            <h1 className="text-2xl font-semibold">{baseRestaurant.name}</h1>
+            {baseRestaurant.address && (
+              <p className="text-teal-100 text-sm mt-1">{baseRestaurant.address}</p>
             )}
-            {restaurant.cuisine && (
+            {baseRestaurant.cuisine && (
               <span className="inline-block mt-2.5 px-3 py-1 bg-white/20 rounded-full text-xs font-medium">
-                {restaurant.cuisine}
+                {baseRestaurant.cuisine}
               </span>
             )}
           </div>
@@ -177,11 +204,11 @@ export default function RestaurantDetail() {
       </div>
 
       {/* Criteria bars */}
-      {restaurant.criteria_averages && (
+      {baseRestaurant.criteria_averages && (
         <div className="px-4 mt-3">
           <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none p-5">
             {CRITERIA_KEYS.map((key, i) => {
-              const value = restaurant.criteria_averages![key];
+              const value = baseRestaurant.criteria_averages![key];
               const percent = (value / 5) * 100;
               const color = getScoreColor(value * 2);
               return (
@@ -218,7 +245,7 @@ export default function RestaurantDetail() {
       {/* Sticky CTA */}
       <div className="fixed bottom-20 left-0 right-0 px-4 z-30 max-w-lg mx-auto">
         <motion.button
-          onClick={() => navigate('/rate', { state: { restaurantId: restaurant.id } })}
+          onClick={() => navigate('/rate', { state: { restaurantId: baseRestaurant.id } })}
           className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-semibold shadow-lg shadow-teal-500/30 active:scale-[0.98] transition-transform text-base"
           whileTap={{ scale: 0.98 }}
           initial={{ y: 20, opacity: 0 }}
@@ -337,7 +364,7 @@ export default function RestaurantDetail() {
           isOpen={showQR}
           onClose={() => setShowQR(false)}
           restaurantId={dbId}
-          restaurantName={restaurant.name}
+          restaurantName={baseRestaurant.name}
         />
       )}
     </div>
