@@ -7,7 +7,8 @@
     "home": "Map",
     "search": "Search",
     "rate": "Rate",
-    "profile": "Profile"
+    "profile": "Profile",
+    "trending": "Trending"
   },
   "splash": {
     "skip": "Skip",
@@ -36,7 +37,9 @@
     "away": "away",
     "range": "Range",
     "restaurantCount": "{{count}} restaurants",
-    "sortBy": "Sort by"
+    "sortBy": "Sort by",
+    "searchCity": "Search city or place...",
+    "myLocation": "My Location"
   },
   "search": {
     "placeholder": "Search restaurants...",
@@ -62,7 +65,8 @@
     "reviews": "Reviews",
     "noReviews": "No reviews yet. Be the first!",
     "photos": "Photos",
-    "notFound": "Restaurant not found"
+    "notFound": "Restaurant not found",
+    "anonymous": "Anonymous"
   },
   "rating": {
     "title": "Rate",
@@ -99,6 +103,10 @@
     "history": "Rating History",
     "settings": "Settings",
     "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
     "logout": "Log out",
     "loginPrompt": "Log in to save your ratings",
     "login": "Log in",
@@ -153,6 +161,22 @@
     "checking": "Checking location...",
     "withinRange": "Within range",
     "outOfRange": "Out of range"
+  },
+  "trending": {
+    "title": "Trending",
+    "desc": "Most rated restaurants in the last 7 days",
+    "empty": "No trends yet. Rate restaurants to see trends!",
+    "recentRatings": "ratings this week"
+  },
+  "share": {
+    "title": "Share",
+    "copied": "Link copied!"
+  },
+  "qr": {
+    "title": "QR Code",
+    "scanToRate": "Scan to rate the cleanliness!",
+    "download": "Download",
+    "print": "Print"
   },
   "common": {
     "back": "Back",

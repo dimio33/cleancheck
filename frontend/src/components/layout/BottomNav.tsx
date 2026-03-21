@@ -8,10 +8,10 @@ const MapIcon = () => (
   </svg>
 );
 
-const SearchIcon = () => (
+const TrendingIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8"/>
-    <path d="M21 21L16.65 16.65"/>
+    <path d="M13 7L18 2M18 2H13M18 2V7" />
+    <path d="M3 17L9 11L13 15L21 7" />
   </svg>
 );
 
@@ -46,7 +46,7 @@ export default function BottomNav() {
     <button
       onClick={() => navigate(path)}
       className={`flex flex-col items-center justify-center flex-1 py-2 transition-colors ${
-        isActive(path) ? 'text-teal-600' : 'text-stone-400'
+        isActive(path) ? 'text-teal-600' : 'text-stone-400 dark:text-stone-500'
       }`}
     >
       {icon}
@@ -56,10 +56,10 @@ export default function BottomNav() {
   );
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-stone-100 pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-stone-950 border-t border-stone-100 dark:border-stone-800 pb-safe">
       <div className="flex items-center h-16 max-w-lg mx-auto px-2">
         <Tab path="/" icon={<MapIcon />} label={t('nav.home')} />
-        <Tab path="/search" icon={<SearchIcon />} label={t('nav.search')} />
+        <Tab path="/trending" icon={<TrendingIcon />} label={t('nav.trending')} />
 
         <div className="flex items-center justify-center flex-1">
           <button

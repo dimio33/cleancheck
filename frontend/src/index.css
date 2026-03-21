@@ -33,6 +33,16 @@ body {
   color: #1C1917;
 }
 
+/* Dark mode */
+.dark body {
+  background-color: #0c0a09;
+  color: #e7e5e4;
+}
+
+.dark .bg-white {
+  background-color: #1c1917;
+}
+
 #root {
   display: flex;
   flex-direction: column;
@@ -50,6 +60,10 @@ body {
   border-radius: 2px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #44403c;
+}
+
 /* Custom range slider - elegant thin design */
 input[type="range"] {
   -webkit-appearance: none;
@@ -59,6 +73,10 @@ input[type="range"] {
   background: #E7E5E4;
   border-radius: 2px;
   outline: none;
+}
+
+.dark input[type="range"] {
+  background: #44403c;
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -100,6 +118,10 @@ input[type="range"]::-moz-range-thumb {
   filter: saturate(0.8) brightness(1.03) contrast(0.95);
 }
 
+.dark .leaflet-tile-pane {
+  filter: saturate(0.6) brightness(0.75) contrast(1.1) invert(1) hue-rotate(180deg);
+}
+
 .leaflet-control-zoom {
   display: none;
 }
@@ -113,4 +135,10 @@ input[type="range"]::-moz-range-thumb {
 /* Safe area insets for PWA */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Print styles for QR Code */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; }
 }

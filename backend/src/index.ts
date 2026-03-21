@@ -8,6 +8,7 @@ import authRoutes from './routes/auth';
 import restaurantRoutes from './routes/restaurants';
 import ratingRoutes from './routes/ratings';
 import userRoutes from './routes/users';
+import qrRoutes from './routes/qr';
 import { initModeration } from './services/moderationService';
 import { apiLimiter, authLimiter, ratingLimiter } from './middleware/rateLimiter';
 
@@ -54,6 +55,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/ratings', ratingRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/qr', qrRoutes);
 
 // Health check
 app.get('/api/health', (_req: Request, res: Response) => {

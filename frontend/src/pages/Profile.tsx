@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../stores/authStore';
+import { useThemeStore } from '../stores/themeStore';
 import BadgeCard from '../components/ui/BadgeCard';
 import { getScoreColor } from '../utils/geo';
 import api from '../services/api';
@@ -62,9 +63,23 @@ export default function Profile() {
     );
   }
 
+  const { mode: themeMode, setMode: setThemeMode } = useThemeStore();
+
   const toggleLanguage = () => {
     const next = i18n.language.startsWith('de') ? 'en' : 'de';
     i18n.changeLanguage(next);
+  };
+
+  const cycleTheme = () => {
+    const modes: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system'];
+    const idx = modes.indexOf(themeMode);
+    setThemeMode(modes[(idx + 1) % modes.length]);
+  };
+
+  const themeLabels: Record<string, string> = {
+    light: t('profile.themeLight'),
+    dark: t('profile.themeDark'),
+    system: t('profile.themeSystem'),
   };
 
   return (
@@ -179,12 +194,20 @@ export default function Profile() {
         <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 overflow-hidden">
           <button
             onClick={toggleLanguage}
-            className="flex items-center justify-between w-full p-4 hover:bg-stone-50 transition-colors"
+            className="flex items-center justify-between w-full p-4 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
           >
-            <span className="text-sm text-stone-700">{t('profile.language')}</span>
+            <span className="text-sm text-stone-700 dark:text-stone-300">{t('profile.language')}</span>
             <span className="text-sm text-teal-600 font-medium">
               {i18n.language.startsWith('de') ? 'Deutsch' : 'English'}
             </span>
+          </button>
+          <div className="h-px bg-stone-50 dark:bg-stone-800" />
+          <button
+            onClick={cycleTheme}
+            className="flex items-center justify-between w-full p-4 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+          >
+            <span className="text-sm text-stone-700 dark:text-stone-300">{t('profile.theme')}</span>
+            <span className="text-sm text-teal-600 font-medium">{themeLabels[themeMode]}</span>
           </button>
           {isAuthenticated && (
             <>

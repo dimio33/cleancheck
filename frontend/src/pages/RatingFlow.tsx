@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,6 +48,13 @@ export default function RatingFlow() {
   });
   const [comment, setComment] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+  const loadedAtRef = useRef(Date.now());
+
+  // Reset loaded_at timestamp when component mounts
+  useEffect(() => {
+    loadedAtRef.current = Date.now();
+  }, []);
 
   // Geo-verification state
   const [geoChecking, setGeoChecking] = useState(false);
@@ -176,6 +183,8 @@ export default function RatingFlow() {
         condition: scores.maintenance,
         accessibility: scores.accessibility,
         comment: comment || undefined,
+        _website: honeypot || undefined,
+        _loaded_at: loadedAtRef.current,
       }, {
         headers: {
           'X-User-Lat': String(lat),
@@ -404,6 +413,18 @@ export default function RatingFlow() {
                 className="hidden"
               />
             </label>
+
+            {/* Honeypot - hidden from humans */}
+            <div style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }}>
+              <input
+                type="text"
+                name="_website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
 
             {/* Comment */}
             <textarea

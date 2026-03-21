@@ -80,7 +80,22 @@ router.post('/verify-location', async (req: Request, res: Response): Promise<voi
 // POST /api/ratings — create rating (anonymous or authenticated, geo-verified)
 router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { restaurant_id, cleanliness, smell, supplies, condition, accessibility, comment, visited_at } = req.body;
+    const { restaurant_id, cleanliness, smell, supplies, condition, accessibility, comment, visited_at, _website, _loaded_at } = req.body;
+
+    // Anti-spam: Honeypot field — bots fill hidden fields, humans don't
+    if (_website) {
+      res.status(201).json({ rating: { id: 'ok' }, restaurant_score: null, new_badges: [] });
+      return;
+    }
+
+    // Anti-spam: Minimum interaction time (5 seconds)
+    if (_loaded_at && typeof _loaded_at === 'number') {
+      const elapsed = Date.now() - _loaded_at;
+      if (elapsed < 5000) {
+        res.status(201).json({ rating: { id: 'ok' }, restaurant_score: null, new_badges: [] });
+        return;
+      }
+    }
 
     if (!restaurant_id || !cleanliness || !smell || !supplies || !condition || !accessibility) {
       res.status(400).json({ error: 'restaurant_id and all rating categories are required' });
@@ -116,6 +131,19 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
     const isAnonymous = !req.user;
     const userId = req.user?.id || null;
     const anonymousId = isAnonymous ? generateAnonymousId(req) : null;
+
+    // Anti-spam: Duplicate comment detection (same anonymous_id + same comment within 24h)
+    if (comment && typeof comment === 'string' && !req.user) {
+      const anonId = generateAnonymousId(req);
+      const dupCommentCheck = await query(
+        `SELECT id FROM ratings WHERE anonymous_id = $1 AND comment = $2 AND created_at > NOW() - INTERVAL '24 hours'`,
+        [anonId, comment]
+      );
+      if (dupCommentCheck.rows.length > 0) {
+        res.status(201).json({ rating: { id: 'ok' }, restaurant_score: null, new_badges: [] });
+        return;
+      }
+    }
 
     // Duplicate rating check — one rating per user/anonymous per restaurant per day
     const visitDate = visited_at || new Date().toISOString().split('T')[0];

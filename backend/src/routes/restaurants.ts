@@ -52,10 +52,37 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// GET /api/restaurants/trending — top restaurants by rating count last 7 days
+router.get('/trending', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const result = await query(
+      `SELECT rest.*, COUNT(r.id) as recent_ratings,
+        ROUND(AVG(r.overall_score)::numeric, 1) as recent_avg_score
+       FROM restaurants rest
+       JOIN ratings r ON r.restaurant_id = rest.id
+       WHERE r.created_at > NOW() - INTERVAL '7 days'
+       GROUP BY rest.id
+       ORDER BY COUNT(r.id) DESC, AVG(r.overall_score) DESC
+       LIMIT 20`
+    );
+    res.json({ restaurants: result.rows });
+  } catch (err) {
+    console.error('Get trending error:', err);
+    res.status(500).json({ error: 'Failed to get trending restaurants' });
+  }
+});
+
 // GET /api/restaurants/:id — full restaurant details
 router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      res.status(400).json({ error: 'Invalid restaurant ID format' });
+      return;
+    }
 
     const restaurantResult = await query(
       `SELECT * FROM restaurants WHERE id = $1`,
@@ -70,29 +97,37 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
     const ratingsResult = await query(
       `SELECT r.*, u.username, u.avatar_url
        FROM ratings r
-       JOIN users u ON r.user_id = u.id
+       LEFT JOIN users u ON r.user_id = u.id
        WHERE r.restaurant_id = $1
        ORDER BY r.created_at DESC
        LIMIT 20`,
       [id]
     );
 
-    // Get photos for these ratings
+    // Get photos grouped by rating
     const ratingIds = ratingsResult.rows.map((r) => r.id);
-    let photos: Record<string, unknown>[] = [];
+    const photosMap: Record<string, { id: string; photo_url: string }[]> = {};
 
     if (ratingIds.length > 0) {
       const photosResult = await query(
-        `SELECT * FROM rating_photos WHERE rating_id = ANY($1)`,
+        `SELECT id, rating_id, url as photo_url FROM rating_photos WHERE rating_id = ANY($1)`,
         [ratingIds]
       );
-      photos = photosResult.rows;
+      for (const photo of photosResult.rows) {
+        const rid = (photo as Record<string, string>).rating_id;
+        if (!photosMap[rid]) photosMap[rid] = [];
+        photosMap[rid].push({ id: (photo as Record<string, string>).id, photo_url: (photo as Record<string, string>).photo_url });
+      }
     }
+
+    const ratingsWithPhotos = ratingsResult.rows.map((r) => ({
+      ...r,
+      photos: photosMap[r.id] || [],
+    }));
 
     res.json({
       restaurant: restaurantResult.rows[0],
-      ratings: ratingsResult.rows,
-      photos,
+      ratings: ratingsWithPhotos,
     });
   } catch (err) {
     console.error('Get restaurant error:', err);

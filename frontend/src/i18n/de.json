@@ -7,7 +7,8 @@
     "home": "Karte",
     "search": "Suche",
     "rate": "Bewerten",
-    "profile": "Profil"
+    "profile": "Profil",
+    "trending": "Trends"
   },
   "splash": {
     "skip": "Überspringen",
@@ -36,7 +37,9 @@
     "away": "entfernt",
     "range": "Umkreis",
     "restaurantCount": "{{count}} Restaurants",
-    "sortBy": "Sortieren"
+    "sortBy": "Sortieren",
+    "searchCity": "Stadt oder Ort suchen...",
+    "myLocation": "Mein Standort"
   },
   "search": {
     "placeholder": "Restaurant suchen...",
@@ -62,7 +65,8 @@
     "reviews": "Bewertungen",
     "noReviews": "Noch keine Bewertungen. Sei der Erste!",
     "photos": "Fotos",
-    "notFound": "Restaurant nicht gefunden"
+    "notFound": "Restaurant nicht gefunden",
+    "anonymous": "Anonym"
   },
   "rating": {
     "title": "Bewertung abgeben",
@@ -99,6 +103,10 @@
     "history": "Bewertungsverlauf",
     "settings": "Einstellungen",
     "language": "Sprache",
+    "theme": "Design",
+    "themeLight": "Hell",
+    "themeDark": "Dunkel",
+    "themeSystem": "System",
     "logout": "Abmelden",
     "loginPrompt": "Melde dich an, um deine Bewertungen zu speichern",
     "login": "Anmelden",
@@ -153,6 +161,22 @@
     "checking": "Standort wird geprüft...",
     "withinRange": "In Reichweite",
     "outOfRange": "Außer Reichweite"
+  },
+  "trending": {
+    "title": "Trending",
+    "desc": "Die meistbewerteten Restaurants der letzten 7 Tage",
+    "empty": "Noch keine Trends. Bewerte Restaurants, um Trends zu sehen!",
+    "recentRatings": "Bewertungen diese Woche"
+  },
+  "share": {
+    "title": "Teilen",
+    "copied": "Link kopiert!"
+  },
+  "qr": {
+    "title": "QR-Code",
+    "scanToRate": "Scannen, um die Sauberkeit zu bewerten!",
+    "download": "Herunterladen",
+    "print": "Drucken"
   },
   "common": {
     "back": "Zurück",

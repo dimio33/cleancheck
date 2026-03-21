@@ -31,6 +31,13 @@ router.post('/register', async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
+    // Sanitize username: strip HTML tags to prevent XSS
+    const sanitizedUsername = username.replace(/<[^>]*>/g, '').trim();
+    if (sanitizedUsername.length < 2 || sanitizedUsername.length > 50) {
+      res.status(400).json({ error: 'Username must be between 2 and 50 characters' });
+      return;
+    }
+
     // Check existing
     const existing = await query(
       `SELECT id FROM users WHERE email = $1 OR username = $2`,
@@ -47,7 +54,7 @@ router.post('/register', async (req: AuthRequest, res: Response): Promise<void> 
     const result = await query<{ id: string; username: string; email: string; created_at: Date }>(
       `INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3)
        RETURNING id, username, email, created_at`,
-      [username, email.toLowerCase(), passwordHash]
+      [sanitizedUsername, email.toLowerCase(), passwordHash]
     );
 
     const user = result.rows[0];
