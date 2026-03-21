@@ -162,12 +162,19 @@ export default function RatingFlow() {
         } catch (createErr: any) {
           if (createErr.response?.status === 409) {
             // Restaurant already exists — look it up by searching nearby
-            const { data: searchData } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=0.1`);
-            const existing = searchData.restaurants?.find((r: any) => r.osm_id === osmId);
+            const { data: searchData } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=0.5`);
+            const existing = searchData.restaurants?.find((r: any) => String(r.osm_id) === String(osmId));
             if (existing) {
               restaurantId = existing.id;
             } else {
-              throw createErr;
+              // Couldn't find by search — try wider radius
+              const { data: widerSearch } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=5`);
+              const wider = widerSearch.restaurants?.find((r: any) => String(r.osm_id) === String(osmId));
+              if (wider) {
+                restaurantId = wider.id;
+              } else {
+                throw createErr;
+              }
             }
           } else {
             throw createErr;
