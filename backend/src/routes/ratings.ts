@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import { query, withTransaction } from '../utils/db';
+import { query } from '../utils/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { optionalAuth } from '../middleware/optionalAuth';
 import { calculateOverallScore, recalculateRestaurantScore } from '../services/scoreService';
@@ -170,23 +170,28 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
 
     const overall_score = calculateOverallScore({ cleanliness, smell, supplies, condition, accessibility });
 
-    // Insert rating in transaction
-    const result = await withTransaction(async (client) => {
-      return await client.query(
-        `INSERT INTO ratings (user_id, anonymous_id, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment, visited_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-         RETURNING *`,
-        [userId, anonymousId, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment || null, visitDate]
-      );
-    });
+    // Insert rating
+    const result = await query(
+      `INSERT INTO ratings (user_id, anonymous_id, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment, visited_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING *`,
+      [userId, anonymousId, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment || null, visitDate]
+    );
 
-    // Recalculate score AFTER commit (so it can see the new rating)
+    // Recalculate restaurant score
     const newScore = await recalculateRestaurantScore(restaurant_id);
 
-    // Check for new badges (only for authenticated users)
+    // Update user total_ratings + check badges
     let newBadges: any[] = [];
     if (req.user) {
-      newBadges = await checkAndAwardBadges(req.user.id);
+      const countResult = await query<{ count: string }>(`SELECT COUNT(*) as count FROM ratings WHERE user_id = $1`, [req.user.id]);
+      const ratingCount = parseInt(countResult.rows[0]?.count || '0', 10);
+      await query(`UPDATE users SET total_ratings = $1 WHERE id = $2`, [ratingCount, req.user.id]);
+      try {
+        newBadges = await checkAndAwardBadges(req.user.id);
+      } catch (badgeErr) {
+        console.error('Badge check failed (non-fatal):', badgeErr);
+      }
     }
 
     res.status(201).json({
@@ -344,6 +349,11 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response): Pro
 
     // Recalculate restaurant score
     await recalculateRestaurantScore(restaurantId);
+
+    // Update user total_ratings
+    const countResult = await query<{ count: string }>(`SELECT COUNT(*) as count FROM ratings WHERE user_id = $1`, [req.user.id]);
+    const ratingCount = parseInt(countResult.rows[0]?.count || '0', 10);
+    await query(`UPDATE users SET total_ratings = $1 WHERE id = $2`, [ratingCount, req.user.id]);
 
     res.json({ message: 'Rating deleted' });
   } catch (err) {

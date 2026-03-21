@@ -59,7 +59,7 @@ export async function recalculateRestaurantScore(restaurantId: string): Promise<
       recencyWeight = 0.5;
     }
 
-    const score = parseFloat(row.overall_score);
+    const score = parseFloat(row.overall_score) || 0;
     weightedSum += score * recencyWeight;
     totalWeight += recencyWeight;
   }

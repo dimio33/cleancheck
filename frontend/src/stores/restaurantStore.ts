@@ -58,9 +58,10 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
           const dbRestaurants: Record<string, { clean_score: number; total_ratings: number }> = {};
           for (const r of data.restaurants || []) {
             if (r.osm_id) {
+              const score = Number(r.clean_score);
               dbRestaurants[String(r.osm_id)] = {
-                clean_score: parseFloat(r.clean_score) || 0,
-                total_ratings: r.total_ratings || 0,
+                clean_score: isNaN(score) ? 0 : score,
+                total_ratings: parseInt(String(r.total_ratings), 10) || 0,
               };
             }
           }

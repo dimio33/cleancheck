@@ -47,23 +47,30 @@ export async function checkAndAwardBadges(userId: string): Promise<AwardedBadge[
   const newBadges: AwardedBadge[] = [];
 
   for (const badge of badgesResult.rows) {
-    const { type, threshold } = badge.criteria;
-    const userValue = stats[type] ?? 0;
+    try {
+      if (!badge.criteria || typeof badge.criteria !== 'object') continue;
+      const { type, threshold } = badge.criteria;
+      if (!type || threshold === undefined) continue;
 
-    if (userValue >= threshold) {
-      await query(
-        `INSERT INTO user_badges (user_id, badge_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-        [userId, badge.id]
-      );
+      const userValue = stats[type] ?? 0;
 
-      const badgeInfo = await query<AwardedBadge>(
-        `SELECT slug, name_de, name_en, icon FROM badges WHERE id = $1`,
-        [badge.id]
-      );
+      if (userValue >= threshold) {
+        await query(
+          `INSERT INTO user_badges (user_id, badge_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          [userId, badge.id]
+        );
 
-      if (badgeInfo.rows[0]) {
-        newBadges.push(badgeInfo.rows[0]);
+        const badgeInfo = await query<AwardedBadge>(
+          `SELECT slug, name_de, name_en, icon FROM badges WHERE id = $1`,
+          [badge.id]
+        );
+
+        if (badgeInfo.rows[0]) {
+          newBadges.push(badgeInfo.rows[0]);
+        }
       }
+    } catch (err) {
+      console.error(`Badge check failed for ${badge.slug}:`, err);
     }
   }
 
@@ -119,9 +126,13 @@ async function getUserStreak(userId: string): Promise<number> {
   let streak = 1;
 
   for (let i = 1; i < result.rows.length; i++) {
-    const current = new Date(result.rows[i - 1].visited_at);
-    const previous = new Date(result.rows[i].visited_at);
-    const diffDays = Math.round((current.getTime() - previous.getTime()) / (1000 * 60 * 60 * 24));
+    // Compare date strings directly (YYYY-MM-DD format from pg)
+    const currentDate = result.rows[i - 1].visited_at.split('T')[0];
+    const previousDate = result.rows[i].visited_at.split('T')[0];
+    const current = new Date(currentDate);
+    const previous = new Date(previousDate);
+    const diffMs = current.getTime() - previous.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffDays === 1) {
       streak++;
