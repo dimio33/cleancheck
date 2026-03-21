@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion';
+
 interface CriteriaSliderProps {
   icon: string;
   label: string;
@@ -7,24 +9,30 @@ interface CriteriaSliderProps {
 
 export default function CriteriaSlider({ icon, label, value, onChange }: CriteriaSliderProps) {
   const getValueColor = (v: number) => {
-    if (v >= 4) return { bg: 'bg-emerald-50', text: 'text-emerald-600', track: '#10B981' };
-    if (v >= 3) return { bg: 'bg-amber-50', text: 'text-amber-600', track: '#F59E0B' };
-    return { bg: 'bg-rose-50', text: 'text-rose-600', track: '#F43F5E' };
+    if (v >= 4) return { bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600', track: '#10B981' };
+    if (v >= 3) return { bg: 'bg-amber-50 dark:bg-amber-900/30', text: 'text-amber-600', track: '#F59E0B' };
+    return { bg: 'bg-rose-50 dark:bg-rose-900/30', text: 'text-rose-600', track: '#F43F5E' };
   };
 
   const colors = getValueColor(value);
   const percentage = ((value - 1) / 4) * 100;
 
   return (
-    <div className="py-4 border-b border-stone-50 last:border-0">
+    <div className="py-4 border-b border-stone-50 dark:border-stone-800 last:border-0">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <span className="text-lg">{icon}</span>
-          <span className="text-sm font-medium text-stone-700">{label}</span>
+          <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{label}</span>
         </div>
-        <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center`}>
+        <motion.div
+          className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center`}
+          key={value}
+          initial={{ scale: 1.3 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+        >
           <span className={`text-sm font-semibold ${colors.text}`}>{value}</span>
-        </div>
+        </motion.div>
       </div>
       <input
         type="range"

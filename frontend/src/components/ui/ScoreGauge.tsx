@@ -1,4 +1,6 @@
-import { motion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
+import { useAnimatedNumber } from '../../hooks/useAnimatedNumber';
 
 interface ScoreGaugeProps {
   score: number | null;
@@ -23,6 +25,11 @@ export default function ScoreGauge({
   const circumference = 2 * Math.PI * radius;
   const progress = score !== null ? (score / 10) * circumference : 0;
 
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-50px' });
+
+  const animatedScore = useAnimatedNumber(isInView && score !== null ? score : 0, 1.2);
+
   const getGradientId = () => {
     if (score === null) return 'gray';
     if (score >= 8) return 'good';
@@ -30,12 +37,11 @@ export default function ScoreGauge({
     return 'bad';
   };
 
-  // Scale font sizes proportionally
   const fontSize = d * 0.28;
   const subFontSize = d * 0.11;
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center" ref={ref}>
       <div className="relative" style={{ width: d, height: d }}>
         <svg width={d} height={d} className="-rotate-90">
           <defs>
@@ -52,7 +58,6 @@ export default function ScoreGauge({
               <stop offset="100%" stopColor="#FB7185" />
             </linearGradient>
           </defs>
-          {/* Background circle */}
           <circle
             cx={d / 2}
             cy={d / 2}
@@ -61,7 +66,6 @@ export default function ScoreGauge({
             stroke="#F5F5F4"
             strokeWidth={sw}
           />
-          {/* Score arc */}
           {score !== null && (
             <motion.circle
               cx={d / 2}
@@ -72,26 +76,29 @@ export default function ScoreGauge({
               strokeWidth={sw}
               strokeLinecap="round"
               strokeDasharray={circumference}
-              initial={animated ? { strokeDashoffset: circumference } : { strokeDashoffset: circumference - progress }}
-              animate={{ strokeDashoffset: circumference - progress }}
-              transition={{ duration: 1, ease: 'easeOut' }}
+              initial={{ strokeDashoffset: circumference }}
+              animate={isInView && animated ? { strokeDashoffset: circumference - progress } : { strokeDashoffset: circumference }}
+              transition={{ duration: 1.2, ease: 'easeOut', delay: 0.2 }}
             />
           )}
         </svg>
         {showLabel && (
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span
-              className="font-light tracking-tight text-stone-800"
-              style={{ fontSize }}
-            >
-              {score !== null ? score.toFixed(1) : '\u2014'}
-            </span>
-            {score !== null && (
-              <span
-                className="font-light text-stone-400"
-                style={{ fontSize: subFontSize }}
-              >
-                /10
+            {score !== null ? (
+              <>
+                <motion.span
+                  className="font-light tracking-tight text-stone-800 dark:text-stone-200"
+                  style={{ fontSize }}
+                >
+                  {animatedScore}
+                </motion.span>
+                <span className="font-light text-stone-400" style={{ fontSize: subFontSize }}>
+                  /10
+                </span>
+              </>
+            ) : (
+              <span className="font-light tracking-tight text-stone-400" style={{ fontSize }}>
+                {'\u2014'}
               </span>
             )}
           </div>

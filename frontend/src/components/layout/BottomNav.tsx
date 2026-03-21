@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 
 const MapIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -42,20 +43,31 @@ export default function BottomNav() {
     return location.pathname.startsWith(path);
   };
 
-  const Tab = ({ path, icon, label }: { path: string; icon: React.ReactNode; label: string }) => (
-    <button
-      onClick={() => navigate(path)}
-      aria-label={label}
-      aria-current={isActive(path) ? 'page' : undefined}
-      className={`flex flex-col items-center justify-center flex-1 py-2 transition-colors ${
-        isActive(path) ? 'text-teal-600' : 'text-stone-400 dark:text-stone-500'
-      }`}
-    >
-      {icon}
-      <span className="text-[10px] font-medium mt-0.5">{label}</span>
-      {isActive(path) && <div className="w-1 h-1 rounded-full bg-teal-500 mt-0.5" />}
-    </button>
-  );
+  const Tab = ({ path, icon, label }: { path: string; icon: React.ReactNode; label: string }) => {
+    const active = isActive(path);
+    return (
+      <button
+        onClick={() => navigate(path)}
+        aria-label={label}
+        aria-current={active ? 'page' : undefined}
+        className={`flex flex-col items-center justify-center flex-1 py-2 transition-colors relative ${
+          active ? 'text-teal-600' : 'text-stone-400 dark:text-stone-500'
+        }`}
+      >
+        <motion.div animate={{ scale: active ? 1.15 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+          {icon}
+        </motion.div>
+        <span className="text-[10px] font-medium mt-0.5">{label}</span>
+        {active && (
+          <motion.div
+            className="w-1 h-1 rounded-full bg-teal-500 mt-0.5"
+            layoutId="nav-indicator"
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          />
+        )}
+      </button>
+    );
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-stone-900 border-t border-stone-100 dark:border-stone-800 pb-safe">

@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+// motion used for heart bounce animation
 import type { Restaurant } from '../../types';
 import { getScoreLabel, formatDistance } from '../../utils/geo';
 import { useFavoritesStore } from '../../stores/favoritesStore';
@@ -83,15 +84,24 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
       </div>
 
       {/* Favorite heart */}
-      <button
+      <motion.button
         onClick={(e) => { e.stopPropagation(); useFavoritesStore.getState().toggleFavorite(restaurant.id); }}
         className="flex-shrink-0 w-8 h-8 flex items-center justify-center"
         aria-label="Favorite"
+        whileTap={{ scale: 1.4 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 15 }}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill={useFavoritesStore.getState().isFavorite(restaurant.id) ? '#F43F5E' : 'none'} stroke={useFavoritesStore.getState().isFavorite(restaurant.id) ? '#F43F5E' : '#D6D3D1'} strokeWidth="2">
+        <motion.svg
+          width="16" height="16" viewBox="0 0 24 24"
+          fill={useFavoritesStore.getState().isFavorite(restaurant.id) ? '#F43F5E' : 'none'}
+          stroke={useFavoritesStore.getState().isFavorite(restaurant.id) ? '#F43F5E' : '#D6D3D1'}
+          strokeWidth="2"
+          animate={{ scale: useFavoritesStore.getState().isFavorite(restaurant.id) ? [1, 1.3, 1] : 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
-      </button>
+        </motion.svg>
+      </motion.button>
     </motion.button>
   );
 }

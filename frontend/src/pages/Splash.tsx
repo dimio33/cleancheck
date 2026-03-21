@@ -135,12 +135,21 @@ export default function Splash() {
         </div>
       )}
 
-      {/* Slides */}
-      <div className="flex-1 overflow-hidden">
+      {/* Slides — swipeable */}
+      <motion.div
+        className="flex-1 overflow-hidden touch-pan-y"
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.3}
+        onDragEnd={(_e, info) => {
+          if (info.offset.x < -60 && step < 2) setStep((s) => s + 1);
+          if (info.offset.x > 60 && step > 0) setStep((s) => s - 1);
+        }}
+      >
         <AnimatePresence mode="wait">
           {slides[step]}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       {/* Dots + Next */}
       <div className="flex flex-col items-center gap-5 pb-12 px-8">
@@ -149,10 +158,12 @@ export default function Splash() {
           {[0, 1, 2].map((i) => (
             <motion.div
               key={i}
-              className={`rounded-full transition-all duration-300 ${
-                i === step ? 'bg-teal-500 w-1.5 h-1.5' : 'bg-stone-200 w-1.5 h-1.5'
-              }`}
-              layout
+              className="rounded-full h-1.5"
+              animate={{
+                width: i === step ? 24 : 6,
+                backgroundColor: i === step ? '#14B8A6' : '#D6D3D1',
+              }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             />
           ))}
         </div>
