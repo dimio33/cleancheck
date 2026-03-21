@@ -9,7 +9,70 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import { getDistance, getScoreColor, getScoreLabel } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import RestaurantCard from '../components/ui/RestaurantCard';
+import api from '../services/api';
 import 'leaflet/dist/leaflet.css';
+
+/** Inline trending list for discovery mode (no location) */
+function TrendingInline() {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const [items, setItems] = useState<{ id: string; name: string; clean_score: string | null; recent_ratings: string; city: string | null }[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    api.get('/restaurants/trending')
+      .then(({ data }) => setItems(data.restaurants || []))
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, []);
+
+  if (!loaded) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <span className="text-3xl block mb-2">📊</span>
+        <p className="text-sm text-stone-400">{t('trending.empty')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {items.map((r, i) => {
+        const score = r.clean_score ? parseFloat(r.clean_score) : null;
+        const color = getScoreColor(score);
+        return (
+          <motion.button
+            key={r.id}
+            className="flex items-center gap-3 p-3.5 bg-white dark:bg-stone-900 rounded-2xl shadow-sm w-full text-left active:scale-[0.98] transition-transform"
+            onClick={() => navigate(`/restaurant/${r.id}`)}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-semibold text-sm"
+              style={{ backgroundColor: `${color}15`, color }}
+            >
+              {score !== null ? score.toFixed(1) : '—'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="text-sm font-medium text-stone-800 dark:text-stone-200 block truncate">{r.name}</span>
+              <span className="text-xs text-stone-400">{r.city || ''} · {r.recent_ratings} {t('trending.recentRatings')}</span>
+            </div>
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
 
 // Fix default marker icons
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -122,11 +185,14 @@ export default function Home() {
   const effectiveLat = searchOverride?.lat ?? lat;
   const effectiveLng = searchOverride?.lng ?? lng;
 
+  // No location = no map, show discovery mode instead
+  const hasLocation = geo.permissionState === 'granted' || searchOverride !== null;
+
   useEffect(() => {
-    if (!geo.loading) {
+    if (!geo.loading && hasLocation) {
       fetchRestaurants(effectiveLat, effectiveLng);
     }
-  }, [effectiveLat, effectiveLng, radius, geo.loading, fetchRestaurants]);
+  }, [effectiveLat, effectiveLng, radius, geo.loading, hasLocation, fetchRestaurants]);
 
   const restaurantsWithDistance = useMemo(() => {
     const withDist = restaurants.map((r) => ({
@@ -142,6 +208,67 @@ export default function Home() {
 
   const mapZoom = zoomForRadius(radius);
 
+  // ── Discovery Mode (no location) ──
+  if (!hasLocation) {
+    return (
+      <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
+        {/* City Search */}
+        <div className="px-4 pt-4 pb-2">
+          <div className="relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <input
+              type="text"
+              value={citySearch}
+              onChange={(e) => searchCity(e.target.value)}
+              placeholder={t('home.searchCity')}
+              className="w-full pl-9 pr-4 h-11 rounded-xl bg-white dark:bg-stone-900 shadow-sm text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 border border-stone-200/50 dark:border-stone-700"
+            />
+          </div>
+          {cityResults.length > 0 && (
+            <div className="mt-1 bg-white dark:bg-stone-900 rounded-xl shadow-lg border border-stone-200/50 dark:border-stone-700 overflow-hidden">
+              {cityResults.map((r, i) => (
+                <button
+                  key={i}
+                  onClick={() => selectCity(r)}
+                  className="w-full text-left px-3 py-2.5 text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 border-b border-stone-100 dark:border-stone-800 last:border-0 truncate"
+                >
+                  {r.display_name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Enable location hint */}
+        <motion.div
+          className="mx-4 mb-4 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-2xl flex items-center gap-3"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-800 flex items-center justify-center shrink-0">
+            <svg className="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-teal-800 dark:text-teal-200">{t('home.enableLocationHint')}</p>
+            <p className="text-xs text-teal-600 dark:text-teal-400 mt-0.5">{t('home.enableLocationHintDesc')}</p>
+          </div>
+        </motion.div>
+
+        {/* Trending section */}
+        <div className="px-4">
+          <h2 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('trending.title')}</h2>
+          <TrendingInline />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Map Mode (has location) ──
   return (
     <div className="flex-1 relative" style={{ marginBottom: '-64px' }}>
       {/* Map */}

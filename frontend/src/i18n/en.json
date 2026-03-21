@@ -39,7 +39,9 @@
     "restaurantCount": "{{count}} restaurants",
     "sortBy": "Sort by",
     "searchCity": "Search city or place...",
-    "myLocation": "My Location"
+    "myLocation": "My Location",
+    "enableLocationHint": "Enable location for the map",
+    "enableLocationHintDesc": "Enable your location or search for a city to see restaurants."
   },
   "search": {
     "placeholder": "Search restaurants...",

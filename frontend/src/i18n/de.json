@@ -39,7 +39,9 @@
     "restaurantCount": "{{count}} Restaurants",
     "sortBy": "Sortieren",
     "searchCity": "Stadt oder Ort suchen...",
-    "myLocation": "Mein Standort"
+    "myLocation": "Mein Standort",
+    "enableLocationHint": "Standort aktivieren für die Karte",
+    "enableLocationHintDesc": "Aktiviere deinen Standort oder suche nach einer Stadt, um Restaurants zu sehen."
   },
   "search": {
     "placeholder": "Restaurant suchen...",
