@@ -52,7 +52,7 @@ export default function Trending() {
               return (
                 <motion.button
                   key={r.id}
-                  className="flex items-center gap-3 p-4 bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none w-full text-left active:scale-[0.98] transition-transform"
+                  className="flex items-center gap-3 p-4 bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none dark:border dark:border-stone-800 w-full text-left active:scale-[0.98] transition-transform"
                   onClick={() => navigate(`/restaurant/${r.id}`)}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}

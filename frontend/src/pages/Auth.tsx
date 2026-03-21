@@ -28,7 +28,9 @@ export default function Auth() {
       localStorage.setItem('cleancheck_onboarded', 'true');
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Something went wrong');
+      const msg = err.response?.data?.error || 'Something went wrong';
+      setError(msg);
+      setTimeout(() => setError(''), 5000);
     } finally {
       setLoading(false);
     }

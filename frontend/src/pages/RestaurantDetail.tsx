@@ -168,6 +168,7 @@ export default function RestaurantDetail() {
               onClick={() => useFavoritesStore.getState().toggleFavorite(baseRestaurant.id)}
               className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
               aria-label="Favorite"
+              aria-pressed={useFavoritesStore.getState().isFavorite(baseRestaurant.id)}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill={useFavoritesStore.getState().isFavorite(baseRestaurant.id) ? 'white' : 'none'} stroke="currentColor" strokeWidth={2}>
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -346,10 +347,10 @@ export default function RestaurantDetail() {
                           .then(() => addToast(t('report.thanks'), 'success'))
                           .catch((err) => addToast(err.response?.data?.error || t('common.error'), 'error'));
                       }}
-                      className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
-                      aria-label="Report"
+                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                      aria-label="Report review"
                     >
-                      <svg className="w-3.5 h-3.5 text-stone-300 dark:text-stone-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg className="w-4 h-4 text-stone-300 dark:text-stone-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z" />
                       </svg>
                     </button>

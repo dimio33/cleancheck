@@ -132,6 +132,13 @@ input[type="range"]::-moz-range-thumb {
   color: #0F766E;
 }
 
+/* Focus visibility for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #14B8A6;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
 /* Safe area insets for PWA */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);

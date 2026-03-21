@@ -397,7 +397,7 @@ export default function Home() {
 
       {/* Bottom Sheet - Restaurant List */}
       <motion.div
-        className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl shadow-[0_-2px_20px_rgba(0,0,0,0.06)] max-w-lg mx-auto"
+        className="absolute bottom-0 left-0 right-0 z-20 bg-white dark:bg-stone-900 rounded-t-3xl shadow-[0_-2px_20px_rgba(0,0,0,0.06)] dark:shadow-none max-w-lg mx-auto"
         style={{ height: `${sheetHeight * 100}vh` }}
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
@@ -431,7 +431,7 @@ export default function Home() {
             document.addEventListener('touchend', onEnd);
           }}
         >
-          <div className="w-12 h-1.5 bg-stone-300 rounded-full" />
+          <div className="w-12 h-1.5 bg-stone-300 dark:bg-stone-600 rounded-full" />
         </div>
 
         <div className="px-4 pb-2">
@@ -457,7 +457,7 @@ export default function Home() {
             <button
               onClick={() => setSortBy('distance')}
               className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                sortBy === 'distance' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-400'
+                sortBy === 'distance' ? 'bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900' : 'bg-stone-100 dark:bg-stone-800 text-stone-400'
               }`}
             >
               {t('search.distance')}
@@ -465,7 +465,7 @@ export default function Home() {
             <button
               onClick={() => setSortBy('score')}
               className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                sortBy === 'score' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-400'
+                sortBy === 'score' ? 'bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900' : 'bg-stone-100 dark:bg-stone-800 text-stone-400'
               }`}
             >
               Score

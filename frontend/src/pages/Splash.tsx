@@ -28,7 +28,7 @@ export default function Splash() {
     const timer = setTimeout(() => {
       localStorage.setItem('cleancheck_onboarded', 'true');
       navigate('/');
-    }, 5000);
+    }, 3000);
     return () => clearTimeout(timer);
   }, [navigate]);
 

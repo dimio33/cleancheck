@@ -63,7 +63,7 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
         <h3 className="text-sm font-medium text-stone-800 dark:text-stone-200 truncate">{restaurant.name}</h3>
         <div className="flex items-center gap-2 mt-0.5">
           {restaurant.cuisine && (
-            <span className="text-xs bg-stone-100 text-stone-500 rounded-full px-2 py-0.5">
+            <span className="text-xs bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 rounded-full px-2 py-0.5">
               {restaurant.cuisine}
             </span>
           )}

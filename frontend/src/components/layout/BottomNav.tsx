@@ -45,6 +45,8 @@ export default function BottomNav() {
   const Tab = ({ path, icon, label }: { path: string; icon: React.ReactNode; label: string }) => (
     <button
       onClick={() => navigate(path)}
+      aria-label={label}
+      aria-current={isActive(path) ? 'page' : undefined}
       className={`flex flex-col items-center justify-center flex-1 py-2 transition-colors ${
         isActive(path) ? 'text-teal-600' : 'text-stone-400 dark:text-stone-500'
       }`}
