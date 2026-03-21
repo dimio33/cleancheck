@@ -68,7 +68,15 @@
     "noReviews": "Noch keine Bewertungen. Sei der Erste!",
     "photos": "Fotos",
     "notFound": "Restaurant nicht gefunden",
-    "anonymous": "Anonym"
+    "anonymous": "Anonym",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "daysAgo": "Tagen",
+    "sort": {
+      "newest": "Neueste",
+      "highest": "Beste",
+      "lowest": "Schlechteste"
+    }
   },
   "rating": {
     "title": "Bewertung abgeben",

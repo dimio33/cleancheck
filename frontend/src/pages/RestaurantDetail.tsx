@@ -45,6 +45,7 @@ export default function RestaurantDetail() {
   const [apiLoading, setApiLoading] = useState(true);
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
+  const [ratingSort, setRatingSort] = useState<'newest' | 'highest' | 'lowest'>('newest');
 
   useEffect(() => {
     if (!id) return;
@@ -88,7 +89,11 @@ export default function RestaurantDetail() {
     }
   }, [id]);
 
-  const ratings = apiRatings;
+  const ratings = [...apiRatings].sort((a, b) => {
+    if (ratingSort === 'highest') return Number(b.overall_score) - Number(a.overall_score);
+    if (ratingSort === 'lowest') return Number(a.overall_score) - Number(b.overall_score);
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
 
   // Build display data: prefer store restaurant, fall back to API restaurant (for Trending/QR links)
   const baseRestaurant = restaurant || (apiRestaurant ? {
@@ -261,9 +266,26 @@ export default function RestaurantDetail() {
 
       {/* Reviews */}
       <div className="mx-4 mt-6">
-        <h2 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">
-          {t('restaurant.reviews')} ({ratings.length})
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs uppercase tracking-widest text-stone-400 font-medium">
+            {t('restaurant.reviews')} ({ratings.length})
+          </h2>
+          {ratings.length > 1 && (
+            <div className="flex gap-1">
+              {(['newest', 'highest', 'lowest'] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setRatingSort(s)}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+                    ratingSort === s ? 'bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900' : 'bg-stone-100 dark:bg-stone-800 text-stone-400'
+                  }`}
+                >
+                  {t(`restaurant.sort.${s}`)}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         {ratings.length === 0 ? (
           <div className="text-center py-10">
             <p className="text-sm text-stone-400 dark:text-stone-500">{t('restaurant.noReviews')}</p>
@@ -288,7 +310,13 @@ export default function RestaurantDetail() {
                         {rating.username || t('restaurant.anonymous')}
                       </span>
                       <span className="text-[10px] text-stone-400 block">
-                        {new Date(rating.created_at).toLocaleDateString()}
+                        {(() => {
+                          const days = Math.floor((Date.now() - new Date(rating.created_at).getTime()) / 86400000);
+                          if (days === 0) return t('restaurant.today');
+                          if (days === 1) return t('restaurant.yesterday');
+                          if (days < 7) return `${days} ${t('restaurant.daysAgo')}`;
+                          return new Date(rating.created_at).toLocaleDateString();
+                        })()}
                       </span>
                     </div>
                   </div>

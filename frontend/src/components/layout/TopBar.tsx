@@ -5,7 +5,7 @@ export default function TopBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { i18n } = useTranslation();
-  const showBack = location.pathname !== '/' && location.pathname !== '/search' && location.pathname !== '/profile';
+  const showBack = location.pathname !== '/' && location.pathname !== '/search' && location.pathname !== '/profile' && location.pathname !== '/trending';
 
   const toggleLang = () => {
     const next = i18n.language.startsWith('de') ? 'en' : 'de';
@@ -13,24 +13,29 @@ export default function TopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-stone-100">
+    <header className="sticky top-0 z-50 bg-white dark:bg-stone-950 border-b border-stone-100 dark:border-stone-800">
       <div className="flex items-center justify-between h-14 px-4 max-w-lg mx-auto">
         {showBack ? (
-          <button onClick={() => navigate(-1)} className="flex items-center justify-center w-8 h-8 -ml-1" aria-label="Back">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-11 h-11 -ml-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+            aria-label="Back"
+          >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M12.5 15L7.5 10L12.5 5" stroke="#1C1917" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-        ) : <div className="w-8" />}
+        ) : <div className="w-11" />}
 
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500" />
-          <span className="font-semibold text-stone-800 tracking-tight">CleanCheck</span>
+          <span className="font-semibold text-stone-800 dark:text-stone-200 tracking-tight">CleanCheck</span>
         </div>
 
         <button
           onClick={toggleLang}
-          className="text-xs font-medium text-stone-400 uppercase tracking-widest hover:text-stone-600 transition-colors"
+          className="flex items-center justify-center w-11 h-11 -mr-2 rounded-full text-xs font-medium text-stone-400 dark:text-stone-500 uppercase tracking-widest hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+          aria-label="Toggle language"
         >
           {i18n.language.startsWith('de') ? 'EN' : 'DE'}
         </button>

@@ -11,6 +11,7 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import { getDistance, getScoreColor, getScoreLabel } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import RestaurantCard from '../components/ui/RestaurantCard';
+import { RestaurantCardSkeleton } from '../components/ui/Skeleton';
 import api from '../services/api';
 import 'leaflet/dist/leaflet.css';
 
@@ -478,9 +479,8 @@ export default function Home() {
 
         <div className="overflow-y-auto px-4 pb-24" style={{ height: 'calc(100% - 56px)' }}>
           {(loading || geo.loading) ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
-              <span className="ml-3 text-sm text-stone-400">{t('common.loading')}</span>
+            <div className="py-4">
+              <RestaurantCardSkeleton count={5} />
             </div>
           ) : restaurantsWithDistance.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">

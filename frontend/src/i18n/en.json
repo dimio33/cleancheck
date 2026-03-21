@@ -68,7 +68,15 @@
     "noReviews": "No reviews yet. Be the first!",
     "photos": "Photos",
     "notFound": "Restaurant not found",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "days ago",
+    "sort": {
+      "newest": "Newest",
+      "highest": "Best",
+      "lowest": "Worst"
+    }
   },
   "rating": {
     "title": "Rate",

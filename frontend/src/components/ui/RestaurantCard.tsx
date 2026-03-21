@@ -28,7 +28,7 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
   return (
     <motion.button
       onClick={() => navigate(`/restaurant/${restaurant.id}`)}
-      className="w-full flex items-center gap-3.5 p-3.5 bg-white rounded-2xl shadow-sm shadow-stone-200/50 hover:shadow-md hover:-translate-y-px transition-all duration-200 text-left"
+      className="w-full flex items-center gap-3.5 p-3.5 bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none hover:shadow-md hover:-translate-y-px transition-all duration-200 text-left"
       initial={{ opacity: 0.6, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.2 }}
@@ -59,7 +59,7 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-medium text-stone-800 truncate">{restaurant.name}</h3>
+        <h3 className="text-sm font-medium text-stone-800 dark:text-stone-200 truncate">{restaurant.name}</h3>
         <div className="flex items-center gap-2 mt-0.5">
           {restaurant.cuisine && (
             <span className="text-xs bg-stone-100 text-stone-500 rounded-full px-2 py-0.5">

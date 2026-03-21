@@ -60,8 +60,8 @@ export default function Auth() {
             onClick={() => { setMode(m); setError(''); }}
             className={`flex-1 pb-2.5 text-sm font-medium transition-all border-b-2 ${
               mode === m
-                ? 'text-stone-800 border-teal-500'
-                : 'text-stone-400 border-transparent'
+                ? 'text-stone-800 dark:text-stone-200 border-teal-500'
+                : 'text-stone-400 dark:text-stone-500 border-transparent'
             }`}
           >
             {t(`auth.${m}`)}
@@ -95,7 +95,7 @@ export default function Auth() {
             onChange={(e) => setUsername(e.target.value)}
             placeholder={t('auth.username')}
             required
-            className="w-full px-4 h-12 rounded-xl bg-stone-50 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+            className="w-full px-4 h-12 rounded-xl bg-stone-50 dark:bg-stone-800 border-0 text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
           />
         )}
         <input
@@ -104,7 +104,7 @@ export default function Auth() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t('auth.email')}
           required
-          className="w-full px-4 h-12 rounded-xl bg-stone-50 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+          className="w-full px-4 h-12 rounded-xl bg-stone-50 dark:bg-stone-800 border-0 text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
         />
         <input
           type="password"
@@ -112,7 +112,7 @@ export default function Auth() {
           onChange={(e) => setPassword(e.target.value)}
           placeholder={t('auth.password')}
           required
-          className="w-full px-4 h-12 rounded-xl bg-stone-50 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+          className="w-full px-4 h-12 rounded-xl bg-stone-50 dark:bg-stone-800 border-0 text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
         />
 
         <div className="pt-1">

@@ -28,7 +28,7 @@ export default function Splash() {
     const timer = setTimeout(() => {
       localStorage.setItem('cleancheck_onboarded', 'true');
       navigate('/');
-    }, 8000);
+    }, 5000);
     return () => clearTimeout(timer);
   }, [navigate]);
 
@@ -47,7 +47,7 @@ export default function Splash() {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
     >
-      <h1 className="text-3xl font-light tracking-tight text-stone-900 whitespace-pre-line leading-tight text-center">
+      <h1 className="text-3xl font-light tracking-tight text-stone-900 dark:text-stone-100 whitespace-pre-line leading-tight text-center">
         {t('splash.slide1Title')}
       </h1>
       <div className="w-12 h-0.5 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full mt-5 mb-5" />
@@ -100,7 +100,7 @@ export default function Splash() {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
     >
-      <h2 className="text-2xl font-light tracking-tight text-stone-900 mb-2 text-center">
+      <h2 className="text-2xl font-light tracking-tight text-stone-900 dark:text-stone-100 mb-2 text-center">
         {t('splash.slide3Title')}
       </h2>
       <p className="text-stone-500 mb-8 max-w-xs text-center text-sm leading-relaxed">
@@ -122,7 +122,7 @@ export default function Splash() {
   ];
 
   return (
-    <div className="fixed inset-0 bg-[#FAFAF9] z-50 flex flex-col">
+    <div className="fixed inset-0 bg-[#FAFAF9] dark:bg-stone-950 z-50 flex flex-col">
       {/* Skip button */}
       {step < 2 && (
         <div className="flex justify-end p-5">

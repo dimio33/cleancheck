@@ -1,15 +1,25 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Home from './pages/Home';
-import Search from './pages/Search';
-import RatingFlow from './pages/RatingFlow';
-import RestaurantDetail from './pages/RestaurantDetail';
-import Profile from './pages/Profile';
-import Auth from './pages/Auth';
-import Splash from './pages/Splash';
-import Trending from './pages/Trending';
-import QuickRate from './pages/QuickRate';
-import LocationPermission from './pages/LocationPermission';
+
+// Lazy-loaded pages — each becomes its own chunk
+const Home = lazy(() => import('./pages/Home'));
+const Search = lazy(() => import('./pages/Search'));
+const RatingFlow = lazy(() => import('./pages/RatingFlow'));
+const RestaurantDetail = lazy(() => import('./pages/RestaurantDetail'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Auth = lazy(() => import('./pages/Auth'));
+const Splash = lazy(() => import('./pages/Splash'));
+const Trending = lazy(() => import('./pages/Trending'));
+const QuickRate = lazy(() => import('./pages/QuickRate'));
+const LocationPermission = lazy(() => import('./pages/LocationPermission'));
+
+function PageLoader() {
+  return (
+    <div className="flex-1 flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 function HomeOrSplash() {
   const [onboarded] = useState(() => localStorage.getItem('cleancheck_onboarded') === 'true');
@@ -35,18 +45,20 @@ function NotFound() {
 
 export default function AppRouter() {
   return (
-    <Routes>
-      <Route path="/" element={<HomeOrSplash />} />
-      <Route path="/splash" element={<Splash />} />
-      <Route path="/location-permission" element={<LocationPermission />} />
-      <Route path="/search" element={<Search />} />
-      <Route path="/rate" element={<RatingFlow />} />
-      <Route path="/rate/:id" element={<QuickRate />} />
-      <Route path="/restaurant/:id" element={<RestaurantDetail />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/trending" element={<Trending />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/" element={<HomeOrSplash />} />
+        <Route path="/splash" element={<Splash />} />
+        <Route path="/location-permission" element={<LocationPermission />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/rate" element={<RatingFlow />} />
+        <Route path="/rate/:id" element={<QuickRate />} />
+        <Route path="/restaurant/:id" element={<RestaurantDetail />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/trending" element={<Trending />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 }
