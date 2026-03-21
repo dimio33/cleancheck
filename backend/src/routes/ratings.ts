@@ -170,20 +170,18 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
 
     const overall_score = calculateOverallScore({ cleanliness, smell, supplies, condition, accessibility });
 
-    // Transaction: INSERT rating + recalculate score atomically
-    const { rating: result, newScore } = await withTransaction(async (client) => {
-      const insertResult = await client.query(
+    // Insert rating in transaction
+    const result = await withTransaction(async (client) => {
+      return await client.query(
         `INSERT INTO ratings (user_id, anonymous_id, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment, visited_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          RETURNING *`,
         [userId, anonymousId, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment || null, visitDate]
       );
-
-      // Recalculate restaurant clean_score within the same transaction
-      const score = await recalculateRestaurantScore(restaurant_id);
-
-      return { rating: insertResult, newScore: score };
     });
+
+    // Recalculate score AFTER commit (so it can see the new rating)
+    const newScore = await recalculateRestaurantScore(restaurant_id);
 
     // Check for new badges (only for authenticated users)
     let newBadges: any[] = [];
