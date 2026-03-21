@@ -13,7 +13,7 @@ echo "=== CleanCheck Deploy ==="
 # 1. Build
 echo "[1/4] Building frontend..."
 cd "$(dirname "$0")/frontend"
-npm run build
+VITE_API_URL=https://backend-production-900c.up.railway.app/api VITE_DEMO_MODE=false npm run build
 cd ..
 
 # 2. Verify build output
