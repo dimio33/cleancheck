@@ -195,16 +195,18 @@ export default function Home() {
   }, [effectiveLat, effectiveLng, radius, geo.loading, hasLocation, fetchRestaurants]);
 
   const restaurantsWithDistance = useMemo(() => {
-    const withDist = restaurants.map((r) => ({
-      ...r,
-      distance: getDistance(effectiveLat, effectiveLng, r.lat, r.lng),
-    }));
+    const withDist = restaurants
+      .map((r) => ({
+        ...r,
+        distance: getDistance(effectiveLat, effectiveLng, r.lat, r.lng),
+      }))
+      .filter((r) => r.distance <= radius); // Only show restaurants within selected radius
 
     if (sortBy === 'score') {
       return withDist.sort((a, b) => (b.clean_score ?? -1) - (a.clean_score ?? -1));
     }
     return withDist.sort((a, b) => a.distance - b.distance);
-  }, [effectiveLat, effectiveLng, restaurants, sortBy]);
+  }, [effectiveLat, effectiveLng, restaurants, sortBy, radius]);
 
   const mapZoom = zoomForRadius(radius);
 

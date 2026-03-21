@@ -42,7 +42,8 @@ export default function Search() {
         const matchesQuery = !query || r.name.toLowerCase().includes(query.toLowerCase());
         const matchesCuisine = selectedCuisine === 'All' || r.cuisine === selectedCuisine;
         const matchesScore = minScore === 0 || (r.clean_score !== null && r.clean_score >= minScore);
-        return matchesQuery && matchesCuisine && matchesScore;
+        const matchesRadius = r.distance <= radius;
+        return matchesQuery && matchesCuisine && matchesScore && matchesRadius;
       })
       .sort((a, b) => a.distance - b.distance);
   }, [query, selectedCuisine, minScore, lat, lng, restaurants]);
