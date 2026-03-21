@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -10,7 +11,7 @@ interface RestaurantCardProps {
   index?: number;
 }
 
-export default function RestaurantCard({ restaurant, distance, index = 0 }: RestaurantCardProps) {
+function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCardProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -99,3 +100,6 @@ export default function RestaurantCard({ restaurant, distance, index = 0 }: Rest
     </motion.button>
   );
 }
+
+const RestaurantCard = memo(RestaurantCardInner);
+export default RestaurantCard;

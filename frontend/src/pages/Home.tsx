@@ -2,8 +2,10 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 // Note: useMemo still used for restaurantsWithDistance
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
 import { motion } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { getDistance, getScoreColor, getScoreLabel } from '../utils/geo';
@@ -85,10 +87,17 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
+// Icon cache — avoids recreating DivIcon objects on every render
+const iconCache = new Map<string, L.DivIcon>();
+
 function createScoreIcon(score: number | null) {
+  const key = score !== null ? score.toFixed(1) : 'null';
+  const cached = iconCache.get(key);
+  if (cached) return cached;
+
   const color = getScoreColor(score);
   const label = getScoreLabel(score);
-  return L.divIcon({
+  const icon = L.divIcon({
     className: 'custom-marker',
     html: `<div style="
       width: 36px; height: 36px; border-radius: 50%;
@@ -101,6 +110,8 @@ function createScoreIcon(score: number | null) {
     iconSize: [36, 36],
     iconAnchor: [18, 18],
   });
+  iconCache.set(key, icon);
+  return icon;
 }
 
 const RADIUS_OPTIONS = [
@@ -117,6 +128,48 @@ function zoomForRadius(r: number): number {
   if (r <= 5000) return 13;
   if (r <= 10000) return 12;
   return 11;
+}
+
+// Marker cluster component using leaflet.markercluster directly
+function MarkerClusterGroup({ restaurants, navigate }: { restaurants: { id: string; name: string; lat: number; lng: number; clean_score: number | null }[]; navigate: (path: string) => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const clusterGroup = (L as any).markerClusterGroup({
+      maxClusterRadius: 50,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      iconCreateFunction: (cluster: any) => {
+        const count = cluster.getChildCount();
+        const size = count < 10 ? 36 : count < 50 ? 42 : 48;
+        return L.divIcon({
+          className: 'custom-cluster',
+          html: `<div style="
+            width: ${size}px; height: ${size}px; border-radius: 50%;
+            background: linear-gradient(135deg, #14B8A6, #10B981);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: ${size < 42 ? 12 : 14}px; color: white;
+            box-shadow: 0 2px 8px rgba(20,184,166,0.3);
+            font-family: 'Inter', system-ui, sans-serif;
+          ">${count}</div>`,
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+        });
+      },
+    });
+
+    for (const r of restaurants) {
+      const marker = L.marker([r.lat, r.lng], { icon: createScoreIcon(r.clean_score) });
+      marker.bindPopup(`<div style="text-align:center;padding:2px"><strong style="font-size:13px">${r.name.replace(/</g, '&lt;')}</strong></div>`);
+      marker.on('click', () => navigate(`/restaurant/${r.id}`));
+      clusterGroup.addLayer(marker);
+    }
+
+    map.addLayer(clusterGroup);
+    return () => { map.removeLayer(clusterGroup); };
+  }, [restaurants, map, navigate]);
+
+  return null;
 }
 
 function UserLocationMarker({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
@@ -149,6 +202,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [sheetHeight, setSheetHeight] = useState(0.55);
   const [sortBy, setSortBy] = useState<'distance' | 'score'>('distance');
+  const [visibleCount, setVisibleCount] = useState(20);
   const { restaurants, loading, fetchRestaurants, radius, setRadius } = useRestaurantStore();
   const [citySearch, setCitySearch] = useState('');
   const [cityResults, setCityResults] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
@@ -295,26 +349,7 @@ export default function Home() {
               dashArray: '10 6',
             }}
           />
-          {restaurantsWithDistance.map((r) => (
-            <Marker
-              key={r.id}
-              position={[r.lat, r.lng]}
-              icon={createScoreIcon(r.clean_score)}
-              eventHandlers={{
-                click: () => navigate(`/restaurant/${r.id}`),
-              }}
-            >
-              <Popup>
-                <div className="text-center p-1">
-                  <strong className="text-sm">{r.name}</strong>
-                  <br />
-                  <span className="text-xs" style={{ color: getScoreColor(r.clean_score) }}>
-                    {r.clean_score !== null ? `CleanScore: ${r.clean_score}` : t('home.noRatings')}
-                  </span>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+          <MarkerClusterGroup restaurants={restaurantsWithDistance} navigate={navigate} />
         </MapContainer>
       </div>
 
@@ -455,9 +490,17 @@ export default function Home() {
             </div>
           ) : (
             <div className="space-y-2">
-              {restaurantsWithDistance.map((r, i) => (
+              {restaurantsWithDistance.slice(0, visibleCount).map((r, i) => (
                 <RestaurantCard key={r.id} restaurant={r} distance={r.distance} index={i} />
               ))}
+              {restaurantsWithDistance.length > visibleCount && (
+                <button
+                  onClick={() => setVisibleCount((c) => c + 20)}
+                  className="w-full py-3 text-sm font-medium text-teal-600 dark:text-teal-400 active:text-teal-700 transition-colors"
+                >
+                  {t('common.loadMore')} ({restaurantsWithDistance.length - visibleCount} {t('common.remaining')})
+                </button>
+              )}
             </div>
           )}
         </div>

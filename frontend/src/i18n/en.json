@@ -214,6 +214,8 @@
     "m": "m",
     "errorOccurred": "An error occurred",
     "tryAgain": "Try again",
-    "noConnection": "Cannot connect to server"
+    "noConnection": "Cannot connect to server",
+    "loadMore": "Load more",
+    "remaining": "remaining"
   }
 }
