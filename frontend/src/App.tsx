@@ -6,6 +6,7 @@ import AppRouter from './router';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import ToastContainer from './components/ui/Toast';
 import OfflineBanner from './components/ui/OfflineBanner';
+import LocationDeniedBanner from './components/ui/LocationDeniedBanner';
 import PWAUpdatePrompt from './components/ui/PWAUpdatePrompt';
 import { useThemeStore } from './stores/themeStore';
 import './App.css';
@@ -23,6 +24,7 @@ function App() {
         <div className="flex flex-col min-h-screen bg-stone-50 dark:bg-stone-950">
           <TopBar />
           <OfflineBanner />
+          <LocationDeniedBanner />
           <ToastContainer />
           <main className="flex-1 flex flex-col">
             <AppRouter />

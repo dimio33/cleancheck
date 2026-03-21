@@ -9,10 +9,14 @@ import Auth from './pages/Auth';
 import Splash from './pages/Splash';
 import Trending from './pages/Trending';
 import QuickRate from './pages/QuickRate';
+import LocationPermission from './pages/LocationPermission';
 
 function HomeOrSplash() {
   const [onboarded] = useState(() => localStorage.getItem('cleancheck_onboarded') === 'true');
+  const [geoAsked] = useState(() => localStorage.getItem('cleancheck_geo_asked') === 'true');
+
   if (!onboarded) return <Navigate to="/splash" replace />;
+  if (!geoAsked) return <Navigate to="/location-permission" replace />;
   return <Home />;
 }
 
@@ -34,6 +38,7 @@ export default function AppRouter() {
     <Routes>
       <Route path="/" element={<HomeOrSplash />} />
       <Route path="/splash" element={<Splash />} />
+      <Route path="/location-permission" element={<LocationPermission />} />
       <Route path="/search" element={<Search />} />
       <Route path="/rate" element={<RatingFlow />} />
       <Route path="/rate/:id" element={<QuickRate />} />

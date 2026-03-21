@@ -160,7 +160,30 @@
     "updateLocation": "Update Location",
     "checking": "Checking location...",
     "withinRange": "Within range",
-    "outOfRange": "Out of range"
+    "outOfRange": "Out of range",
+    "locationDenied": "Location access denied. Some features are limited.",
+    "locationRequired": "Location access is required to rate restaurants.",
+    "enableToRate": "Enable location to rate"
+  },
+  "locationPermission": {
+    "title": "Enable Location",
+    "description": "We need your location to find restaurants near you and verify your ratings.",
+    "enableButton": "Enable Location",
+    "skipLink": "Continue without location",
+    "tryAgain": "Try Again",
+    "howToEnable": "How to enable location",
+    "deniedTitle": "Location Access Denied",
+    "deniedDescription": "You denied location access. To use all features, please enable it in your browser settings.",
+    "unavailableTitle": "Location Services Disabled",
+    "unavailableDescription": "Your device's location services are turned off. Please enable them to use all features.",
+    "instructions": {
+      "iosSafari": "Go to Settings > Privacy > Location Services > Safari and select \"While Using the App\".",
+      "androidChrome": "Tap the lock icon in the address bar, then Permissions > Location > Allow.",
+      "desktopChrome": "Click the lock icon in the address bar > Site settings > Location > Allow.",
+      "desktopSafari": "Go to Safari > Settings > Websites > Location and allow this site.",
+      "firefox": "Click the lock icon > Connection secure > More information > Permissions > Location.",
+      "generic": "Check your browser settings to allow location access for this site."
+    }
   },
   "trending": {
     "title": "Trending",

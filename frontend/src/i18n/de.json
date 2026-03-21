@@ -160,7 +160,30 @@
     "updateLocation": "Standort aktualisieren",
     "checking": "Standort wird geprüft...",
     "withinRange": "In Reichweite",
-    "outOfRange": "Außer Reichweite"
+    "outOfRange": "Außer Reichweite",
+    "locationDenied": "Standortzugriff verweigert. Einige Funktionen sind eingeschränkt.",
+    "locationRequired": "Standortzugriff wird zum Bewerten benötigt.",
+    "enableToRate": "Standort aktivieren zum Bewerten"
+  },
+  "locationPermission": {
+    "title": "Standort aktivieren",
+    "description": "Wir brauchen deinen Standort, um Restaurants in deiner Nähe zu finden und deine Bewertungen zu verifizieren.",
+    "enableButton": "Standort aktivieren",
+    "skipLink": "Ohne Standort fortfahren",
+    "tryAgain": "Nochmal versuchen",
+    "howToEnable": "So aktivierst du den Standort",
+    "deniedTitle": "Standort abgelehnt",
+    "deniedDescription": "Du hast den Standortzugriff abgelehnt. Um alle Funktionen zu nutzen, aktiviere ihn in deinen Browser-Einstellungen.",
+    "unavailableTitle": "Ortungsdienste deaktiviert",
+    "unavailableDescription": "Die Ortungsdienste deines Geräts sind ausgeschaltet. Bitte aktiviere sie, um alle Funktionen nutzen zu können.",
+    "instructions": {
+      "iosSafari": "Öffne Einstellungen > Datenschutz > Ortungsdienste > Safari und wähle \"Beim Verwenden der App\".",
+      "androidChrome": "Tippe auf das Schloss-Symbol in der Adressleiste, dann Berechtigungen > Standort > Zulassen.",
+      "desktopChrome": "Klicke auf das Schloss-Symbol in der Adressleiste > Website-Einstellungen > Standort > Zulassen.",
+      "desktopSafari": "Öffne Safari > Einstellungen > Websites > Standort und erlaube diese Seite.",
+      "firefox": "Klicke auf das Schloss-Symbol > Verbindung sicher > Weitere Informationen > Berechtigungen > Standort.",
+      "generic": "Prüfe deine Browser-Einstellungen, um den Standortzugriff für diese Seite zu erlauben."
+    }
   },
   "trending": {
     "title": "Trending",
