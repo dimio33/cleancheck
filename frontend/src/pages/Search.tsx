@@ -134,8 +134,16 @@ export default function Search() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <h3 className="text-sm font-medium text-stone-400">{t('search.noResults')}</h3>
-          <p className="text-xs text-stone-300 mt-1.5 max-w-xs">{t('search.noResultsDesc')}</p>
+          <h3 className="text-sm font-medium text-stone-400 dark:text-stone-500">{t('search.noResults')}</h3>
+          <p className="text-xs text-stone-300 dark:text-stone-600 mt-1.5 max-w-xs">{t('search.noResultsDesc')}</p>
+          {radius < 25000 && (
+            <button
+              onClick={() => setRadius(radius < 5000 ? 5000 : 25000)}
+              className="mt-3 px-4 py-2 rounded-xl bg-teal-500 text-white text-xs font-medium active:scale-95 transition-transform"
+            >
+              {t('search.expandRadius')}
+            </button>
+          )}
         </motion.div>
       )}
     </div>

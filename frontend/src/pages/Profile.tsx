@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
 import { useFavoritesStore } from '../stores/favoritesStore';
 import { useRestaurantStore } from '../stores/restaurantStore';
+import { useDraftStore } from '../stores/draftStore';
 import BadgeCard from '../components/ui/BadgeCard';
 import { getScoreColor } from '../utils/geo';
 import api from '../services/api';
@@ -149,7 +150,15 @@ export default function Profile() {
       {(() => {
         const favorites = useFavoritesStore((s) => s.favorites);
         const { restaurants } = useRestaurantStore();
-        if (favorites.length === 0) return null;
+        if (favorites.length === 0) return (
+          <div className="px-4 mb-6">
+            <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.saved')} (0)</h3>
+            <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none p-6 text-center">
+              <span className="text-2xl block mb-2">❤️</span>
+              <p className="text-sm text-stone-400">{t('profile.noSaved')}</p>
+            </div>
+          </div>
+        );
         return (
           <div className="px-4 mb-6">
             <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.saved')} ({favorites.length})</h3>
@@ -182,6 +191,23 @@ export default function Profile() {
           </div>
         );
       })()}
+
+      {/* Offline Drafts */}
+      {useDraftStore.getState().drafts.length > 0 && (
+        <div className="px-4 mb-6">
+          <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.drafts')} ({useDraftStore.getState().drafts.length})</h3>
+          <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-800 flex items-center justify-center shrink-0">
+              <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">{t('profile.draftsHint')}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Rating History */}
       <div className="px-4 mb-6">

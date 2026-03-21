@@ -343,6 +343,7 @@ export default function RestaurantDetail() {
                     </div>
                     <button
                       onClick={() => {
+                        if (!confirm(t('report.confirmText'))) return;
                         api.post(`/ratings/${rating.id}/report`, { reason: 'spam' })
                           .then(() => addToast(t('report.thanks'), 'success'))
                           .catch((err) => addToast(err.response?.data?.error || t('common.error'), 'error'));

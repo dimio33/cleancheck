@@ -48,6 +48,7 @@
     "filters": "Filter",
     "noResults": "Keine Ergebnisse gefunden",
     "noResultsDesc": "Versuche einen anderen Suchbegriff oder erweitere die Filter.",
+    "expandRadius": "Radius vergrößern",
     "allCuisines": "Alle",
     "minScore": "Min. Score",
     "distance": "Entfernung",
@@ -122,6 +123,9 @@
     "themeDark": "Dunkel",
     "themeSystem": "System",
     "saved": "Gespeichert",
+    "noSaved": "Tippe auf das Herz bei einem Restaurant, um es zu speichern.",
+    "drafts": "Entwürfe",
+    "draftsHint": "Offline-Bewertungen werden gesendet sobald du online bist.",
     "logout": "Abmelden",
     "loginPrompt": "Melde dich an, um deine Bewertungen zu speichern",
     "login": "Anmelden",
@@ -222,7 +226,12 @@
     "offensive": "Beleidigung",
     "incorrect": "Falsche Info",
     "other": "Sonstiges",
-    "thanks": "Danke für die Meldung!"
+    "thanks": "Danke für die Meldung!",
+    "confirmText": "Möchtest du diese Bewertung wirklich melden?"
+  },
+  "pwa": {
+    "updateAvailable": "Update verfügbar",
+    "update": "Aktualisieren"
   },
   "common": {
     "back": "Zurück",

@@ -48,6 +48,7 @@
     "filters": "Filters",
     "noResults": "No results found",
     "noResultsDesc": "Try a different search term or expand your filters.",
+    "expandRadius": "Expand radius",
     "allCuisines": "All",
     "minScore": "Min. Score",
     "distance": "Distance",
@@ -122,6 +123,9 @@
     "themeDark": "Dark",
     "themeSystem": "System",
     "saved": "Saved",
+    "noSaved": "Tap the heart on a restaurant to save it.",
+    "drafts": "Drafts",
+    "draftsHint": "Offline ratings will sync when you're back online.",
     "logout": "Log out",
     "loginPrompt": "Log in to save your ratings",
     "login": "Log in",
@@ -222,7 +226,12 @@
     "offensive": "Offensive",
     "incorrect": "Incorrect Info",
     "other": "Other",
-    "thanks": "Thanks for reporting!"
+    "thanks": "Thanks for reporting!",
+    "confirmText": "Are you sure you want to report this review?"
+  },
+  "pwa": {
+    "updateAvailable": "Update available",
+    "update": "Update"
   },
   "common": {
     "back": "Back",

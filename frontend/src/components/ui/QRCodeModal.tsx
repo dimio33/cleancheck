@@ -94,7 +94,13 @@ export default function QRCodeModal({ isOpen, onClose, restaurantId, restaurantN
               <canvas ref={canvasRef} style={{ width: 200, height: 200 }} />
             </div>
 
-            <p className="text-xs text-stone-400 text-center mb-4 break-all">{qrUrl}</p>
+            <button
+              onClick={() => { navigator.clipboard.writeText(qrUrl); }}
+              className="text-xs text-stone-400 hover:text-teal-500 text-center mb-4 break-all block w-full transition-colors"
+              title={t('share.copied')}
+            >
+              {qrUrl} <span className="text-[10px]">📋</span>
+            </button>
 
             <div className="flex gap-2">
               <button

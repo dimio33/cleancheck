@@ -42,7 +42,13 @@ export default function Trending() {
         ) : restaurants.length === 0 ? (
           <div className="text-center py-16">
             <span className="text-4xl block mb-3">📊</span>
-            <p className="text-sm text-stone-400 dark:text-stone-500">{t('trending.empty')}</p>
+            <p className="text-sm text-stone-400 dark:text-stone-500 mb-4">{t('trending.empty')}</p>
+            <button
+              onClick={() => navigate('/rate')}
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-sm font-medium active:scale-95 transition-transform"
+            >
+              {t('restaurant.rateThis')}
+            </button>
           </div>
         ) : (
           <div className="space-y-2.5">
