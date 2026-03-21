@@ -62,7 +62,7 @@ export default function Trending() {
                     className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-semibold text-sm"
                     style={{ backgroundColor: `${color}15`, color }}
                   >
-                    {score ? score.toFixed(1) : '—'}
+                    {score !== null ? score.toFixed(1) : '—'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-medium text-stone-800 dark:text-stone-200 block truncate">{r.name}</span>

@@ -26,6 +26,13 @@ router.post('/register', async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
+    // Validate email format and length
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email) || email.length > 254) {
+      res.status(400).json({ error: 'Invalid email format' });
+      return;
+    }
+
     if (password.length < 6) {
       res.status(400).json({ error: 'Password must be at least 6 characters' });
       return;
@@ -41,7 +48,7 @@ router.post('/register', async (req: AuthRequest, res: Response): Promise<void> 
     // Check existing
     const existing = await query(
       `SELECT id FROM users WHERE email = $1 OR username = $2`,
-      [email.toLowerCase(), username]
+      [email.toLowerCase(), sanitizedUsername]
     );
 
     if (existing.rows.length > 0) {

@@ -293,8 +293,8 @@ router.post('/:id/photos', authenticate, upload.single('photo'), async (req: Aut
 router.get('/user/:userId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
-    const limit = parseInt((req.query.limit as string) || '20', 10);
-    const offset = parseInt((req.query.offset as string) || '0', 10);
+    const limit = Math.min(Math.max(parseInt((req.query.limit as string) || '20', 10) || 20, 1), 100);
+    const offset = Math.max(parseInt((req.query.offset as string) || '0', 10) || 0, 0);
 
     const result = await query(
       `SELECT r.*, rest.name as restaurant_name, rest.city as restaurant_city

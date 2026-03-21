@@ -13,6 +13,7 @@ export default function Profile() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { mode: themeMode, setMode: setThemeMode } = useThemeStore();
 
   const [profileData, setProfileData] = useState<any>(null);
   const [userRatings, setUserRatings] = useState<Rating[]>([]);
@@ -62,8 +63,6 @@ export default function Profile() {
       </div>
     );
   }
-
-  const { mode: themeMode, setMode: setThemeMode } = useThemeStore();
 
   const toggleLanguage = () => {
     const next = i18n.language.startsWith('de') ? 'en' : 'de';
@@ -171,7 +170,7 @@ export default function Profile() {
                   }}
                 >
                   <span className="text-[11px] font-semibold" style={{ color: getScoreColor(rating.overall_score) }}>
-                    {rating.overall_score.toFixed(1)}
+                    {Number(rating.overall_score).toFixed(1)}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">

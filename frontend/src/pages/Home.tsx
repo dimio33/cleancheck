@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+// Note: useMemo still used for restaurantsWithDistance
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
@@ -58,7 +59,7 @@ function zoomForRadius(r: number): number {
 function UserLocationMarker({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
   const map = useMap();
 
-  useMemo(() => {
+  useEffect(() => {
     map.setView([lat, lng], zoom);
   }, [lat, lng, zoom, map]);
 

@@ -102,10 +102,12 @@ export default function QRCodeModal({ isOpen, onClose, restaurantId, restaurantN
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow || !canvasRef.current) return;
+    const escapedName = restaurantName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const escapedText = t('qr.scanToRate').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
-      <head><title>CleanCheck QR - ${restaurantName}</title>
+      <head><title>CleanCheck QR</title>
       <style>
         body { font-family: Inter, system-ui, sans-serif; text-align: center; padding: 40px; }
         h1 { font-size: 24px; color: #1c1917; margin-bottom: 8px; }
@@ -114,10 +116,10 @@ export default function QRCodeModal({ isOpen, onClose, restaurantId, restaurantN
         .footer { margin-top: 24px; font-size: 12px; color: #a8a29e; }
       </style></head>
       <body>
-        <h1>${restaurantName}</h1>
-        <p>${t('qr.scanToRate')}</p>
+        <h1>${escapedName}</h1>
+        <p>${escapedText}</p>
         <img src="${canvasRef.current.toDataURL('image/png')}" />
-        <p class="footer">Powered by CleanCheck · cleancheck.e-findo.de</p>
+        <p class="footer">Powered by CleanCheck &middot; cleancheck.e-findo.de</p>
       </body></html>
     `);
     printWindow.document.close();

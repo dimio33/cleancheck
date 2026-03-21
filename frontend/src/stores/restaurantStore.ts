@@ -55,10 +55,10 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
         try {
           const radiusKm = radius / 1000;
           const { data } = await api.get(`/restaurants?lat=${lat}&lng=${lng}&radius=${radiusKm}`);
-          const dbRestaurants: Record<number, { clean_score: number; total_ratings: number }> = {};
+          const dbRestaurants: Record<string, { clean_score: number; total_ratings: number }> = {};
           for (const r of data.restaurants || []) {
             if (r.osm_id) {
-              dbRestaurants[r.osm_id] = {
+              dbRestaurants[String(r.osm_id)] = {
                 clean_score: parseFloat(r.clean_score) || 0,
                 total_ratings: r.total_ratings || 0,
               };
@@ -67,7 +67,7 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
 
           // Merge DB scores into Overpass results
           for (const r of results) {
-            const osmId = parseInt(r.id.replace('osm-', ''), 10);
+            const osmId = r.id.replace('osm-', '');
             const dbData = dbRestaurants[osmId];
             if (dbData && dbData.total_ratings > 0) {
               r.clean_score = dbData.clean_score;

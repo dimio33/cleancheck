@@ -53,14 +53,17 @@ export default function RestaurantDetail() {
     if (id.startsWith('osm-')) {
       const storeRestaurant = useRestaurantStore.getState().getById(id);
       if (storeRestaurant) {
-        api.get(`/restaurants?lat=${storeRestaurant.lat}&lng=${storeRestaurant.lng}&radius=0.05`)
+        const osmId = id.replace('osm-', '');
+        api.get(`/restaurants?lat=${storeRestaurant.lat}&lng=${storeRestaurant.lng}&radius=0.5`)
           .then(({ data }) => {
-            const match = data.restaurants?.find((r: any) => {
-              const osmId = parseInt(id.replace('osm-', ''), 10);
-              return r.osm_id === osmId;
-            });
+            const match = data.restaurants?.find((r: any) => String(r.osm_id) === osmId);
             if (match) return api.get(`/restaurants/${match.id}`);
-            return null;
+            // Wider radius fallback
+            return api.get(`/restaurants?lat=${storeRestaurant.lat}&lng=${storeRestaurant.lng}&radius=5`)
+              .then(({ data: wider }) => {
+                const m = wider.restaurants?.find((r: any) => String(r.osm_id) === osmId);
+                return m ? api.get(`/restaurants/${m.id}`) : null;
+              });
           })
           .then((res) => {
             if (res?.data) {
