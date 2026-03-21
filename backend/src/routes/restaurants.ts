@@ -110,7 +110,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 
     if (ratingIds.length > 0) {
       const photosResult = await query(
-        `SELECT id, rating_id, url as photo_url FROM rating_photos WHERE rating_id = ANY($1)`,
+        `SELECT id, rating_id, photo_url FROM rating_photos WHERE rating_id = ANY($1)`,
         [ratingIds]
       );
       for (const photo of photosResult.rows) {

@@ -68,15 +68,19 @@ HTACCESS
 echo "[3/4] Deploying to $REMOTE_HOST..."
 export SSHPASS='kL2qP3***95!'
 
+# Use absolute paths to avoid lcd issues
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ABS_DIST="$SCRIPT_DIR/$LOCAL_DIST"
+
 # Clean remote assets first, then upload everything
 sshpass -e sftp -oBatchMode=no -oStrictHostKeyChecking=no "$REMOTE_HOST" << SFTP
 cd $REMOTE_DIR
 cd assets
 $(for f in $(ls "$LOCAL_DIST/assets/" 2>/dev/null); do echo "rm $f"; done)
-lcd $LOCAL_DIST/assets
+lcd $ABS_DIST/assets
 put *
 cd ..
-lcd $LOCAL_DIST
+lcd $ABS_DIST
 put .htaccess
 put index.html
 put favicon.svg

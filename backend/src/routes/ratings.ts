@@ -276,10 +276,10 @@ router.post('/:id/photos', authenticate, upload.single('photo'), async (req: Aut
 
     // Store in rating_photos table
     const photoResult = await query(
-      `INSERT INTO rating_photos (rating_id, url, hash)
-       VALUES ($1, $2, $3)
+      `INSERT INTO rating_photos (rating_id, photo_url)
+       VALUES ($1, $2)
        RETURNING *`,
-      [id, photoUrl, await generateImageHash(buffer)]
+      [id, photoUrl]
     );
 
     res.status(201).json({ photo: photoResult.rows[0] });
