@@ -189,10 +189,10 @@ export default function Home() {
   const hasLocation = geo.permissionState === 'granted' || searchOverride !== null;
 
   useEffect(() => {
-    if (!geo.loading && hasLocation) {
+    if (hasLocation && (!geo.loading || searchOverride)) {
       fetchRestaurants(effectiveLat, effectiveLng);
     }
-  }, [effectiveLat, effectiveLng, radius, geo.loading, hasLocation, fetchRestaurants]);
+  }, [effectiveLat, effectiveLng, radius, geo.loading, hasLocation, searchOverride, fetchRestaurants]);
 
   const restaurantsWithDistance = useMemo(() => {
     const withDist = restaurants

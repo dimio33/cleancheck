@@ -38,7 +38,7 @@ export const useGeoStore = create<GeoStore>((set, get) => ({
         const state = result.state === 'granted' ? 'granted'
           : result.state === 'denied' ? 'denied'
           : 'prompt';
-        set({ permissionState: state });
+        set({ permissionState: state, loading: state !== 'granted' ? false : get().loading });
         localStorage.setItem('cleancheck_geo_permission', state);
 
         // Listen for changes (user toggles in browser settings while app is open)
@@ -61,7 +61,10 @@ export const useGeoStore = create<GeoStore>((set, get) => ({
     // Fallback: read from localStorage (Safari, older browsers)
     const stored = localStorage.getItem('cleancheck_geo_permission') as PermissionState | null;
     if (stored) {
-      set({ permissionState: stored });
+      set({ permissionState: stored, loading: stored !== 'granted' ? false : get().loading });
+    } else {
+      // No stored state and no Permissions API — stop loading
+      set({ loading: false });
     }
   },
 
