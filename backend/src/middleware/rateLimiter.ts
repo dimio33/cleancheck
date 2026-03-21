@@ -16,20 +16,23 @@ export function createRateLimiter(windowMs: number, maxRequests: number): Reques
 
   if (!stores.has(storeKey)) {
     stores.set(storeKey, new Map());
+
+    // Periodic cleanup of expired entries every 5 minutes (only once per store)
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      const store = stores.get(storeKey);
+      if (store) {
+        for (const [key, entry] of store) {
+          if (now > entry.resetAt) {
+            store.delete(key);
+          }
+        }
+      }
+    }, 5 * 60 * 1000);
+    cleanupInterval.unref();
   }
 
   const store = stores.get(storeKey)!;
-
-  // Periodic cleanup of expired entries every 5 minutes
-  const cleanupInterval = setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of store) {
-      if (now > entry.resetAt) {
-        store.delete(key);
-      }
-    }
-  }, 5 * 60 * 1000);
-  cleanupInterval.unref();
 
   return (req: Request, res: Response, next: NextFunction): void => {
     const ip = req.ip || req.socket.remoteAddress || 'unknown';

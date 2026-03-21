@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import { query } from '../utils/db';
+import { query, withTransaction } from '../utils/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { optionalAuth } from '../middleware/optionalAuth';
 import { calculateOverallScore, recalculateRestaurantScore } from '../services/scoreService';
@@ -170,27 +170,20 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
 
     const overall_score = calculateOverallScore({ cleanliness, smell, supplies, condition, accessibility });
 
-    const result = await query(
-      `INSERT INTO ratings (user_id, anonymous_id, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment, visited_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-       RETURNING *`,
-      [
-        userId,
-        anonymousId,
-        restaurant_id,
-        cleanliness,
-        smell,
-        supplies,
-        condition,
-        accessibility,
-        overall_score,
-        comment || null,
-        visitDate,
-      ]
-    );
+    // Transaction: INSERT rating + recalculate score atomically
+    const { rating: result, newScore } = await withTransaction(async (client) => {
+      const insertResult = await client.query(
+        `INSERT INTO ratings (user_id, anonymous_id, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment, visited_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         RETURNING *`,
+        [userId, anonymousId, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment || null, visitDate]
+      );
 
-    // Recalculate restaurant clean_score
-    const newScore = await recalculateRestaurantScore(restaurant_id);
+      // Recalculate restaurant clean_score within the same transaction
+      const score = await recalculateRestaurantScore(restaurant_id);
+
+      return { rating: insertResult, newScore: score };
+    });
 
     // Check for new badges (only for authenticated users)
     let newBadges: any[] = [];
@@ -199,7 +192,7 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
     }
 
     res.status(201).json({
-      rating: result.rows[0],
+      rating: result.rows?.[0],
       restaurant_score: newScore,
       new_badges: newBadges,
     });

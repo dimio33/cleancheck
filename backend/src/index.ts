@@ -33,6 +33,9 @@ if (process.env.NODE_ENV !== 'test') {
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 
+// Trust proxy (Railway runs behind reverse proxy)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet());
 app.use(cors({
