@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Restaurant } from '../types';
 import { fetchNearbyRestaurants } from '../services/overpass';
+import api from '../services/api';
 
 interface RestaurantStore {
   restaurants: Restaurant[];
@@ -50,6 +51,33 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
       const results = await fetchNearbyRestaurants(lat, lng, radius);
 
       if (results.length > 0) {
+        // Merge scores from backend DB — restaurants that have been rated
+        try {
+          const radiusKm = radius / 1000;
+          const { data } = await api.get(`/restaurants?lat=${lat}&lng=${lng}&radius=${radiusKm}`);
+          const dbRestaurants: Record<number, { clean_score: number; total_ratings: number }> = {};
+          for (const r of data.restaurants || []) {
+            if (r.osm_id) {
+              dbRestaurants[r.osm_id] = {
+                clean_score: parseFloat(r.clean_score) || 0,
+                total_ratings: r.total_ratings || 0,
+              };
+            }
+          }
+
+          // Merge DB scores into Overpass results
+          for (const r of results) {
+            const osmId = parseInt(r.id.replace('osm-', ''), 10);
+            const dbData = dbRestaurants[osmId];
+            if (dbData && dbData.total_ratings > 0) {
+              r.clean_score = dbData.clean_score;
+              r.rating_count = dbData.total_ratings;
+            }
+          }
+        } catch {
+          // Backend unavailable — show Overpass results without scores
+        }
+
         set({ restaurants: results, loading: false, lastFetchLocation: { lat, lng } });
       } else {
         set({
