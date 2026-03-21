@@ -13,6 +13,11 @@ interface AuthState {
   loginAsGuest: () => void;
 }
 
+function storeTokens(token: string, refreshToken?: string) {
+  localStorage.setItem('cleancheck_token', token);
+  if (refreshToken) localStorage.setItem('cleancheck_refresh_token', refreshToken);
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: (() => {
     try {
@@ -27,7 +32,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('cleancheck_token', data.token);
+    storeTokens(data.token, data.refreshToken);
     const user: User = {
       id: data.user.id,
       username: data.user.username,
@@ -45,7 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   register: async (username: string, email: string, password: string) => {
     const { data } = await api.post('/auth/register', { username, email, password });
-    localStorage.setItem('cleancheck_token', data.token);
+    storeTokens(data.token, data.refreshToken);
     const user: User = {
       id: data.user.id,
       username: data.user.username,
@@ -62,7 +67,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
+    const refreshToken = localStorage.getItem('cleancheck_refresh_token');
+    if (refreshToken) {
+      // Best-effort server-side revocation
+      api.post('/auth/logout', { refreshToken }).catch(() => {});
+    }
     localStorage.removeItem('cleancheck_token');
+    localStorage.removeItem('cleancheck_refresh_token');
     localStorage.removeItem('cleancheck_user');
     set({ user: null, token: null, isAuthenticated: false });
   },
