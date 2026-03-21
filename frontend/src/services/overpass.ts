@@ -3,10 +3,17 @@ import type { Restaurant } from '../types';
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 
 function getMaxResults(radius: number): number {
-  if (radius <= 1000) return 30;
-  if (radius <= 3000) return 50;
-  if (radius <= 5000) return 80;
-  return 100;
+  if (radius <= 1000) return 200;
+  if (radius <= 2000) return 300;
+  if (radius <= 5000) return 500;
+  if (radius <= 10000) return 750;
+  return 1000;
+}
+
+function getTimeout(radius: number): number {
+  if (radius <= 2000) return 15;
+  if (radius <= 10000) return 25;
+  return 30;
 }
 
 export async function fetchNearbyRestaurants(
@@ -15,11 +22,12 @@ export async function fetchNearbyRestaurants(
   radius: number = 5000
 ): Promise<Restaurant[]> {
   const maxResults = getMaxResults(radius);
+  const timeout = getTimeout(radius);
 
   const query = `
-    [out:json][timeout:15];
+    [out:json][timeout:${timeout}];
     (
-      nwr["amenity"~"restaurant|fast_food|cafe|bar|pub"]["name"](around:${radius},${lat},${lng});
+      nwr["amenity"~"restaurant|fast_food|cafe|bar|pub|biergarten|food_court|ice_cream"]["name"](around:${radius},${lat},${lng});
     );
     out center;
   `;
@@ -61,6 +69,9 @@ export async function fetchNearbyRestaurants(
           const amenity = tags.amenity;
           if (amenity === 'cafe') cuisine = 'Cafe';
           else if (amenity === 'fast_food') cuisine = 'Fast Food';
+          else if (amenity === 'biergarten') cuisine = 'Biergarten';
+          else if (amenity === 'ice_cream') cuisine = 'Eisdiele';
+          else if (amenity === 'food_court') cuisine = 'Food Court';
           else cuisine = 'Restaurant';
         }
 
