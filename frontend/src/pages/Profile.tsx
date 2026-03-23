@@ -21,14 +21,16 @@ export default function Profile() {
   const [profileData, setProfileData] = useState<any>(null);
   const [userRatings, setUserRatings] = useState<Rating[]>([]);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState(false);
 
   useEffect(() => {
     if (user && user.id !== 'guest' && isAuthenticated) {
       setProfileLoading(true);
+      setProfileError(false);
       Promise.all([
-        api.get(`/users/${user.id}/profile`).then(({ data }) => setProfileData(data)).catch(() => {}),
-        api.get(`/ratings/user/${user.id}`).then(({ data }) => setUserRatings(data.ratings || [])).catch(() => {}),
-      ]).finally(() => setProfileLoading(false));
+        api.get(`/users/${user.id}/profile`).then(({ data }) => setProfileData(data)),
+        api.get(`/ratings/user/${user.id}`).then(({ data }) => setUserRatings(data.ratings || [])),
+      ]).catch(() => setProfileError(true)).finally(() => setProfileLoading(false));
     }
   }, [user, isAuthenticated]);
 
@@ -84,6 +86,17 @@ export default function Profile() {
     system: t('profile.themeSystem'),
   };
 
+  if (profileError) {
+    return (
+      <div className="flex-1 flex items-center justify-center pb-24">
+        <div className="text-center">
+          <p className="text-stone-500 mb-3">Profil konnte nicht geladen werden</p>
+          <button onClick={() => window.location.reload()} className="text-teal-500 font-medium">Erneut versuchen</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
       {/* Header */}
@@ -95,7 +108,7 @@ export default function Profile() {
           transition={{ type: 'spring', damping: 12 }}
         >
           <span className="text-xl text-white font-semibold">
-            {displayUser?.username.charAt(0).toUpperCase()}
+            {displayUser?.username?.charAt(0)?.toUpperCase() || '?'}
           </span>
         </motion.div>
         <h2 className="text-lg font-semibold text-stone-800">{displayUser?.username}</h2>

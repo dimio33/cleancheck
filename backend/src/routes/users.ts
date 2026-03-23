@@ -43,15 +43,15 @@ router.get('/:id/profile', async (req: Request, res: Response): Promise<void> =>
       [id]
     );
 
-    const stats = statsResult.rows[0];
+    const stats = statsResult.rows[0] || { total_ratings: '0', avg_score: '0', cities_visited: '0' };
 
     res.json({
       user: userResult.rows[0],
       badges: badgesResult.rows,
       stats: {
-        total_ratings: parseInt(stats.total_ratings, 10),
-        avg_score: Math.round(parseFloat(stats.avg_score) * 10) / 10,
-        cities_visited: parseInt(stats.cities_visited, 10),
+        total_ratings: parseInt(stats.total_ratings || '0', 10),
+        avg_score: Math.round(parseFloat(stats.avg_score || '0') * 10) / 10,
+        cities_visited: parseInt(stats.cities_visited || '0', 10),
       },
     });
   } catch (err) {

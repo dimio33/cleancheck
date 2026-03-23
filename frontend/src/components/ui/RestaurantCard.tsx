@@ -16,6 +16,8 @@ interface RestaurantCardProps {
 function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCardProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const isFavorite = useFavoritesStore((s) => s.isFavorite(restaurant.id));
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
 
   const getScoreColor = (s: number | null) => {
     if (s === null) return { stroke: '#D6D3D1', text: 'text-stone-400' };
@@ -85,7 +87,7 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
 
       {/* Favorite heart */}
       <motion.button
-        onClick={(e) => { e.stopPropagation(); useFavoritesStore.getState().toggleFavorite(restaurant.id); }}
+        onClick={(e) => { e.stopPropagation(); toggleFavorite(restaurant.id); }}
         className="flex-shrink-0 w-8 h-8 flex items-center justify-center"
         aria-label="Favorite"
         whileTap={{ scale: 1.4 }}
@@ -93,10 +95,10 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
       >
         <motion.svg
           width="16" height="16" viewBox="0 0 24 24"
-          fill={useFavoritesStore.getState().isFavorite(restaurant.id) ? '#F43F5E' : 'none'}
-          stroke={useFavoritesStore.getState().isFavorite(restaurant.id) ? '#F43F5E' : '#D6D3D1'}
+          fill={isFavorite ? '#F43F5E' : 'none'}
+          stroke={isFavorite ? '#F43F5E' : '#D6D3D1'}
           strokeWidth="2"
-          animate={{ scale: useFavoritesStore.getState().isFavorite(restaurant.id) ? [1, 1.3, 1] : 1 }}
+          animate={{ scale: isFavorite ? [1, 1.3, 1] : 1 }}
           transition={{ duration: 0.3 }}
         >
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />

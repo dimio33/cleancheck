@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises';
+import fsSync from 'fs';
 import crypto from 'crypto';
 import { query } from '../utils/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
@@ -97,7 +98,7 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
       }
     }
 
-    if (!restaurant_id || !cleanliness || !smell || !supplies || !condition || !accessibility) {
+    if (!restaurant_id || cleanliness == null || smell == null || supplies == null || condition == null || accessibility == null) {
       res.status(400).json({ error: 'restaurant_id and all rating categories are required' });
       return;
     }
@@ -132,16 +133,27 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
     const userId = req.user?.id || null;
     const anonymousId = isAnonymous ? generateAnonymousId(req) : null;
 
-    // Anti-spam: Duplicate comment detection (same anonymous_id + same comment within 24h)
-    if (comment && typeof comment === 'string' && !req.user) {
-      const anonId = generateAnonymousId(req);
-      const dupCommentCheck = await query(
-        `SELECT id FROM ratings WHERE anonymous_id = $1 AND comment = $2 AND created_at > NOW() - INTERVAL '24 hours'`,
-        [anonId, comment]
-      );
-      if (dupCommentCheck.rows.length > 0) {
-        res.status(201).json({ rating: { id: 'ok' }, restaurant_score: null, new_badges: [] });
-        return;
+    // Anti-spam: Duplicate comment detection (same user/anonymous + same comment within 24h)
+    if (comment && typeof comment === 'string') {
+      if (req.user) {
+        const dupCommentCheck = await query(
+          `SELECT id FROM ratings WHERE user_id = $1 AND comment = $2 AND created_at > NOW() - INTERVAL '24 hours'`,
+          [req.user.id, comment]
+        );
+        if (dupCommentCheck.rows.length > 0) {
+          res.status(409).json({ error: 'You already submitted this comment recently' });
+          return;
+        }
+      } else {
+        const anonId = generateAnonymousId(req);
+        const dupCommentCheck = await query(
+          `SELECT id FROM ratings WHERE anonymous_id = $1 AND comment = $2 AND created_at > NOW() - INTERVAL '24 hours'`,
+          [anonId, comment]
+        );
+        if (dupCommentCheck.rows.length > 0) {
+          res.status(201).json({ rating: { id: 'ok' }, restaurant_score: null, new_badges: [] });
+          return;
+        }
       }
     }
 
@@ -263,10 +275,10 @@ router.post('/:id/photos', authenticate, upload.single('photo'), async (req: Aut
     } else {
       // Local fallback for development
       const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
-      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+      if (!fsSync.existsSync(uploadsDir)) await fs.mkdir(uploadsDir, { recursive: true });
       const ext = req.file.mimetype.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
       const filename = `${id}-${Date.now()}.${ext}`;
-      fs.writeFileSync(path.join(uploadsDir, filename), buffer);
+      await fs.writeFile(path.join(uploadsDir, filename), buffer);
       photoUrl = `/uploads/${filename}`;
     }
 

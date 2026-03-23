@@ -20,6 +20,11 @@ export interface CriteriaScores {
   accessibility: number;
 }
 
+export interface RatingPhoto {
+  id: string;
+  photo_url: string;
+}
+
 export interface Rating {
   id: string;
   restaurant_id: string;
@@ -27,10 +32,11 @@ export interface Rating {
   user_id: string;
   user_name: string;
   user_avatar?: string;
+  username?: string;
   scores: CriteriaScores;
   overall_score: number;
   comment?: string;
-  photos?: string[];
+  photos?: RatingPhoto[];
   created_at: string;
 }
 

@@ -88,7 +88,7 @@ async function getUserRatingCount(userId: string): Promise<number> {
     `SELECT COUNT(*) as count FROM ratings WHERE user_id = $1`,
     [userId]
   );
-  return parseInt(result.rows[0].count, 10);
+  return parseInt(result.rows[0]?.count || '0', 10);
 }
 
 async function getUserPhotoCount(userId: string): Promise<number> {
@@ -98,7 +98,7 @@ async function getUserPhotoCount(userId: string): Promise<number> {
      WHERE r.user_id = $1`,
     [userId]
   );
-  return parseInt(result.rows[0].count, 10);
+  return parseInt(result.rows[0]?.count || '0', 10);
 }
 
 async function getUserCityCount(userId: string): Promise<number> {
@@ -109,7 +109,7 @@ async function getUserCityCount(userId: string): Promise<number> {
      WHERE r.user_id = $1 AND rest.city IS NOT NULL`,
     [userId]
   );
-  return parseInt(result.rows[0].count, 10);
+  return parseInt(result.rows[0]?.count || '0', 10);
 }
 
 async function getUserStreak(userId: string): Promise<number> {
@@ -129,10 +129,10 @@ async function getUserStreak(userId: string): Promise<number> {
     // Compare date strings directly (YYYY-MM-DD format from pg)
     const currentDate = result.rows[i - 1].visited_at.split('T')[0];
     const previousDate = result.rows[i].visited_at.split('T')[0];
-    const current = new Date(currentDate);
-    const previous = new Date(previousDate);
+    const current = new Date(currentDate + 'T00:00:00Z');
+    const previous = new Date(previousDate + 'T00:00:00Z');
     const diffMs = current.getTime() - previous.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffDays === 1) {
       streak++;
