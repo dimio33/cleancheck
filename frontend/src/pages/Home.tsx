@@ -115,6 +115,7 @@ function createScoreIcon(score: number | null) {
   return icon;
 }
 
+// Values in meters — divided by 1000 before API call (backend expects km)
 const RADIUS_OPTIONS = [
   { label: '1 km', value: 1000 },
   { label: '2 km', value: 2000 },

@@ -10,15 +10,18 @@ import LocationDeniedBanner from './components/ui/LocationDeniedBanner';
 import PWAUpdatePrompt from './components/ui/PWAUpdatePrompt';
 import { useThemeStore } from './stores/themeStore';
 import { useDraftStore } from './stores/draftStore';
+import { useGeoStore } from './stores/geoStore';
 import { useToastStore } from './components/ui/Toast';
 import './App.css';
 
 function App() {
   const initTheme = useThemeStore((s) => s.init);
+  const initGeo = useGeoStore((s) => s.initGeo);
   const addToast = useToastStore((s) => s.addToast);
 
   useEffect(() => {
     initTheme();
+    initGeo();
 
     // Sync offline drafts when coming back online
     const handleOnline = async () => {
@@ -35,7 +38,7 @@ function App() {
     }
 
     return () => window.removeEventListener('online', handleOnline);
-  }, [initTheme, addToast]);
+  }, [initTheme, initGeo, addToast]);
 
   return (
     <BrowserRouter>

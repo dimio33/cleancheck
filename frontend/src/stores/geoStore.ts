@@ -13,13 +13,19 @@ interface GeoStore {
   permissionState: PermissionState;
   permissionAsked: boolean;
   watchId: number | null;
+  initialized: boolean;
 
+  initGeo: () => Promise<void>;
   checkPermission: () => Promise<void>;
   requestPermission: () => Promise<PermissionState>;
   startWatching: () => void;
   stopWatching: () => void;
   setPermissionAsked: () => void;
 }
+
+// Track permission listener to avoid duplicates
+let permissionListener: (() => void) | null = null;
+let permissionResult: PermissionStatus | null = null;
 
 export const useGeoStore = create<GeoStore>((set, get) => ({
   lat: DEFAULT_LAT,
@@ -29,6 +35,16 @@ export const useGeoStore = create<GeoStore>((set, get) => ({
   permissionState: (localStorage.getItem('cleancheck_geo_permission') as PermissionState) || 'unknown',
   permissionAsked: localStorage.getItem('cleancheck_geo_asked') === 'true',
   watchId: null,
+  initialized: false,
+
+  initGeo: async () => {
+    if (get().initialized) return;
+    set({ initialized: true });
+    await get().checkPermission();
+    if (get().permissionState === 'granted') {
+      get().startWatching();
+    }
+  },
 
   checkPermission: async () => {
     // Try Permissions API (Chrome, Firefox — NOT Safari)
@@ -41,8 +57,13 @@ export const useGeoStore = create<GeoStore>((set, get) => ({
         set({ permissionState: state, loading: state !== 'granted' ? false : get().loading });
         localStorage.setItem('cleancheck_geo_permission', state);
 
+        // Clean up old listener before adding new one
+        if (permissionListener && permissionResult) {
+          permissionResult.removeEventListener('change', permissionListener);
+        }
+
         // Listen for changes (user toggles in browser settings while app is open)
-        result.addEventListener('change', () => {
+        permissionListener = () => {
           const newState = result.state === 'granted' ? 'granted'
             : result.state === 'denied' ? 'denied'
             : 'prompt';
@@ -51,7 +72,9 @@ export const useGeoStore = create<GeoStore>((set, get) => ({
           if (newState === 'granted' && !get().watchId) {
             get().startWatching();
           }
-        });
+        };
+        permissionResult = result;
+        result.addEventListener('change', permissionListener);
         return;
       } catch {
         // Permissions API failed — fall through to localStorage
@@ -91,12 +114,10 @@ export const useGeoStore = create<GeoStore>((set, get) => ({
         },
         (err) => {
           if (err.code === 1) {
-            // PERMISSION_DENIED
             set({ permissionState: 'denied', loading: false, error: 'Permission denied' });
             localStorage.setItem('cleancheck_geo_permission', 'denied');
             resolve('denied');
           } else {
-            // POSITION_UNAVAILABLE or TIMEOUT
             set({ permissionState: 'unavailable', loading: false, error: err.message });
             localStorage.setItem('cleancheck_geo_permission', 'unavailable');
             resolve('unavailable');
@@ -144,11 +165,3 @@ export const useGeoStore = create<GeoStore>((set, get) => ({
     localStorage.setItem('cleancheck_geo_asked', 'true');
   },
 }));
-
-// Auto-init: check permission on store creation
-useGeoStore.getState().checkPermission().then(() => {
-  const state = useGeoStore.getState().permissionState;
-  if (state === 'granted') {
-    useGeoStore.getState().startWatching();
-  }
-});

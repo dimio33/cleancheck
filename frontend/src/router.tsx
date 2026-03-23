@@ -1,5 +1,6 @@
 import { useState, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 
 // Lazy-loaded pages — each becomes its own chunk
 const Home = lazy(() => import('./pages/Home'));
@@ -46,6 +47,7 @@ function NotFound() {
 export default function AppRouter() {
   return (
     <Suspense fallback={<PageLoader />}>
+      <ErrorBoundary>
       <Routes>
         <Route path="/" element={<HomeOrSplash />} />
         <Route path="/splash" element={<Splash />} />
@@ -59,6 +61,7 @@ export default function AppRouter() {
         <Route path="/trending" element={<Trending />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </ErrorBoundary>
     </Suspense>
   );
 }

@@ -12,6 +12,7 @@ interface RatingDraft {
 
 interface DraftStore {
   drafts: RatingDraft[];
+  syncing: boolean;
   addDraft: (draft: RatingDraft) => void;
   syncDrafts: () => Promise<number>;
   clearDrafts: () => void;
@@ -25,6 +26,7 @@ export const useDraftStore = create<DraftStore>((set, get) => ({
       return [];
     }
   })(),
+  syncing: false,
 
   addDraft: (draft: RatingDraft) => {
     const next = [...get().drafts, draft];
@@ -33,8 +35,9 @@ export const useDraftStore = create<DraftStore>((set, get) => ({
   },
 
   syncDrafts: async () => {
-    const { drafts } = get();
-    if (drafts.length === 0) return 0;
+    const { drafts, syncing } = get();
+    if (drafts.length === 0 || syncing) return 0;
+    set({ syncing: true });
 
     let synced = 0;
     const remaining: RatingDraft[] = [];
@@ -63,7 +66,7 @@ export const useDraftStore = create<DraftStore>((set, get) => ({
     }
 
     localStorage.setItem('cleancheck_drafts', JSON.stringify(remaining));
-    set({ drafts: remaining });
+    set({ drafts: remaining, syncing: false });
     return synced;
   },
 
