@@ -11,6 +11,7 @@ import userRoutes from './routes/users';
 import qrRoutes from './routes/qr';
 import { initModeration, getModerationStatus } from './services/moderationService';
 import { apiLimiter, authLimiter, ratingLimiter } from './middleware/rateLimiter';
+import { query } from './utils/db';
 
 // ============================================================
 // Env validation
@@ -101,6 +102,16 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, async () => {
     console.log(`CleanCheck API running on port ${PORT}`);
+
+    // Ensure indexes exist (idempotent)
+    try {
+      await query('CREATE INDEX IF NOT EXISTS idx_ratings_user_created ON ratings(user_id, created_at DESC)');
+      await query('CREATE INDEX IF NOT EXISTS idx_ratings_visited_at ON ratings(visited_at)');
+      await query('CREATE INDEX IF NOT EXISTS idx_rating_photos_rating ON rating_photos(rating_id)');
+      console.log('Database indexes verified');
+    } catch (err) {
+      console.warn('Index creation skipped:', (err as Error).message);
+    }
 
     // Pre-load content moderation model (non-blocking)
     try {
