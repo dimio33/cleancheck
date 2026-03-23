@@ -25,6 +25,12 @@ function processQueue(error: unknown, token: string | null): void {
   failedQueue = [];
 }
 
+function clearAuth(): void {
+  localStorage.removeItem('cleancheck_token');
+  localStorage.removeItem('cleancheck_refresh_token');
+  localStorage.removeItem('cleancheck_user');
+}
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('cleancheck_token');
   if (token) {
@@ -38,7 +44,7 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Don't retry refresh or logout requests
+    // Don't retry refresh or logout requests, or non-401 errors
     if (
       error.response?.status !== 401 ||
       !originalRequest ||
@@ -47,22 +53,19 @@ api.interceptors.response.use(
       originalRequest.url === '/auth/logout'
     ) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('cleancheck_token');
-        localStorage.removeItem('cleancheck_refresh_token');
-        localStorage.removeItem('cleancheck_user');
+        clearAuth();
       }
       return Promise.reject(error);
     }
 
     const refreshToken = localStorage.getItem('cleancheck_refresh_token');
     if (!refreshToken) {
-      localStorage.removeItem('cleancheck_token');
-      localStorage.removeItem('cleancheck_user');
+      clearAuth();
       return Promise.reject(error);
     }
 
+    // If already refreshing, queue this request
     if (isRefreshing) {
-      // Queue this request until the refresh completes
       return new Promise<string>((resolve, reject) => {
         failedQueue.push({ resolve, reject });
       }).then((token) => {
@@ -84,15 +87,16 @@ api.interceptors.response.use(
       localStorage.setItem('cleancheck_token', data.token);
       localStorage.setItem('cleancheck_refresh_token', data.refreshToken);
 
+      // Process queued requests with new token
       processQueue(null, data.token);
 
+      // Retry original request with new token
       originalRequest.headers.Authorization = `Bearer ${data.token}`;
       return api(originalRequest);
     } catch (refreshError) {
+      // Refresh failed — reject all queued requests and clear auth
       processQueue(refreshError, null);
-      localStorage.removeItem('cleancheck_token');
-      localStorage.removeItem('cleancheck_refresh_token');
-      localStorage.removeItem('cleancheck_user');
+      clearAuth();
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

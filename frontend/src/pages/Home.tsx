@@ -134,6 +134,8 @@ function zoomForRadius(r: number): number {
 // Marker cluster component using leaflet.markercluster directly
 function MarkerClusterGroup({ restaurants, navigate }: { restaurants: { id: string; name: string; lat: number; lng: number; clean_score: number | null }[]; navigate: (path: string) => void }) {
   const map = useMap();
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
 
   useEffect(() => {
     const clusterGroup = (L as any).markerClusterGroup({
@@ -162,13 +164,16 @@ function MarkerClusterGroup({ restaurants, navigate }: { restaurants: { id: stri
     for (const r of restaurants) {
       const marker = L.marker([r.lat, r.lng], { icon: createScoreIcon(r.clean_score) });
       marker.bindPopup(`<div style="text-align:center;padding:2px"><strong style="font-size:13px">${r.name.replace(/</g, '&lt;')}</strong></div>`);
-      marker.on('click', () => navigate(`/restaurant/${r.id}`));
+      marker.on('click', () => navigateRef.current(`/restaurant/${r.id}`));
       clusterGroup.addLayer(marker);
     }
 
     map.addLayer(clusterGroup);
-    return () => { map.removeLayer(clusterGroup); };
-  }, [restaurants, map, navigate]);
+    return () => {
+      clusterGroup.clearLayers();
+      map.removeLayer(clusterGroup);
+    };
+  }, [restaurants, map]);
 
   return null;
 }

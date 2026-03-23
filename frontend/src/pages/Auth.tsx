@@ -19,6 +19,27 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Client-side validation
+    if (mode === 'register') {
+      if (username.trim().length < 3) {
+        setError(t('auth.errorUsernameShort'));
+        setLoading(false);
+        return;
+      }
+      if (password.length < 6) {
+        setError(t('auth.errorPasswordShort'));
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (!email.includes('@') || !email.includes('.')) {
+      setError(t('auth.errorEmailInvalid'));
+      setLoading(false);
+      return;
+    }
+
     try {
       if (mode === 'login') {
         await login(email, password);

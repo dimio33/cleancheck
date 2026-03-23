@@ -70,6 +70,9 @@ CREATE TABLE user_badges (
 CREATE INDEX idx_restaurants_location ON restaurants(lat, lng);
 CREATE INDEX idx_ratings_restaurant ON ratings(restaurant_id);
 CREATE INDEX idx_ratings_user ON ratings(user_id);
+CREATE INDEX IF NOT EXISTS idx_ratings_user_created ON ratings(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ratings_visited_at ON ratings(visited_at);
+CREATE INDEX IF NOT EXISTS idx_rating_photos_rating ON rating_photos(rating_id);
 
 -- Seed badges
 INSERT INTO badges (slug, name_de, name_en, description_de, description_en, icon, criteria) VALUES

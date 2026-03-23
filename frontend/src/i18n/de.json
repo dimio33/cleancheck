@@ -143,7 +143,10 @@
     "hasAccount": "Bereits ein Konto?",
     "loginFailed": "Anmeldung fehlgeschlagen",
     "registerFailed": "Registrierung fehlgeschlagen",
-    "invalidCredentials": "E-Mail oder Passwort falsch"
+    "invalidCredentials": "E-Mail oder Passwort falsch",
+    "errorUsernameShort": "Benutzername muss mindestens 3 Zeichen lang sein",
+    "errorPasswordShort": "Passwort muss mindestens 6 Zeichen lang sein",
+    "errorEmailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein"
   },
   "badges": {
     "firstRating": {

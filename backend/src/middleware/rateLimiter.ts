@@ -9,7 +9,7 @@ const stores = new Map<string, Map<string, RateLimitEntry>>();
 
 /**
  * Create a rate limiter middleware with configurable window and max requests.
- * Uses in-memory storage keyed by client IP.
+ * Uses in-memory storage keyed by client IP + user ID (if authenticated).
  */
 export function createRateLimiter(windowMs: number, maxRequests: number): RequestHandler {
   const storeKey = `${windowMs}:${maxRequests}`;
@@ -17,7 +17,7 @@ export function createRateLimiter(windowMs: number, maxRequests: number): Reques
   if (!stores.has(storeKey)) {
     stores.set(storeKey, new Map());
 
-    // Periodic cleanup of expired entries every 5 minutes (only once per store)
+    // Periodic cleanup of expired entries every 5 minutes
     const cleanupInterval = setInterval(() => {
       const now = Date.now();
       const store = stores.get(storeKey);
@@ -35,13 +35,16 @@ export function createRateLimiter(windowMs: number, maxRequests: number): Reques
   const store = stores.get(storeKey)!;
 
   return (req: Request, res: Response, next: NextFunction): void => {
+    // Use user ID if authenticated, otherwise IP
+    const userId = (req as any).user?.id;
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    const key = userId ? `user:${userId}` : `ip:${ip}`;
     const now = Date.now();
 
-    const entry = store.get(ip);
+    const entry = store.get(key);
 
     if (!entry || now > entry.resetAt) {
-      store.set(ip, { count: 1, resetAt: now + windowMs });
+      store.set(key, { count: 1, resetAt: now + windowMs });
       next();
       return;
     }

@@ -143,7 +143,10 @@
     "hasAccount": "Already have an account?",
     "loginFailed": "Login failed",
     "registerFailed": "Registration failed",
-    "invalidCredentials": "Invalid email or password"
+    "invalidCredentials": "Invalid email or password",
+    "errorUsernameShort": "Username must be at least 3 characters",
+    "errorPasswordShort": "Password must be at least 6 characters",
+    "errorEmailInvalid": "Please enter a valid email address"
   },
   "badges": {
     "firstRating": {
