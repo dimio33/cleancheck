@@ -250,7 +250,9 @@ export default function Home() {
   const hasLocation = geo.permissionState === 'granted' || searchOverride !== null;
 
   useEffect(() => {
-    if (hasLocation && (!geo.loading || searchOverride)) {
+    // Don't fetch with default coordinates — wait for real GPS or city search
+    const hasRealCoords = searchOverride || !geo.loading;
+    if (hasLocation && hasRealCoords) {
       fetchRestaurants(effectiveLat, effectiveLng);
     }
   }, [effectiveLat, effectiveLng, radius, geo.loading, hasLocation, searchOverride, fetchRestaurants]);

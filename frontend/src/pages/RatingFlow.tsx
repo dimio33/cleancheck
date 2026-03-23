@@ -217,7 +217,7 @@ export default function RatingFlow() {
           const formData = new FormData();
           formData.append('photo', selectedPhoto);
           await api.post(`/ratings/${ratingData.rating.id}/photos`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
+            headers: { 'Content-Type': undefined }, // Let axios set boundary automatically
           });
         } catch {
           addToast(t('rating.photoUploadFailed'), 'error');
@@ -419,21 +419,13 @@ export default function RatingFlow() {
               </div>
             </div>
 
-            {preselected && (
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder={t('rating.addComment')}
-                maxLength={1000}
-                className="w-full h-20 p-3 bg-stone-50 rounded-xl border-0 text-sm text-stone-900 placeholder:text-stone-400 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 mb-4 transition-all"
-              />
-            )}
+            {/* Comment + Photo moved to Step 3 for all flows */}
 
             <button
-              onClick={() => preselected ? handleSubmit() : setStep(3)}
+              onClick={() => setStep(3)}
               className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform"
             >
-              {preselected ? t('rating.submit') : t('splash.next')}
+              {t('splash.next')}
             </button>
           </motion.div>
         )}
