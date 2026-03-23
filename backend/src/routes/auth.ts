@@ -65,8 +65,8 @@ router.post('/register', async (req: AuthRequest, res: Response): Promise<void> 
 
     // Sanitize username: strip HTML tags to prevent XSS
     const sanitizedUsername = username.replace(/<[^>]*>/g, '').trim();
-    if (sanitizedUsername.length < 2 || sanitizedUsername.length > 50) {
-      res.status(400).json({ error: 'Username must be between 2 and 50 characters' });
+    if (sanitizedUsername.length < 3 || sanitizedUsername.length > 50) {
+      res.status(400).json({ error: 'Username must be between 3 and 50 characters' });
       return;
     }
 
