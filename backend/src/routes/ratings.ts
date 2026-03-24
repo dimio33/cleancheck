@@ -90,9 +90,10 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
     }
 
     // Anti-spam: Minimum interaction time (5 seconds)
+    // Only reject if elapsed is positive AND under threshold (handles client/server clock skew)
     if (_loaded_at && typeof _loaded_at === 'number') {
       const elapsed = Date.now() - _loaded_at;
-      if (elapsed < 5000) {
+      if (elapsed >= 0 && elapsed < 5000) {
         res.status(201).json({ rating: { id: 'ok' }, restaurant_score: null, new_badges: [] });
         return;
       }
