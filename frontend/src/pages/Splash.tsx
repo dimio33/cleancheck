@@ -23,14 +23,15 @@ export default function Splash() {
     navigate('/');
   };
 
-  // Auto-skip splash after 8 seconds
+  // Auto-skip splash after 30 seconds of inactivity
   useEffect(() => {
     const timer = setTimeout(() => {
+      loginAsGuest();
       localStorage.setItem('cleancheck_onboarded', 'true');
       navigate('/');
-    }, 3000);
+    }, 30000);
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, loginAsGuest]);
 
   const handleGuestContinue = () => {
     loginAsGuest();
@@ -114,10 +115,11 @@ export default function Splash() {
       </button>
       <button
         onClick={handleGuestContinue}
-        className="mt-4 text-stone-400 text-sm font-medium hover:text-teal-600 transition-colors"
+        className="mt-4 text-stone-400 text-sm font-medium hover:text-teal-600 transition-colors active:scale-95 transition-transform"
       >
         {t('splash.continueAsGuest')}
       </button>
+      <p className="mt-2 text-xs text-stone-300 dark:text-stone-600">{t('splash.noAccountNeeded')}</p>
     </motion.div>,
   ];
 
