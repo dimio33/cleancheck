@@ -147,6 +147,7 @@ export default function RatingFlow() {
   };
 
   const handleSelectRestaurant = async (r: Restaurant) => {
+    if (geoChecking) return; // Prevent concurrent geo checks
     setSelectedRestaurant(r);
     const allowed = await verifyGeoLocation(r);
     if (allowed) {

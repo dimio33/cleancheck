@@ -19,7 +19,8 @@ function getTimeout(radius: number): number {
 export async function fetchNearbyRestaurants(
   lat: number,
   lng: number,
-  radius: number = 5000
+  radius: number = 5000,
+  signal?: AbortSignal
 ): Promise<Restaurant[]> {
   const maxResults = getMaxResults(radius);
   const timeout = getTimeout(radius);
@@ -37,6 +38,7 @@ export async function fetchNearbyRestaurants(
       method: 'POST',
       body: `data=${encodeURIComponent(query)}`,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      signal,
     });
 
     if (!response.ok) throw new Error('Overpass API error');

@@ -11,6 +11,7 @@ interface RestaurantStore {
   lastFetchLocation: { lat: number; lng: number } | null;
   mapCenter: { lat: number; lng: number } | null;
   mapZoom: number | null;
+  _abortController: AbortController | null;
   fetchRestaurants: (lat: number, lng: number) => Promise<void>;
   setRadius: (radius: number) => void;
   setMapView: (lat: number, lng: number, zoom: number) => void;
@@ -39,12 +40,10 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
   lastFetchLocation: null,
   mapCenter: null,
   mapZoom: null,
+  _abortController: null,
 
   fetchRestaurants: async (lat: number, lng: number) => {
-    const { lastFetchLocation, loading, radius } = get();
-
-    // Don't refetch if already loading
-    if (loading) return;
+    const { lastFetchLocation, radius } = get();
 
     // Don't refetch if user hasn't moved much
     if (lastFetchLocation) {
@@ -52,10 +51,16 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
       if (moved < MIN_REFETCH_DISTANCE) return;
     }
 
-    set({ loading: true, error: null });
+    // Abort previous in-flight request
+    get()._abortController?.abort();
+    const controller = new AbortController();
+    set({ loading: true, error: null, _abortController: controller });
 
     try {
-      const results = await fetchNearbyRestaurants(lat, lng, radius);
+      const results = await fetchNearbyRestaurants(lat, lng, radius, controller.signal);
+
+      // Ignore if this request was aborted (a newer one took over)
+      if (controller.signal.aborted) return;
 
       if (results.length > 0) {
         // Merge scores from backend DB — restaurants that have been rated
@@ -95,7 +100,9 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
           error: get().restaurants.length === 0 ? 'no_results' : null,
         });
       }
-    } catch {
+    } catch (err) {
+      // Ignore abort errors (request was cancelled by a newer one)
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       // Keep old restaurants — don't wipe data on fetch error
       set({
         loading: false,

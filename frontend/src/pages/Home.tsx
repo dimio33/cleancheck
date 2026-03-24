@@ -23,10 +23,12 @@ function TrendingInline() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     api.get('/restaurants/trending')
-      .then(({ data }) => setItems(data.restaurants || []))
+      .then(({ data }) => { if (!cancelled) setItems(data.restaurants || []); })
       .catch(() => {})
-      .finally(() => setLoaded(true));
+      .finally(() => { if (!cancelled) setLoaded(true); });
+    return () => { cancelled = true; };
   }, []);
 
   if (!loaded) {
@@ -241,16 +243,18 @@ export default function Home() {
   const [nameFilter, setNameFilter] = useState('');
   const [cuisineFilter, setCuisineFilter] = useState('All');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchIdRef = useRef(0);
 
   const searchCity = useCallback((q: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setCitySearch(q);
     if (q.length < 2) { setCityResults([]); return; }
+    const id = ++searchIdRef.current;
     debounceRef.current = setTimeout(() => {
       fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&addressdetails=0`)
         .then(r => r.json())
-        .then(data => setCityResults(data || []))
-        .catch(() => setCityResults([]));
+        .then(data => { if (searchIdRef.current === id) setCityResults(data || []); })
+        .catch(() => { if (searchIdRef.current === id) setCityResults([]); });
     }, 300);
   }, []);
 

@@ -50,44 +50,43 @@ export default function RestaurantDetail() {
 
   useEffect(() => {
     if (!id) return;
+    let cancelled = false;
     setApiLoading(true);
 
-    if (id.startsWith('osm-')) {
-      const storeRestaurant = useRestaurantStore.getState().getById(id);
-      if (storeRestaurant) {
-        const osmId = id.replace('osm-', '');
-        api.get(`/restaurants?lat=${storeRestaurant.lat}&lng=${storeRestaurant.lng}&radius=0.5`)
-          .then(({ data }) => {
-            const match = data.restaurants?.find((r: any) => String(r.osm_id) === osmId);
-            if (match) return api.get(`/restaurants/${match.id}`);
-            // Wider radius fallback
-            return api.get(`/restaurants?lat=${storeRestaurant.lat}&lng=${storeRestaurant.lng}&radius=5`)
-              .then(({ data: wider }) => {
-                const m = wider.restaurants?.find((r: any) => String(r.osm_id) === osmId);
-                return m ? api.get(`/restaurants/${m.id}`) : null;
-              });
-          })
-          .then((res) => {
-            if (res?.data) {
-              setApiRatings(res.data.ratings || []);
-              if (res.data.restaurant) setApiRestaurant(res.data.restaurant);
-            }
-          })
-          .catch(() => {})
-          .finally(() => setApiLoading(false));
-      } else {
-        setApiLoading(false);
-      }
-    } else {
-      // UUID from DB (e.g. from Trending page)
-      api.get(`/restaurants/${id}`)
-        .then(({ data }) => {
+    const loadData = async () => {
+      try {
+        if (id.startsWith('osm-')) {
+          const storeRestaurant = useRestaurantStore.getState().getById(id);
+          if (!storeRestaurant) { setApiLoading(false); return; }
+          const osmId = id.replace('osm-', '');
+          const { data } = await api.get(`/restaurants?lat=${storeRestaurant.lat}&lng=${storeRestaurant.lng}&radius=0.5`);
+          let match = (data.restaurants || []).find((r: any) => String(r.osm_id) === osmId);
+          if (!match) {
+            const { data: wider } = await api.get(`/restaurants?lat=${storeRestaurant.lat}&lng=${storeRestaurant.lng}&radius=5`);
+            match = (wider.restaurants || []).find((r: any) => String(r.osm_id) === osmId);
+          }
+          if (cancelled) return;
+          if (match) {
+            const { data: detail } = await api.get(`/restaurants/${match.id}`);
+            if (cancelled) return;
+            setApiRatings(detail.ratings || []);
+            if (detail.restaurant) setApiRestaurant(detail.restaurant);
+          }
+        } else {
+          const { data } = await api.get(`/restaurants/${id}`);
+          if (cancelled) return;
           setApiRatings(data.ratings || []);
           if (data.restaurant) setApiRestaurant(data.restaurant);
-        })
-        .catch(() => {})
-        .finally(() => setApiLoading(false));
-    }
+        }
+      } catch {
+        // Silently fail — store data is used as fallback
+      } finally {
+        if (!cancelled) setApiLoading(false);
+      }
+    };
+
+    loadData();
+    return () => { cancelled = true; };
   }, [id]);
 
   const ratings = [...apiRatings].sort((a, b) => {
