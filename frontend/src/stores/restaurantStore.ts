@@ -86,21 +86,20 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
           // Backend unavailable — show Overpass results without scores
         }
 
-        set({ restaurants: results, loading: false, lastFetchLocation: { lat, lng } });
+        set({ restaurants: results, loading: false, lastFetchLocation: { lat, lng }, error: null });
       } else {
+        // Keep old restaurants — don't wipe data on empty Overpass response
         set({
-          restaurants: [],
           loading: false,
           lastFetchLocation: { lat, lng },
-          error: 'no_results',
+          error: get().restaurants.length === 0 ? 'no_results' : null,
         });
       }
     } catch {
+      // Keep old restaurants — don't wipe data on fetch error
       set({
-        restaurants: [],
         loading: false,
-        lastFetchLocation: { lat, lng },
-        error: 'fetch_error',
+        error: get().restaurants.length === 0 ? 'fetch_error' : null,
       });
     }
   },
