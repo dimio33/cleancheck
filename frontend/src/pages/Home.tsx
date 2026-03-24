@@ -238,6 +238,8 @@ export default function Home() {
   const [citySearch, setCitySearch] = useState('');
   const [cityResults, setCityResults] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
   const [searchOverride, setSearchOverride] = useState<{ lat: number; lng: number } | null>(null);
+  const [nameFilter, setNameFilter] = useState('');
+  const [cuisineFilter, setCuisineFilter] = useState('All');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const searchCity = useCallback((q: string) => {
@@ -281,19 +283,29 @@ export default function Home() {
     }
   }, [effectiveLat, effectiveLng, radius, geo.loading, hasLocation, searchOverride, fetchRestaurants]);
 
+  const cuisines = useMemo(() => {
+    const set = new Set(restaurants.map((r) => r.cuisine).filter((c): c is string => !!c));
+    return ['All', ...Array.from(set).sort()];
+  }, [restaurants]);
+
   const restaurantsWithDistance = useMemo(() => {
     const withDist = restaurants
       .map((r) => ({
         ...r,
         distance: getDistance(effectiveLat, effectiveLng, r.lat, r.lng),
       }))
-      .filter((r) => r.distance <= radius); // Only show restaurants within selected radius
+      .filter((r) => {
+        if (r.distance > radius) return false;
+        if (nameFilter && !r.name.toLowerCase().includes(nameFilter.toLowerCase())) return false;
+        if (cuisineFilter !== 'All' && r.cuisine !== cuisineFilter) return false;
+        return true;
+      });
 
     if (sortBy === 'score') {
       return withDist.sort((a, b) => (b.clean_score ?? -1) - (a.clean_score ?? -1));
     }
     return withDist.sort((a, b) => a.distance - b.distance);
-  }, [effectiveLat, effectiveLng, restaurants, sortBy, radius]);
+  }, [effectiveLat, effectiveLng, restaurants, sortBy, radius, nameFilter, cuisineFilter]);
 
   const mapZoom = zoomForRadius(radius);
 
@@ -476,7 +488,7 @@ export default function Home() {
                 className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
                   radius === opt.value
                     ? 'bg-teal-500 text-white'
-                    : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                    : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
                 }`}
               >
                 {opt.label}
@@ -505,17 +517,48 @@ export default function Home() {
             </button>
           </div>
 
+          {/* Restaurant name search */}
+          <div className="relative mt-2 mb-2">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <input
+              type="text"
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+              placeholder={t('search.placeholder')}
+              className="w-full pl-8 pr-4 h-9 rounded-lg bg-stone-50 dark:bg-stone-800 border-0 text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+            />
+          </div>
+
+          {/* Cuisine chips */}
+          <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide mb-1">
+            {cuisines.map((cuisine) => (
+              <button
+                key={cuisine}
+                onClick={() => setCuisineFilter(cuisine)}
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-200 ${
+                  cuisineFilter === cuisine
+                    ? 'bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900'
+                    : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
+                }`}
+              >
+                {cuisine === 'All' ? t('search.allCuisines') : cuisine}
+              </button>
+            ))}
+          </div>
+
           <h2 className="text-xs uppercase tracking-widest text-stone-400 font-medium">
             {t('home.nearby')} ({restaurantsWithDistance.length})
           </h2>
         </div>
 
         <div className="overflow-y-auto px-4 pb-24" style={{ height: 'calc(100% - 56px)' }}>
-          {(loading || geo.loading) ? (
+          {(loading || geo.loading) && restaurantsWithDistance.length === 0 ? (
             <div className="py-4">
               <RestaurantCardSkeleton count={5} />
             </div>
-          ) : restaurantsWithDistance.length === 0 ? (
+          ) : restaurantsWithDistance.length === 0 && !loading ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <span className="text-3xl mb-3">🍽️</span>
               <p className="text-sm text-stone-400">{t('search.noResults')}</p>
