@@ -6,26 +6,18 @@ import { getDistance } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import RestaurantCard from '../components/ui/RestaurantCard';
 
-const RADIUS_OPTIONS = [
-  { label: '1 km', value: 1000 },
-  { label: '2 km', value: 2000 },
-  { label: '5 km', value: 5000 },
-  { label: '10 km', value: 10000 },
-  { label: '25 km', value: 25000 },
-];
-
 export default function Search() {
   const { t } = useTranslation();
   const geo = useGeolocation();
   const { lat, lng } = geo;
-  const { restaurants, fetchRestaurants, radius, setRadius } = useRestaurantStore();
+  const { restaurants, fetchRestaurants } = useRestaurantStore();
   const [query, setQuery] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState('All');
   const [minScore, setMinScore] = useState(0);
 
   useEffect(() => {
     if (!geo.loading) fetchRestaurants(lat, lng);
-  }, [lat, lng, radius, fetchRestaurants]);
+  }, [lat, lng, fetchRestaurants]);
 
   // Build cuisine list dynamically from actual restaurants
   const cuisines = useMemo(() => {
@@ -42,8 +34,7 @@ export default function Search() {
         const matchesQuery = !query || r.name.toLowerCase().includes(query.toLowerCase());
         const matchesCuisine = selectedCuisine === 'All' || r.cuisine === selectedCuisine;
         const matchesScore = minScore === 0 || (r.clean_score !== null && r.clean_score >= minScore);
-        const matchesRadius = r.distance <= radius;
-        return matchesQuery && matchesCuisine && matchesScore && matchesRadius;
+        return matchesQuery && matchesCuisine && matchesScore;
       })
       .sort((a, b) => a.distance - b.distance);
   }, [query, selectedCuisine, minScore, lat, lng, restaurants]);
@@ -81,26 +72,6 @@ export default function Search() {
         ))}
       </div>
 
-      {/* Radius filter */}
-      <div className="flex items-center gap-3 mb-3 px-1">
-        <span className="text-xs text-stone-400 shrink-0">{t('search.distance')}:</span>
-        <div className="flex gap-1.5">
-          {RADIUS_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setRadius(opt.value)}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
-                radius === opt.value
-                  ? 'bg-teal-500 text-white'
-                  : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Min score filter */}
       <div className="flex items-center gap-3 mb-5 px-1">
         <span className="text-xs text-stone-400 shrink-0">{t('search.minScore')}:</span>
@@ -136,14 +107,6 @@ export default function Search() {
         >
           <h3 className="text-sm font-medium text-stone-400 dark:text-stone-500">{t('search.noResults')}</h3>
           <p className="text-xs text-stone-300 dark:text-stone-600 mt-1.5 max-w-xs">{t('search.noResultsDesc')}</p>
-          {radius < 25000 && (
-            <button
-              onClick={() => setRadius(radius < 5000 ? 5000 : 25000)}
-              className="mt-3 px-4 py-2 rounded-xl bg-teal-500 text-white text-xs font-medium active:scale-95 transition-transform"
-            >
-              {t('search.expandRadius')}
-            </button>
-          )}
         </motion.div>
       )}
     </div>

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 // Note: useMemo still used for restaurantsWithDistance
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
@@ -117,22 +117,7 @@ function createScoreIcon(score: number | null) {
   return icon;
 }
 
-// Values in meters — divided by 1000 before API call (backend expects km)
-const RADIUS_OPTIONS = [
-  { label: '1 km', value: 1000 },
-  { label: '2 km', value: 2000 },
-  { label: '5 km', value: 5000 },
-  { label: '10 km', value: 10000 },
-  { label: '25 km', value: 25000 },
-];
-
-function zoomForRadius(r: number): number {
-  if (r <= 1000) return 15;
-  if (r <= 2000) return 14;
-  if (r <= 5000) return 13;
-  if (r <= 10000) return 12;
-  return 11;
-}
+const DEFAULT_MAP_ZOOM = 13;
 
 // Marker cluster component using leaflet.markercluster directly
 function MarkerClusterGroup({ restaurants, navigate }: { restaurants: { id: string; name: string; lat: number; lng: number; clean_score: number | null }[]; navigate: (path: string) => void }) {
@@ -236,7 +221,7 @@ export default function Home() {
   const [sheetHeight, setSheetHeight] = useState(0.55);
   const [sortBy, setSortBy] = useState<'distance' | 'score'>('distance');
   const [visibleCount, setVisibleCount] = useState(20);
-  const { restaurants, loading, fetchRestaurants, radius, setRadius } = useRestaurantStore();
+  const { restaurants, loading, fetchRestaurants } = useRestaurantStore();
   const [citySearch, setCitySearch] = useState('');
   const [cityResults, setCityResults] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
   const [searchOverride, setSearchOverride] = useState<{ lat: number; lng: number } | null>(null);
@@ -285,7 +270,7 @@ export default function Home() {
     if (hasLocation && hasRealCoords) {
       fetchRestaurants(effectiveLat, effectiveLng);
     }
-  }, [effectiveLat, effectiveLng, radius, geo.loading, hasLocation, searchOverride, fetchRestaurants]);
+  }, [effectiveLat, effectiveLng, geo.loading, hasLocation, searchOverride, fetchRestaurants]);
 
   const cuisines = useMemo(() => {
     const set = new Set(restaurants.map((r) => r.cuisine).filter((c): c is string => !!c));
@@ -299,7 +284,6 @@ export default function Home() {
         distance: getDistance(effectiveLat, effectiveLng, r.lat, r.lng),
       }))
       .filter((r) => {
-        if (r.distance > radius) return false;
         if (nameFilter && !r.name.toLowerCase().includes(nameFilter.toLowerCase())) return false;
         if (cuisineFilter !== 'All' && r.cuisine !== cuisineFilter) return false;
         return true;
@@ -309,9 +293,9 @@ export default function Home() {
       return withDist.sort((a, b) => (b.clean_score ?? -1) - (a.clean_score ?? -1));
     }
     return withDist.sort((a, b) => a.distance - b.distance);
-  }, [effectiveLat, effectiveLng, restaurants, sortBy, radius, nameFilter, cuisineFilter]);
+  }, [effectiveLat, effectiveLng, restaurants, sortBy, nameFilter, cuisineFilter]);
 
-  const mapZoom = zoomForRadius(radius);
+  const mapZoom = DEFAULT_MAP_ZOOM;
 
   // ── Discovery Mode (no location) ──
   if (!hasLocation) {
@@ -388,17 +372,6 @@ export default function Home() {
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <MapStateTracker />
           <UserLocationMarker lat={effectiveLat} lng={effectiveLng} zoom={mapZoom} />
-          <Circle
-            center={[effectiveLat, effectiveLng]}
-            radius={radius}
-            pathOptions={{
-              color: '#0d9488',
-              weight: 2.5,
-              fillColor: '#14b8a6',
-              fillOpacity: 0.1,
-              dashArray: '10 6',
-            }}
-          />
           <MarkerClusterGroup restaurants={restaurantsWithDistance} navigate={navigate} />
         </MapContainer>
       </div>
@@ -484,24 +457,8 @@ export default function Home() {
         </div>
 
         <div className="px-4 pb-2">
-          <div className="flex gap-1.5 mb-3">
-            {RADIUS_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setRadius(opt.value)}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
-                  radius === opt.value
-                    ? 'bg-teal-500 text-white'
-                    : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
           {/* Sort toggle */}
-          <div className="flex items-center gap-2 mt-2 mb-1">
+          <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] uppercase tracking-widest text-stone-400">{t('home.sortBy')}:</span>
             <button
               onClick={() => setSortBy('distance')}
