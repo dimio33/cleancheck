@@ -15,6 +15,8 @@ interface RestaurantStore {
   setRadius: (radius: number) => void;
   setMapView: (lat: number, lng: number, zoom: number) => void;
   getById: (id: string) => Restaurant | undefined;
+  updateRestaurantScore: (id: string, score: number, ratingCount: number) => void;
+  invalidate: () => void;
 }
 
 const MIN_REFETCH_DISTANCE = 500; // Only refetch if user moved 500m+
@@ -113,5 +115,17 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
 
   getById: (id: string) => {
     return get().restaurants.find((r) => r.id === id);
+  },
+
+  updateRestaurantScore: (id: string, score: number, ratingCount: number) => {
+    set({
+      restaurants: get().restaurants.map((r) =>
+        r.id === id ? { ...r, clean_score: score, rating_count: ratingCount } : r
+      ),
+    });
+  },
+
+  invalidate: () => {
+    set({ lastFetchLocation: null });
   },
 }));

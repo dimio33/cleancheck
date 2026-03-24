@@ -230,6 +230,18 @@ export default function RatingFlow() {
         }
       }
 
+      // Update store immediately so score shows without reload
+      if (ratingData.restaurant_score != null) {
+        const storeId = selectedRestaurant.id;
+        useRestaurantStore.getState().updateRestaurantScore(
+          storeId,
+          ratingData.restaurant_score,
+          (selectedRestaurant.rating_count || 0) + 1
+        );
+      }
+      // Invalidate so home page refetches fresh data on return
+      useRestaurantStore.getState().invalidate();
+
       setStep(4);
       addToast(t('rating.thankYou'), 'success');
     } catch (err: any) {
