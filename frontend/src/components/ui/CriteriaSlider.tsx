@@ -43,7 +43,7 @@ export default function CriteriaSlider({ icon, label, value, onChange }: Criteri
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full h-[3px] rounded-full appearance-none cursor-pointer"
         style={{
-          background: `linear-gradient(to right, ${colors.track} 0%, ${colors.track} ${percentage}%, #E7E5E4 ${percentage}%, #E7E5E4 100%)`,
+          background: `linear-gradient(to right, ${colors.track} 0%, ${colors.track} ${percentage}%, var(--slider-track, #E7E5E4) ${percentage}%, var(--slider-track, #E7E5E4) 100%)`,
         }}
       />
     </div>

@@ -179,10 +179,34 @@ function MarkerClusterGroup({ restaurants, navigate }: { restaurants: { id: stri
   return null;
 }
 
+function MapStateTracker() {
+  const map = useMap();
+  const { setMapView } = useRestaurantStore();
+  useEffect(() => {
+    const handler = () => {
+      const c = map.getCenter();
+      setMapView(c.lat, c.lng, map.getZoom());
+    };
+    map.on('moveend', handler);
+    return () => { map.off('moveend', handler); };
+  }, [map, setMapView]);
+  return null;
+}
+
 function UserLocationMarker({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
   const map = useMap();
+  const { mapCenter, mapZoom } = useRestaurantStore();
+  const initializedRef = useRef(false);
 
   useEffect(() => {
+    // On first mount, restore saved position if available
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      if (mapCenter && mapZoom) {
+        map.setView([mapCenter.lat, mapCenter.lng], mapZoom);
+        return;
+      }
+    }
     map.setView([lat, lng], zoom);
   }, [lat, lng, zoom, map]);
 
@@ -346,6 +370,7 @@ export default function Home() {
           attributionControl={false}
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <MapStateTracker />
           <UserLocationMarker lat={effectiveLat} lng={effectiveLng} zoom={mapZoom} />
           <Circle
             center={[effectiveLat, effectiveLng]}

@@ -72,8 +72,8 @@ export default function Search() {
             onClick={() => setSelectedCuisine(cuisine)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
               selectedCuisine === cuisine
-                ? 'bg-stone-800 text-white'
-                : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                ? 'bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900'
+                : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
             }`}
           >
             {cuisine === 'All' ? t('search.allCuisines') : cuisine}
@@ -92,7 +92,7 @@ export default function Search() {
               className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
                 radius === opt.value
                   ? 'bg-teal-500 text-white'
-                  : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                  : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
               }`}
             >
               {opt.label}
@@ -111,8 +111,8 @@ export default function Search() {
               onClick={() => setMinScore(score)}
               className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
                 minScore === score
-                  ? 'bg-stone-800 text-white'
-                  : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                  ? 'bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900'
+                  : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
               }`}
             >
               {score === 0 ? t('search.allCuisines') : `${score}+`}

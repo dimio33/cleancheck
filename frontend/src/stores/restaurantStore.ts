@@ -9,8 +9,11 @@ interface RestaurantStore {
   error: string | null;
   radius: number;
   lastFetchLocation: { lat: number; lng: number } | null;
+  mapCenter: { lat: number; lng: number } | null;
+  mapZoom: number | null;
   fetchRestaurants: (lat: number, lng: number) => Promise<void>;
   setRadius: (radius: number) => void;
+  setMapView: (lat: number, lng: number, zoom: number) => void;
   getById: (id: string) => Restaurant | undefined;
 }
 
@@ -32,6 +35,8 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
   error: null,
   radius: 5000,
   lastFetchLocation: null,
+  mapCenter: null,
+  mapZoom: null,
 
   fetchRestaurants: async (lat: number, lng: number) => {
     const { lastFetchLocation, loading, radius } = get();
@@ -100,6 +105,10 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
 
   setRadius: (radius: number) => {
     set({ radius, lastFetchLocation: null });
+  },
+
+  setMapView: (lat: number, lng: number, zoom: number) => {
+    set({ mapCenter: { lat, lng }, mapZoom: zoom });
   },
 
   getById: (id: string) => {

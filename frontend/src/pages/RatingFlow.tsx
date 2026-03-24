@@ -258,7 +258,7 @@ export default function RatingFlow() {
             <div
               key={s}
               className={`h-0.5 rounded-full flex-1 transition-all duration-300 ${
-                s <= step ? 'bg-gradient-to-r from-teal-500 to-emerald-500' : 'bg-stone-200'
+                s <= step ? 'bg-gradient-to-r from-teal-500 to-emerald-500' : 'bg-stone-200 dark:bg-stone-700'
               }`}
             />
           ))}
@@ -276,17 +276,17 @@ export default function RatingFlow() {
             exit={{ opacity: 0, x: -40 }}
             transition={{ duration: 0.3 }}
           >
-            <h2 className="text-xl font-semibold text-stone-900">{t('rating.step1Title')}</h2>
-            <p className="text-sm text-stone-500 mt-1 mb-4">{t('rating.step1Desc')}</p>
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">{t('rating.step1Title')}</h2>
+            <p className="text-sm text-stone-500 dark:text-stone-400 mt-1 mb-4">{t('rating.step1Desc')}</p>
 
             {/* Geo-checking indicator */}
             {geoChecking && (
-              <div className="flex items-center gap-2 p-3 bg-teal-50 rounded-xl mb-4">
+              <div className="flex items-center gap-2 p-3 bg-teal-50 dark:bg-teal-900/30 rounded-xl mb-4">
                 <svg className="w-4 h-4 text-teal-500 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                <span className="text-sm text-teal-700">{t('geo.checking')}</span>
+                <span className="text-sm text-teal-700 dark:text-teal-300">{t('geo.checking')}</span>
               </div>
             )}
 
@@ -295,7 +295,7 @@ export default function RatingFlow() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 bg-rose-50 border border-rose-200 rounded-xl mb-4"
+                className="p-4 bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-xl mb-4"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <svg className="w-5 h-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -343,7 +343,7 @@ export default function RatingFlow() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('rating.searchRestaurant')}
-                className="w-full pl-11 pr-4 h-11 rounded-xl bg-stone-50 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+                className="w-full pl-11 pr-4 h-11 rounded-xl bg-stone-50 dark:bg-stone-800 border-0 text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
               />
             </div>
 
@@ -355,16 +355,16 @@ export default function RatingFlow() {
               {nearbyRestaurants.map((r) => (
                 <motion.button
                   key={r.id}
-                  className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm shadow-stone-200/50 w-full text-left active:ring-2 active:ring-teal-500 transition-all"
+                  className="flex items-center gap-3 p-3 bg-white dark:bg-stone-900 rounded-xl shadow-sm shadow-stone-200/50 dark:shadow-none w-full text-left active:ring-2 active:ring-teal-500 transition-all"
                   onClick={() => handleSelectRestaurant(r)}
                   whileTap={{ scale: 0.98 }}
                   disabled={geoChecking}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-stone-50 flex items-center justify-center text-base">
+                  <div className="w-10 h-10 rounded-xl bg-stone-50 dark:bg-stone-800 flex items-center justify-center text-base">
                     🏪
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-stone-800 block truncate">{r.name}</span>
+                    <span className="text-sm font-medium text-stone-800 dark:text-stone-200 block truncate">{r.name}</span>
                     <span className="text-xs text-stone-400">
                       {r.cuisine && `${r.cuisine} · `}{formatDistance(r.distance)}
                     </span>
@@ -389,16 +389,16 @@ export default function RatingFlow() {
             transition={{ duration: 0.3 }}
           >
             {selectedRestaurant && (
-              <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 bg-stone-100 rounded-full">
+              <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 bg-stone-100 dark:bg-stone-800 rounded-full">
                 <span className="text-sm">🏪</span>
-                <span className="text-xs font-medium text-stone-600">{selectedRestaurant.name}</span>
+                <span className="text-xs font-medium text-stone-600 dark:text-stone-300">{selectedRestaurant.name}</span>
               </div>
             )}
 
-            <h2 className="text-xl font-semibold text-stone-900">{t('rating.step2Title')}</h2>
-            <p className="text-sm text-stone-500 mt-1 mb-2">{t('rating.step2Desc')}</p>
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">{t('rating.step2Title')}</h2>
+            <p className="text-sm text-stone-500 dark:text-stone-400 mt-1 mb-2">{t('rating.step2Desc')}</p>
 
-            <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 p-4 mb-4">
+            <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none p-4 mb-4">
               {CRITERIA.map((c) => (
                 <CriteriaSlider
                   key={c.key}
@@ -411,11 +411,11 @@ export default function RatingFlow() {
             </div>
 
             {/* Overall score preview */}
-            <div className="flex items-center justify-center gap-4 p-4 bg-white rounded-2xl shadow-sm shadow-stone-200/50 mb-6">
+            <div className="flex items-center justify-center gap-4 p-4 bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none mb-6">
               <ScoreGauge score={overallScore} size={80} strokeWidth={6} />
               <div>
                 <p className="text-xs uppercase tracking-widest text-stone-400 font-medium">{t('rating.overall')}</p>
-                <p className="text-2xl font-light text-stone-800">{overallScore.toFixed(1)}</p>
+                <p className="text-2xl font-light text-stone-800 dark:text-stone-200">{overallScore.toFixed(1)}</p>
               </div>
             </div>
 
@@ -440,8 +440,8 @@ export default function RatingFlow() {
             exit={{ opacity: 0, x: -40 }}
             transition={{ duration: 0.3 }}
           >
-            <h2 className="text-xl font-semibold text-stone-900">{t('rating.step3Title')}</h2>
-            <p className="text-sm text-stone-500 mt-1 mb-6">{t('rating.step3Desc')}</p>
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">{t('rating.step3Title')}</h2>
+            <p className="text-sm text-stone-500 dark:text-stone-400 mt-1 mb-6">{t('rating.step3Desc')}</p>
 
             {/* Photo upload */}
             {photoPreview ? (
@@ -505,7 +505,7 @@ export default function RatingFlow() {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder={t('rating.addComment')}
-              className="w-full h-28 p-3 bg-stone-50 rounded-xl border-0 text-sm text-stone-900 placeholder:text-stone-400 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 mb-6 transition-all"
+              className="w-full h-28 p-3 bg-stone-50 dark:bg-stone-800 rounded-xl border-0 text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 mb-6 transition-all"
             />
 
             <div className="flex gap-3">
@@ -556,7 +556,7 @@ export default function RatingFlow() {
             </motion.div>
 
             <motion.h2
-              className="text-lg font-medium text-stone-800 mb-2"
+              className="text-lg font-medium text-stone-800 dark:text-stone-200 mb-2"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
@@ -570,7 +570,7 @@ export default function RatingFlow() {
               transition={{ delay: 0.6 }}
               className="mb-8"
             >
-              <p className="text-sm text-stone-500 mb-4">{t('rating.yourScore')}</p>
+              <p className="text-sm text-stone-500 dark:text-stone-400 mb-4">{t('rating.yourScore')}</p>
               <div className="flex justify-center">
                 <ScoreGauge score={overallScore} size={160} strokeWidth={12} />
               </div>

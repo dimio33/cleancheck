@@ -52,13 +52,13 @@ export default function Profile() {
   if (!user) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-8 text-center pb-24">
-        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mb-5">
+        <div className="w-16 h-16 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center mb-5">
           <svg className="w-7 h-7 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold text-stone-800 mb-1">{t('profile.title')}</h2>
-        <p className="text-sm text-stone-500 mb-6">{t('profile.loginPrompt')}</p>
+        <h2 className="text-lg font-semibold text-stone-800 dark:text-stone-200 mb-1">{t('profile.title')}</h2>
+        <p className="text-sm text-stone-500 dark:text-stone-400 mb-6">{t('profile.loginPrompt')}</p>
         <button
           onClick={() => navigate('/auth')}
           className="px-8 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20"
@@ -90,7 +90,7 @@ export default function Profile() {
     return (
       <div className="flex-1 flex items-center justify-center pb-24">
         <div className="text-center">
-          <p className="text-stone-500 mb-3">Profil konnte nicht geladen werden</p>
+          <p className="text-stone-500 dark:text-stone-400 mb-3">Profil konnte nicht geladen werden</p>
           <button onClick={() => window.location.reload()} className="text-teal-500 font-medium">Erneut versuchen</button>
         </div>
       </div>
@@ -111,7 +111,7 @@ export default function Profile() {
             {displayUser?.username?.charAt(0)?.toUpperCase() || '?'}
           </span>
         </motion.div>
-        <h2 className="text-lg font-semibold text-stone-800">{displayUser?.username}</h2>
+        <h2 className="text-lg font-semibold text-stone-800 dark:text-stone-200">{displayUser?.username}</h2>
         <p className="text-xs text-stone-400 mt-0.5">
           {t('profile.memberSince')} {displayUser && new Date(displayUser.created_at).toLocaleDateString()}
         </p>
@@ -119,13 +119,13 @@ export default function Profile() {
 
       {/* Stats */}
       <div className="px-4 mb-6">
-        <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 p-4">
+        <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none p-4">
           {profileLoading ? (
             <div className="flex items-center justify-center py-4">
               <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
-            <div className="grid grid-cols-3 divide-x divide-stone-100">
+            <div className="grid grid-cols-3 divide-x divide-stone-100 dark:divide-stone-800">
               {[
                 { value: displayUser?.rating_count || 0, label: t('profile.totalRatings') },
                 { value: displayUser?.restaurant_count || 0, label: t('profile.restaurants') },
@@ -138,7 +138,7 @@ export default function Profile() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 + i * 0.1 }}
                 >
-                  <span className="text-2xl font-light text-stone-800 block">{stat.value}</span>
+                  <span className="text-2xl font-light text-stone-800 dark:text-stone-200 block">{stat.value}</span>
                   <span className="text-[10px] uppercase tracking-widest text-stone-400">{stat.label}</span>
                 </motion.div>
               ))}
@@ -230,12 +230,12 @@ export default function Profile() {
             <p className="text-sm text-stone-400">{t('home.noRatings')}</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 overflow-hidden">
+          <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none overflow-hidden">
             {userRatings.slice(0, 5).map((rating, i) => (
               <motion.div
                 key={rating.id}
-                className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-stone-50 transition-colors ${
-                  i < Math.min(userRatings.length, 5) - 1 ? 'border-b border-stone-50' : ''
+                className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors ${
+                  i < Math.min(userRatings.length, 5) - 1 ? 'border-b border-stone-50 dark:border-stone-800' : ''
                 }`}
                 onClick={() => navigate(`/restaurant/${rating.restaurant_id}`)}
                 initial={{ opacity: 0, x: -20 }}
@@ -253,7 +253,7 @@ export default function Profile() {
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-stone-800 block truncate">
+                  <span className="text-sm font-medium text-stone-800 dark:text-stone-200 block truncate">
                     {rating.restaurant_name}
                   </span>
                   <span className="text-xs text-stone-400">
@@ -269,7 +269,7 @@ export default function Profile() {
       {/* Settings */}
       <div className="px-4">
         <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.settings')}</h3>
-        <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 overflow-hidden">
+        <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none overflow-hidden">
           <button
             onClick={toggleLanguage}
             className="flex items-center justify-between w-full p-4 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
@@ -289,10 +289,10 @@ export default function Profile() {
           </button>
           {isAuthenticated && (
             <>
-              <div className="h-px bg-stone-50" />
+              <div className="h-px bg-stone-50 dark:bg-stone-800" />
               <button
                 onClick={() => { logout(); navigate('/'); }}
-                className="flex items-center w-full p-4 hover:bg-stone-50 transition-colors"
+                className="flex items-center w-full p-4 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
               >
                 <span className="text-sm text-rose-500 font-medium">{t('profile.logout')}</span>
               </button>
