@@ -53,6 +53,8 @@ export default function RatingFlow() {
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [photoFailed, setPhotoFailed] = useState(false);
   const loadedAtRef = useRef(Date.now());
 
   // Reset loaded_at timestamp when component mounts
@@ -154,7 +156,8 @@ export default function RatingFlow() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedRestaurant) return;
+    if (!selectedRestaurant || submitting) return;
+    setSubmitting(true);
 
     try {
       let restaurantId = selectedRestaurant.id;
@@ -174,13 +177,13 @@ export default function RatingFlow() {
           if (createErr.response?.status === 409) {
             // Restaurant already exists — look it up by searching nearby
             const { data: searchData } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=0.5`);
-            const existing = searchData.restaurants?.find((r: any) => String(r.osm_id) === String(osmId));
+            const existing = (searchData.restaurants || []).find((r: any) => String(r.osm_id) === String(osmId));
             if (existing) {
               restaurantId = existing.id;
             } else {
               // Couldn't find by search — try wider radius
               const { data: widerSearch } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=5`);
-              const wider = widerSearch.restaurants?.find((r: any) => String(r.osm_id) === String(osmId));
+              const wider = (widerSearch.restaurants || []).find((r: any) => String(r.osm_id) === String(osmId));
               if (wider) {
                 restaurantId = wider.id;
               } else {
@@ -220,6 +223,7 @@ export default function RatingFlow() {
             headers: { 'Content-Type': undefined }, // Let axios set boundary automatically
           });
         } catch {
+          setPhotoFailed(true);
           addToast(t('rating.photoUploadFailed'), 'error');
         } finally {
           setUploading(false);
@@ -246,6 +250,8 @@ export default function RatingFlow() {
         const msg = err.response?.data?.error || 'Rating failed';
         addToast(msg, 'error');
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -511,15 +517,21 @@ export default function RatingFlow() {
             <div className="flex gap-3">
               <button
                 onClick={handleSubmit}
-                className="flex-1 py-3.5 text-stone-400 text-sm font-medium active:scale-[0.98] transition-transform"
+                disabled={submitting}
+                className="flex-1 py-3.5 text-stone-400 text-sm font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
               >
                 {t('rating.skip')}
               </button>
               <button
                 onClick={handleSubmit}
-                className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform"
+                disabled={submitting}
+                className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform disabled:opacity-50"
               >
-                {t('rating.submit')}
+                {submitting ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : t('rating.submit')}
               </button>
             </div>
           </motion.div>
@@ -563,6 +575,17 @@ export default function RatingFlow() {
             >
               {t('rating.thankYou')}
             </motion.h2>
+
+            {photoFailed && (
+              <motion.p
+                className="text-xs text-amber-600 dark:text-amber-400 mb-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                {t('rating.photoUploadFailed')}
+              </motion.p>
+            )}
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}

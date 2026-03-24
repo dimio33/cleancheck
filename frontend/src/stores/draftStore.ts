@@ -29,6 +29,16 @@ export const useDraftStore = create<DraftStore>((set, get) => ({
   syncing: false,
 
   addDraft: (draft: RatingDraft) => {
+    // Deduplicate: skip if same restaurant + same scores already exists
+    const existing = get().drafts.find(d =>
+      d.restaurantId === draft.restaurantId &&
+      d.scores.cleanliness === draft.scores.cleanliness &&
+      d.scores.smell === draft.scores.smell &&
+      d.scores.supplies === draft.scores.supplies &&
+      d.scores.maintenance === draft.scores.maintenance &&
+      d.scores.accessibility === draft.scores.accessibility
+    );
+    if (existing) return;
     const next = [...get().drafts, draft];
     localStorage.setItem('cleancheck_drafts', JSON.stringify(next));
     set({ drafts: next });

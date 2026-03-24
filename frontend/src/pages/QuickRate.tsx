@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../services/api';
+import { useToastStore } from '../components/ui/Toast';
 
 export default function QuickRate() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
+  const addToast = useToastStore((s) => s.addToast);
 
   useEffect(() => {
     if (!id) {
@@ -24,11 +26,12 @@ export default function QuickRate() {
             replace: true,
           });
         } else {
+          addToast(t('restaurant.notFound'), 'error');
           navigate('/');
         }
       })
       .catch(() => {
-        // Restaurant might not exist in DB yet, redirect to home
+        addToast(t('restaurant.notFound'), 'error');
         navigate('/');
       })
       .finally(() => setLoading(false));

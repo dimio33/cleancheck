@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../utils/db';
+import { isValidUuid } from '../utils/validate';
 
 const router = Router();
 
@@ -7,6 +8,11 @@ const router = Router();
 router.get('/:id/profile', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+
+    if (!isValidUuid(id as string)) {
+      res.status(400).json({ error: 'Invalid user ID format' });
+      return;
+    }
 
     const userResult = await query(
       `SELECT id, username, avatar_url, total_ratings, locale, created_at

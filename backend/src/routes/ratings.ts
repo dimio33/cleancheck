@@ -12,6 +12,7 @@ import { checkAndAwardBadges } from '../services/badgeService';
 import { geoVerify, calculateDistance } from '../middleware/geoVerify';
 import { validateImageFile, moderateImage, generateImageHash } from '../services/moderationService';
 import { uploadPhoto, isR2Configured } from '../services/storageService';
+import { isValidUuid } from '../utils/validate';
 
 function generateAnonymousId(req: Request): string {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
@@ -41,6 +42,11 @@ router.post('/verify-location', async (req: Request, res: Response): Promise<voi
 
     if (!restaurant_id || !userLatStr || !userLngStr) {
       res.status(400).json({ error: 'restaurant_id, X-User-Lat, and X-User-Lng are required' });
+      return;
+    }
+
+    if (!isValidUuid(restaurant_id)) {
+      res.status(400).json({ error: 'Invalid restaurant_id format' });
       return;
     }
 
@@ -85,22 +91,30 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
 
     // Anti-spam: Honeypot field — bots fill hidden fields, humans don't
     if (_website) {
-      res.status(201).json({ rating: { id: 'ok' }, restaurant_score: null, new_badges: [] });
+      console.warn('[Anti-Spam] Honeypot triggered, rejecting');
+      res.status(429).json({ error: 'Spam detected' });
       return;
     }
 
-    // Anti-spam: Minimum interaction time (5 seconds)
+    // Anti-spam: Minimum interaction time (3 seconds)
     // Only reject if elapsed is positive AND under threshold (handles client/server clock skew)
     if (_loaded_at && typeof _loaded_at === 'number') {
       const elapsed = Date.now() - _loaded_at;
-      if (elapsed >= 0 && elapsed < 5000) {
-        res.status(201).json({ rating: { id: 'ok' }, restaurant_score: null, new_badges: [] });
+      if (elapsed >= 0 && elapsed < 3000) {
+        console.warn(`[Anti-Spam] Rating blocked: elapsed=${elapsed}ms`);
+        res.status(429).json({ error: 'Please wait before submitting' });
         return;
       }
     }
 
     if (!restaurant_id || cleanliness == null || smell == null || supplies == null || condition == null || accessibility == null) {
       res.status(400).json({ error: 'restaurant_id and all rating categories are required' });
+      return;
+    }
+
+    // Validate restaurant_id format
+    if (!isValidUuid(restaurant_id)) {
+      res.status(400).json({ error: 'Invalid restaurant_id format' });
       return;
     }
 
@@ -152,7 +166,7 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
           [anonId, comment]
         );
         if (dupCommentCheck.rows.length > 0) {
-          res.status(201).json({ rating: { id: 'ok' }, restaurant_score: null, new_badges: [] });
+          res.status(409).json({ error: 'You already submitted this comment recently' });
           return;
         }
       }
@@ -221,6 +235,10 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
 // POST /api/ratings/:id/photos — upload photo for a rating (auth required)
 router.post('/:id/photos', authenticate, upload.single('photo'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    if (!isValidUuid(req.params.id as string)) {
+      res.status(400).json({ error: 'Invalid rating ID format' });
+      return;
+    }
     if (!req.user) {
       res.status(401).json({ error: 'Not authenticated' });
       return;
@@ -302,6 +320,10 @@ router.post('/:id/photos', authenticate, upload.single('photo'), async (req: Aut
 router.get('/user/:userId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
+    if (!isValidUuid(userId as string)) {
+      res.status(400).json({ error: 'Invalid user ID format' });
+      return;
+    }
     const limit = Math.min(Math.max(parseInt((req.query.limit as string) || '20', 10) || 20, 1), 100);
     const offset = Math.max(parseInt((req.query.offset as string) || '0', 10) || 0, 0);
 
@@ -333,6 +355,10 @@ router.get('/user/:userId', async (req: Request, res: Response): Promise<void> =
 // DELETE /api/ratings/:id — delete own rating (auth required)
 router.delete('/:id', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    if (!isValidUuid(req.params.id as string)) {
+      res.status(400).json({ error: 'Invalid rating ID format' });
+      return;
+    }
     if (!req.user) {
       res.status(401).json({ error: 'Not authenticated' });
       return;
@@ -379,6 +405,10 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response): Pro
 router.post('/:id/report', optionalAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const id = req.params.id as string;
+    if (!isValidUuid(id)) {
+      res.status(400).json({ error: 'Invalid rating ID format' });
+      return;
+    }
     const { reason, details } = req.body;
 
     if (!reason || !['spam', 'offensive', 'incorrect', 'other'].includes(reason)) {

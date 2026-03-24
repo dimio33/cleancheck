@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { query } from '../utils/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { optionalAuth } from '../middleware/optionalAuth';
+import { isValidUuid, isValidCoordinate } from '../utils/validate';
 
 const router = Router();
 
@@ -20,8 +21,8 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     const radiusKm = parseFloat((radius as string) || '5');
     const minCleanScore = parseFloat((minScore as string) || '0');
 
-    if (isNaN(latitude) || isNaN(longitude)) {
-      res.status(400).json({ error: 'Invalid lat or lng values' });
+    if (!isValidCoordinate(latitude, longitude)) {
+      res.status(400).json({ error: 'Invalid coordinates (lat: -90 to 90, lng: -180 to 180)' });
       return;
     }
 

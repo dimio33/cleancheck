@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { query } from '../utils/db';
+import { isValidUuid } from '../utils/validate';
 
 // ============================================================
 // Types
@@ -66,6 +67,11 @@ export function geoVerify(options?: GeoVerifyOptions): RequestHandler {
       const restaurantId = req.body?.restaurant_id;
       if (!restaurantId) {
         res.status(400).json({ error: 'restaurant_id is required for geo verification' });
+        return;
+      }
+
+      if (!isValidUuid(restaurantId)) {
+        res.status(400).json({ error: 'Invalid restaurant_id format' });
         return;
       }
 
