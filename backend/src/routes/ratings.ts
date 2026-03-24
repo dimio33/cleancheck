@@ -118,8 +118,13 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
       return;
     }
 
+    // Sanitize comment: strip HTML tags
+    const sanitizedComment = comment && typeof comment === 'string'
+      ? comment.replace(/<[^>]*>/g, '').trim()
+      : comment;
+
     // Validate comment length
-    if (comment && typeof comment === 'string' && comment.length > 1000) {
+    if (sanitizedComment && typeof sanitizedComment === 'string' && sanitizedComment.length > 1000) {
       res.status(400).json({ error: 'Comment must be 1000 characters or fewer' });
       return;
     }
@@ -149,11 +154,11 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
     const anonymousId = isAnonymous ? generateAnonymousId(req) : null;
 
     // Anti-spam: Duplicate comment detection (same user/anonymous + same comment within 24h)
-    if (comment && typeof comment === 'string') {
+    if (sanitizedComment && typeof sanitizedComment === 'string') {
       if (req.user) {
         const dupCommentCheck = await query(
           `SELECT id FROM ratings WHERE user_id = $1 AND comment = $2 AND created_at > NOW() - INTERVAL '24 hours'`,
-          [req.user.id, comment]
+          [req.user.id, sanitizedComment]
         );
         if (dupCommentCheck.rows.length > 0) {
           res.status(409).json({ error: 'You already submitted this comment recently' });
@@ -163,7 +168,7 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
         const anonId = generateAnonymousId(req);
         const dupCommentCheck = await query(
           `SELECT id FROM ratings WHERE anonymous_id = $1 AND comment = $2 AND created_at > NOW() - INTERVAL '24 hours'`,
-          [anonId, comment]
+          [anonId, sanitizedComment]
         );
         if (dupCommentCheck.rows.length > 0) {
           res.status(409).json({ error: 'You already submitted this comment recently' });
@@ -202,7 +207,7 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
       `INSERT INTO ratings (user_id, anonymous_id, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment, visited_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
-      [userId, anonymousId, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment || null, visitDate]
+      [userId, anonymousId, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, sanitizedComment || null, visitDate]
     );
 
     // Recalculate restaurant score
