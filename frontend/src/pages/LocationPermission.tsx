@@ -12,11 +12,16 @@ export default function LocationPermission() {
 
   const handleEnable = async () => {
     const result = await requestPermission();
+    setPermissionAsked();
     if (result === 'granted') {
-      setPermissionAsked();
       navigate('/', { replace: true });
     }
     // If denied/unavailable, the UI updates to show instructions
+    // If already denied and user clicks "Nochmal versuchen", show feedback
+    if (result === 'denied' && permissionState === 'denied') {
+      // Already denied — browser won't ask again. Navigate to home with discovery mode.
+      navigate('/', { replace: true });
+    }
   };
 
   const handleSkip = () => {
