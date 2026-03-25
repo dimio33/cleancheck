@@ -190,7 +190,12 @@ export default function Home() {
  });
 
  if (sortBy === 'score') {
- return withDist.sort((a, b) => (b.clean_score ?? -1) - (a.clean_score ?? -1));
+ return withDist.sort((a, b) => {
+   const scoreA = a.clean_score ?? -1;
+   const scoreB = b.clean_score ?? -1;
+   if (scoreB !== scoreA) return scoreB - scoreA;
+   return a.distance - b.distance; // Same score → sort by distance
+ });
  }
  return withDist.sort((a, b) => a.distance - b.distance);
  }, [effectiveLat, effectiveLng, restaurants, sortBy, nameFilter, cuisineFilter]);
