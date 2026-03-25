@@ -43,7 +43,7 @@ function App() {
   return (
     <BrowserRouter>
       <ErrorBoundary>
-        <div className="flex flex-col min-h-screen bg-stone-50 dark:bg-stone-950">
+        <div className="flex flex-col min-h-screen bg-stone-50">
           <TopBar />
           <OfflineBanner />
           <LocationDeniedBanner />
