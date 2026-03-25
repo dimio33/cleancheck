@@ -1,20 +1,16 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet.markercluster';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
+import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { getDistance, getScoreColor, getScoreLabel } from '../utils/geo';
+import { getDistance, getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useAuthStore } from '../stores/authStore';
 import RestaurantCard from '../components/ui/RestaurantCard';
 import PullToRefresh from '../components/ui/PullToRefresh';
 import { RestaurantCardSkeleton } from '../components/ui/Skeleton';
 import api from '../services/api';
-import 'leaflet/dist/leaflet.css';
 
 /** Inline trending list for discovery mode (no location) */
 function TrendingInline() {
@@ -80,136 +76,33 @@ function TrendingInline() {
  );
 }
 
-// Fix default marker icons
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+const DEFAULT_MAP_ZOOM = 14;
 
-L.Icon.Default.mergeOptions({
- iconRetinaUrl: markerIcon2x,
- iconUrl: markerIcon,
- shadowUrl: markerShadow,
-});
+/** Score-colored marker for a restaurant on Google Maps */
+function ScoreMarker({ restaurant, onClick }: { restaurant: { lat: number; lng: number; clean_score: number | null }; onClick: () => void }) {
+ const score = restaurant.clean_score;
+ const hasScore = score !== null;
+ const color = hasScore ? getScoreColor(score) : '#D6D3D1';
 
-// Icon cache — avoids recreating DivIcon objects on every render
-const iconCache = new Map<string, L.DivIcon>();
-
-function createScoreIcon(score: number | null) {
- const key = score !== null ? score.toFixed(1) : 'null';
- const cached = iconCache.get(key);
- if (cached) return cached;
-
- const color = getScoreColor(score);
- const label = getScoreLabel(score);
- const icon = L.divIcon({
- className: 'custom-marker',
- html: `<div style="
- width: 36px; height: 36px; border-radius: 50%;
- background: white; border: 3px solid ${color};
- display: flex; align-items: center; justify-content: center;
- font-weight: 600; font-size: 11px; color: ${color};
- box-shadow: 0 1px 4px rgba(0,0,0,0.1);
- font-family: 'Inter', system-ui, sans-serif;
- ">${label}</div>`,
- iconSize: [36, 36],
- iconAnchor: [18, 18],
- });
- iconCache.set(key, icon);
- return icon;
-}
-
-const DEFAULT_MAP_ZOOM = 13;
-
-// Marker cluster component using leaflet.markercluster directly
-function MarkerClusterGroup({ restaurants, navigate }: { restaurants: { id: string; name: string; lat: number; lng: number; clean_score: number | null }[]; navigate: (path: string) => void }) {
- const map = useMap();
- const navigateRef = useRef(navigate);
- navigateRef.current = navigate;
-
- useEffect(() => {
- const clusterGroup = (L as any).markerClusterGroup({
- maxClusterRadius: 50,
- spiderfyOnMaxZoom: true,
- showCoverageOnHover: false,
- iconCreateFunction: (cluster: any) => {
- const count = cluster.getChildCount();
- const size = count < 10 ? 36 : count < 50 ? 42 : 48;
- return L.divIcon({
- className: 'custom-cluster',
- html: `<div style="
- width: ${size}px; height: ${size}px; border-radius: 50%;
- background: linear-gradient(135deg, #14B8A6, #10B981);
- display: flex; align-items: center; justify-content: center;
- font-weight: 700; font-size: ${size < 42 ? 12 : 14}px; color: white;
- box-shadow: 0 2px 8px rgba(20,184,166,0.3);
- font-family: 'Inter', system-ui, sans-serif;
- ">${count}</div>`,
- iconSize: [size, size],
- iconAnchor: [size / 2, size / 2],
- });
- },
- });
-
- for (const r of restaurants) {
- const marker = L.marker([r.lat, r.lng], { icon: createScoreIcon(r.clean_score) });
- marker.bindPopup(`<div style="text-align:center;padding:2px"><strong style="font-size:13px">${r.name.replace(/</g, '&lt;')}</strong></div>`);
- marker.on('click', () => navigateRef.current(`/restaurant/${r.id}`));
- clusterGroup.addLayer(marker);
- }
-
- map.addLayer(clusterGroup);
- return () => {
- clusterGroup.clearLayers();
- map.removeLayer(clusterGroup);
- };
- }, [restaurants, map]);
-
- return null;
-}
-
-function MapStateTracker() {
- const map = useMap();
- const { setMapView } = useRestaurantStore();
- useEffect(() => {
- const handler = () => {
- const c = map.getCenter();
- setMapView(c.lat, c.lng, map.getZoom());
- };
- map.on('moveend', handler);
- return () => { map.off('moveend', handler); };
- }, [map, setMapView]);
- return null;
-}
-
-function UserLocationMarker({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
- const map = useMap();
- const { mapCenter, mapZoom } = useRestaurantStore();
- const initializedRef = useRef(false);
-
- useEffect(() => {
- // On first mount, restore saved position if available
- if (!initializedRef.current) {
- initializedRef.current = true;
- if (mapCenter && mapZoom) {
- map.setView([mapCenter.lat, mapCenter.lng], mapZoom);
- return;
- }
- }
- map.setView([lat, lng], zoom);
- }, [lat, lng, zoom, map]);
-
- const userIcon = L.divIcon({
- className: 'user-marker',
- html: `<div style="
- width: 14px; height: 14px; border-radius: 50%;
- background: #14b8a6; border: 3px solid white;
- box-shadow: 0 0 0 6px rgba(20,184,166,0.2), 0 1px 4px rgba(0,0,0,0.15);
- "></div>`,
- iconSize: [14, 14],
- iconAnchor: [7, 7],
- });
-
- return <Marker position={[lat, lng]} icon={userIcon} />;
+ return (
+ <AdvancedMarker
+ position={{ lat: restaurant.lat, lng: restaurant.lng }}
+ onClick={onClick}
+ >
+ <div style={{
+ width: 32, height: 32, borderRadius: '50%',
+ background: hasScore ? color : '#F5F5F4',
+ border: '2px solid white',
+ display: 'flex', alignItems: 'center', justifyContent: 'center',
+ fontSize: 11, fontWeight: 700, color: hasScore ? 'white' : '#A8A29E',
+ boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+ cursor: 'pointer',
+ fontFamily: "'Inter', system-ui, sans-serif",
+ }}>
+ {hasScore ? score!.toFixed(1) : '?'}
+ </div>
+ </AdvancedMarker>
+ );
 }
 
 /** Time-based greeting */
@@ -488,30 +381,31 @@ export default function Home() {
  </div>
 
  {/* Map (toggled by Karte quick action) */}
- <AnimatePresence>
  {showMap && (
- <motion.div
- className="mx-5 mb-4 rounded-2xl overflow-hidden shadow-sm"
- initial={{ height: 0, opacity: 0 }}
- animate={{ height: 240, opacity: 1 }}
- exit={{ height: 0, opacity: 0 }}
- transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+ <div className="mx-5 mb-4 rounded-2xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.06)]" style={{ height: 240 }}>
+ <APIProvider apiKey={import.meta.env.VITE_GOOGLE_PLACES_KEY || ''}>
+ <Map
+ defaultCenter={{ lat: effectiveLat, lng: effectiveLng }}
+ defaultZoom={mapZoom}
+ mapId="cleancheck"
+ gestureHandling="greedy"
+ disableDefaultUI={true}
+ style={{ width: '100%', height: '100%' }}
  >
- <MapContainer
- center={[effectiveLat, effectiveLng]}
- zoom={mapZoom}
- className="h-[240px] w-full"
- zoomControl={false}
- attributionControl={false}
- >
- <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
- <MapStateTracker />
- <UserLocationMarker lat={effectiveLat} lng={effectiveLng} zoom={mapZoom} />
- <MarkerClusterGroup restaurants={restaurantsWithDistance} navigate={navigate} />
- </MapContainer>
- </motion.div>
+ {restaurantsWithDistance.map((r) => (
+ <ScoreMarker key={r.id} restaurant={r} onClick={() => navigate(`/restaurant/${r.id}`)} />
+ ))}
+ <AdvancedMarker position={{ lat: effectiveLat, lng: effectiveLng }}>
+ <div style={{
+ width: 14, height: 14, borderRadius: '50%',
+ background: '#0D9488', border: '3px solid white',
+ boxShadow: '0 0 0 4px rgba(13,148,136,0.2)',
+ }} />
+ </AdvancedMarker>
+ </Map>
+ </APIProvider>
+ </div>
  )}
- </AnimatePresence>
 
  {/* Sort toggle + filter chips */}
  <div className="px-5 pb-2">
