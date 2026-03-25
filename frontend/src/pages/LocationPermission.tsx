@@ -14,13 +14,11 @@ export default function LocationPermission() {
  const result = await requestPermission();
  setPermissionAsked();
  if (result === 'granted') {
- navigate('/', { replace: true });
- }
- // If denied/unavailable, the UI updates to show instructions
- // If already denied and user clicks "Nochmal versuchen", show feedback
- if (result === 'denied' && permissionState === 'denied') {
- // Already denied — browser won't ask again. Navigate to home with discovery mode.
- navigate('/', { replace: true });
+   navigate('/', { replace: true });
+ } else {
+   // Denied or unavailable — show instructions briefly, then navigate
+   // Short delay so user sees the feedback before redirect
+   setTimeout(() => navigate('/', { replace: true }), 1500);
  }
  };
 

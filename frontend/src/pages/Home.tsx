@@ -228,7 +228,7 @@ export default function Home() {
  const user = useAuthStore((s) => s.user);
  const [sortBy, setSortBy] = useState<'distance' | 'score'>('distance');
  const [visibleCount, setVisibleCount] = useState(20);
- const { restaurants, loading, fetchRestaurants } = useRestaurantStore();
+ const { restaurants, loading, error: storeError, fetchRestaurants } = useRestaurantStore();
  const [citySearch, setCitySearch] = useState('');
  const [cityResults, setCityResults] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
  const [searchOverride, setSearchOverride] = useState<{ lat: number; lng: number } | null>(null);
@@ -596,6 +596,15 @@ export default function Home() {
  {(loading || geo.loading) && restaurantsWithDistance.length === 0 ? (
  <div className="py-4">
  <RestaurantCardSkeleton count={5} />
+ </div>
+ ) : storeError === 'fetch_error' && restaurantsWithDistance.length === 0 ? (
+ <div className="flex flex-col items-center justify-center py-12 text-center">
+ <span className="text-3xl mb-3">⚠️</span>
+ <p className="text-sm text-stone-500 font-medium">Server nicht erreichbar</p>
+ <p className="text-xs text-stone-400 mt-1 max-w-xs">Die Restaurant-Daten konnten nicht geladen werden. Bitte versuche es gleich nochmal.</p>
+ <button onClick={() => { useRestaurantStore.getState().invalidate(); fetchRestaurants(effectiveLat, effectiveLng); }} className="mt-4 px-5 py-2 bg-teal-600 text-white text-sm font-medium rounded-xl active:scale-[0.98] transition-transform">
+   Nochmal versuchen
+ </button>
  </div>
  ) : restaurantsWithDistance.length === 0 && !loading ? (
  <div className="flex flex-col items-center justify-center py-12 text-center">
