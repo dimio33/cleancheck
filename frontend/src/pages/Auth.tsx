@@ -70,7 +70,7 @@ export default function Auth() {
  initial={{ opacity: 0, y: -20 }}
  animate={{ opacity: 1, y: 0 }}
  >
- <h1 className="text-2xl font-light tracking-tight bg-gradient-to-r from-teal-500 to-emerald-500 bg-clip-text text-transparent">
+ <h1 className="text-2xl font-light tracking-tight text-teal-600">
  CleanCheck
  </h1>
  </motion.div>
@@ -118,7 +118,7 @@ export default function Auth() {
  onChange={(e) => setUsername(e.target.value)}
  placeholder={t('auth.username')}
  required
- className="w-full px-4 h-12 rounded-xl bg-stone-50 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+ className="w-full px-4 h-12 rounded-xl bg-stone-100 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
  />
  )}
  <input
@@ -127,7 +127,7 @@ export default function Auth() {
  onChange={(e) => setEmail(e.target.value)}
  placeholder={t('auth.email')}
  required
- className="w-full px-4 h-12 rounded-xl bg-stone-50 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+ className="w-full px-4 h-12 rounded-xl bg-stone-100 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
  />
  <input
  type="password"
@@ -135,14 +135,14 @@ export default function Auth() {
  onChange={(e) => setPassword(e.target.value)}
  placeholder={t('auth.password')}
  required
- className="w-full px-4 h-12 rounded-xl bg-stone-50 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+ className="w-full px-4 h-12 rounded-xl bg-stone-100 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
  />
 
  <div className="pt-1">
  <button
  type="submit"
  disabled={loading}
- className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform disabled:opacity-50"
+ className="w-full py-3.5 rounded-xl bg-teal-600 text-white font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
  >
  {loading ? t('common.loading') : t(`auth.${mode}`)}
  </button>

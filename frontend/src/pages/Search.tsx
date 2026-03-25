@@ -51,7 +51,7 @@ export default function Search() {
  value={query}
  onChange={(e) => setQuery(e.target.value)}
  placeholder={t('search.placeholder')}
- className="w-full pl-11 pr-4 h-11 rounded-xl bg-stone-50 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 transition-all"
+ className="w-full pl-11 pr-4 h-11 rounded-xl bg-stone-100 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 transition-all"
  />
  </div>
 

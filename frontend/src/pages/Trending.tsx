@@ -30,7 +30,7 @@ export default function Trending() {
  return (
  <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
  <div className="px-4 pt-6 pb-2">
- <h1 className="text-xl font-semibold text-stone-900">{t('trending.title')}</h1>
+ <h1 className="text-xl font-bold tracking-tight text-stone-900">{t('trending.title')}</h1>
  <p className="text-sm text-stone-500 mt-1">{t('trending.desc')}</p>
  </div>
 
@@ -45,7 +45,7 @@ export default function Trending() {
  <p className="text-sm text-stone-400 mb-4">{t('trending.empty')}</p>
  <button
  onClick={() => navigate('/rate')}
- className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-sm font-medium active:scale-95 transition-transform"
+ className="px-6 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-medium active:scale-95 transition-transform"
  >
  {t('restaurant.rateThis')}
  </button>
@@ -65,7 +65,7 @@ export default function Trending() {
  transition={{ delay: i * 0.05 }}
  >
  <div
- className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-semibold text-sm"
+ className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 font-semibold text-sm"
  style={{ backgroundColor: `${color}15`, color }}
  >
  {score !== null ? score.toFixed(1) : '—'}

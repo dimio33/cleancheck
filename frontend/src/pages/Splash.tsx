@@ -48,10 +48,10 @@ export default function Splash() {
  exit={{ opacity: 0, y: -20 }}
  transition={{ duration: 0.4, ease: 'easeOut' }}
  >
- <h1 className="text-3xl font-light tracking-tight text-stone-900 whitespace-pre-line leading-tight text-center">
+ <h1 className="text-xl font-bold tracking-tight text-stone-900 whitespace-pre-line leading-tight text-center">
  {t('splash.slide1Title')}
  </h1>
- <div className="w-12 h-0.5 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full mt-5 mb-5" />
+ <div className="w-12 h-0.5 bg-teal-600 rounded-full mt-5 mb-5" />
  <p className="text-stone-500 text-center max-w-xs text-sm leading-relaxed">
  {t('splash.slide1Desc')}
  </p>
@@ -101,7 +101,7 @@ export default function Splash() {
  exit={{ opacity: 0, y: -20 }}
  transition={{ duration: 0.4, ease: 'easeOut' }}
  >
- <h2 className="text-2xl font-light tracking-tight text-stone-900 mb-2 text-center">
+ <h2 className="text-xl font-bold tracking-tight text-stone-900 mb-2 text-center">
  {t('splash.slide3Title')}
  </h2>
  <p className="text-stone-500 mb-8 max-w-xs text-center text-sm leading-relaxed">
@@ -109,7 +109,7 @@ export default function Splash() {
  </p>
  <button
  onClick={() => { handleFinish(); navigate('/auth'); }}
- className="w-full max-w-xs py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-95 transition-transform"
+ className="w-full max-w-xs py-3.5 rounded-xl bg-teal-600 text-white font-medium active:scale-95 transition-transform"
  >
  {t('splash.getStarted')}
  </button>
@@ -124,7 +124,7 @@ export default function Splash() {
  ];
 
  return (
- <div className="fixed inset-0 bg-[#FAFAF9] z-50 flex flex-col">
+ <div className="fixed inset-0 bg-white z-50 flex flex-col">
  {/* Skip button */}
  {step < 2 && (
  <div className="flex justify-end p-5">
@@ -174,7 +174,7 @@ export default function Splash() {
  {step < 2 && (
  <button
  onClick={() => setStep((s) => s + 1)}
- className="w-full max-w-xs py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-95 transition-transform"
+ className="w-full max-w-xs py-3.5 rounded-xl bg-teal-600 text-white font-medium active:scale-95 transition-transform"
  >
  {t('splash.next')}
  </button>

@@ -42,7 +42,7 @@ export default function LocationPermission() {
  const showInstructions = isDenied || isUnavailable;
 
  return (
- <div className="flex-1 flex flex-col items-center justify-center px-6 pb-12 min-h-screen bg-stone-50">
+ <div className="flex-1 flex flex-col items-center justify-center px-6 pb-12 min-h-screen bg-white">
  <motion.div
  className="w-full max-w-sm text-center"
  initial={{ opacity: 0, y: 20 }}
@@ -54,7 +54,7 @@ export default function LocationPermission() {
  className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${
  showInstructions
  ? 'bg-amber-100'
- : 'bg-gradient-to-br from-teal-500 to-emerald-500'
+ : 'bg-teal-600'
  }`}
  initial={{ scale: 0 }}
  animate={{ scale: 1 }}
@@ -75,7 +75,7 @@ export default function LocationPermission() {
 
  {/* Title */}
  <motion.h1
- className="text-xl font-semibold text-stone-900 mb-2"
+ className="text-xl font-bold tracking-tight text-stone-900 mb-2"
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  transition={{ delay: 0.3 }}
@@ -119,7 +119,7 @@ export default function LocationPermission() {
  {/* Primary button */}
  <motion.button
  onClick={handleEnable}
- className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform mb-3"
+ className="w-full py-3.5 rounded-xl bg-teal-600 text-white font-medium active:scale-[0.98] transition-transform mb-3"
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: 0.5 }}
