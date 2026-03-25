@@ -2,9 +2,8 @@ import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-// motion used for heart bounce animation
 import type { Restaurant } from '../../types';
-import { getScoreLabel, formatDistance } from '../../utils/geo';
+import { formatDistance } from '../../utils/geo';
 import { useFavoritesStore } from '../../stores/favoritesStore';
 
 interface RestaurantCardProps {
@@ -13,76 +12,67 @@ interface RestaurantCardProps {
   index?: number;
 }
 
+function getScoreBadgeBg(score: number | null): string {
+  if (score === null) return 'bg-stone-100';
+  if (score >= 7.0) return 'bg-[#10B981]';
+  if (score >= 4.0) return 'bg-[#F59E0B]';
+  return 'bg-[#EF4444]';
+}
+
 function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCardProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const isFavorite = useFavoritesStore((s) => s.isFavorite(restaurant.id));
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
 
-  const getScoreColor = (s: number | null) => {
-    if (s === null) return { stroke: '#D6D3D1', text: 'text-stone-400' };
-    if (s >= 8) return { stroke: '#10B981', text: 'text-emerald-600' };
-    if (s >= 5) return { stroke: '#F59E0B', text: 'text-amber-600' };
-    return { stroke: '#F43F5E', text: 'text-rose-600' };
-  };
+  const score = restaurant.clean_score;
+  const hasScore = score !== null;
 
-  const colors = getScoreColor(restaurant.clean_score);
-  const circumference = 2 * Math.PI * 19;
+  // Build subtitle parts: cuisine, distance, rating count
+  const subtitleParts: string[] = [];
+  if (restaurant.cuisine) subtitleParts.push(restaurant.cuisine);
+  if (distance !== undefined) subtitleParts.push(`${formatDistance(distance)} ${t('home.away')}`);
+  if (restaurant.rating_count > 0) {
+    subtitleParts.push(`${restaurant.rating_count} ${t('home.ratings')}`);
+  }
 
   return (
     <motion.button
       onClick={() => navigate(`/restaurant/${restaurant.id}`)}
-      className="w-full flex items-center gap-3.5 p-3.5 bg-white rounded-2xl shadow-sm shadow-stone-200/50 hover:shadow-md hover:-translate-y-px transition-all duration-200 text-left"
-      initial={{ opacity: 0.6, y: 6 }}
+      className="w-full flex items-center gap-3.5 p-4 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] text-left"
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.2 }}
+      transition={{ delay: index * 0.05, type: 'spring', damping: 20, stiffness: 300 }}
+      whileTap={{ scale: 0.98 }}
     >
-      {/* Score circle */}
-      <div className="relative flex-shrink-0 w-11 h-11">
-        <svg width="44" height="44" className="-rotate-90">
-          <circle cx="22" cy="22" r="19" fill="none" stroke="#F5F5F4" strokeWidth="2.5" />
-          {restaurant.clean_score !== null && (
-            <circle
-              cx="22"
-              cy="22"
-              r="19"
-              fill="none"
-              stroke={colors.stroke}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeDasharray={`${(restaurant.clean_score / 10) * circumference} ${circumference}`}
-            />
-          )}
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className={`text-xs font-semibold ${colors.text}`}>
-            {getScoreLabel(restaurant.clean_score)}
+      {/* Score badge — squircle */}
+      {hasScore ? (
+        <div
+          className={`flex-shrink-0 w-12 h-12 rounded-[14px] flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.08)] ${getScoreBadgeBg(score)}`}
+        >
+          <span className="text-[15px] font-bold tracking-tight text-white">
+            {score!.toFixed(1)}
           </span>
         </div>
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-medium text-stone-800 truncate">{restaurant.name}</h3>
-        <div className="flex items-center gap-2 mt-0.5">
-          {restaurant.cuisine && (
-            <span className="text-xs bg-stone-100 text-stone-500 rounded-full px-2 py-0.5">
-              {restaurant.cuisine}
-            </span>
-          )}
-          {distance !== undefined && (
-            <>
-              <span className="text-xs text-stone-400">
-                {formatDistance(distance)} {t('home.away')}
-              </span>
-            </>
-          )}
+      ) : (
+        <div className="flex-shrink-0 w-12 h-12 rounded-[14px] flex items-center justify-center bg-gradient-to-br from-teal-50 to-emerald-50 border-2 border-dashed border-teal-200">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2" strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
         </div>
-        <p className="text-[11px] text-stone-400 mt-0.5">
-          {restaurant.rating_count > 0
-            ? `${restaurant.rating_count} ${t('home.ratings')}`
-            : t('home.noRatings')}
+      )}
+
+      {/* Text content */}
+      <div className="flex-1 min-w-0">
+        <h3 className="text-[15px] font-semibold text-stone-900 tracking-[-0.2px] truncate">
+          {restaurant.name}
+        </h3>
+        <p className="text-[13px] text-stone-400 truncate mt-0.5">
+          {subtitleParts.join(' \u00B7 ')}
         </p>
+        {!hasScore && (
+          <p className="text-[11px] text-teal-500 font-medium mt-0.5">Als Erster bewerten →</p>
+        )}
       </div>
 
       {/* Favorite heart */}
@@ -104,6 +94,21 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </motion.svg>
       </motion.button>
+
+      {/* Chevron right */}
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#D6D3D1"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="flex-shrink-0"
+      >
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
     </motion.button>
   );
 }
