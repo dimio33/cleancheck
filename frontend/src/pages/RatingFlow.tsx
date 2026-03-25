@@ -29,11 +29,17 @@ export default function RatingFlow() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { lat, lng, permissionState } = useGeolocation();
+  const geo = useGeolocation();
+  const { lat, lng, permissionState } = geo;
   // Anonymous ratings allowed - no token check needed
   const addToast = useToastStore((s) => s.addToast);
 
-  const { restaurants } = useRestaurantStore();
+  const { restaurants, fetchRestaurants } = useRestaurantStore();
+
+  // Fetch restaurants when geo is ready (same as Search/Home pages)
+  useEffect(() => {
+    if (!geo.loading) fetchRestaurants(lat, lng);
+  }, [lat, lng, geo.loading, fetchRestaurants]);
 
   const preselectedId = (location.state as { restaurantId?: string } | null)?.restaurantId;
   const preselected = preselectedId ? restaurants.find((r) => r.id === preselectedId) : undefined;
