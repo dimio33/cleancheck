@@ -30,10 +30,6 @@ const GOOGLE_INCLUDED_TYPES = [
   'cafe',
   'bar',
   'fast_food_restaurant',
-  'bakery',
-  'ice_cream_shop',
-  'meal_takeaway',
-  'meal_delivery',
 ];
 
 // Friendly German names for Google Places types
@@ -42,10 +38,6 @@ const TYPE_DISPLAY_NAMES: Record<string, string> = {
   cafe: 'Café',
   bar: 'Bar',
   fast_food_restaurant: 'Fast Food',
-  bakery: 'Bäckerei',
-  ice_cream_shop: 'Eisdiele',
-  meal_takeaway: 'Imbiss',
-  meal_delivery: 'Lieferservice',
 };
 
 interface GooglePlace {
