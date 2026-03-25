@@ -74,12 +74,6 @@ export async function checkAndAwardBadges(userId: string): Promise<AwardedBadge[
     }
   }
 
-  // Update user total_ratings
-  await query(
-    `UPDATE users SET total_ratings = $1 WHERE id = $2`,
-    [ratingCount, userId]
-  );
-
   return newBadges;
 }
 

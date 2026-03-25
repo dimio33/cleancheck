@@ -90,8 +90,8 @@ export default function Profile() {
     return (
       <div className="flex-1 flex items-center justify-center pb-24">
         <div className="text-center">
-          <p className="text-stone-500 dark:text-stone-400 mb-3">Profil konnte nicht geladen werden</p>
-          <button onClick={() => window.location.reload()} className="text-teal-500 font-medium">Erneut versuchen</button>
+          <p className="text-stone-500 dark:text-stone-400 mb-3">{t('common.errorOccurred')}</p>
+          <button onClick={() => window.location.reload()} className="text-teal-500 font-medium">{t('common.tryAgain')}</button>
         </div>
       </div>
     );

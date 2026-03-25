@@ -1,7 +1,7 @@
+import 'dotenv/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import pool from '../utils/db';
-import 'dotenv/config';
 
 async function runMigrations(): Promise<void> {
   const migrationsDir = path.join(__dirname);

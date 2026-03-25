@@ -15,7 +15,7 @@ import { uploadPhoto, isR2Configured } from '../services/storageService';
 import { isValidUuid } from '../utils/validate';
 
 function generateAnonymousId(req: Request): string {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
   const ua = req.headers['user-agent'] || 'unknown';
   const hash = crypto.createHash('sha256').update(`${ip}-${ua}`).digest('hex').substring(0, 16);
   return `anon-${hash}`;
@@ -213,12 +213,10 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
     // Recalculate restaurant score
     const newScore = await recalculateRestaurantScore(restaurant_id);
 
-    // Update user total_ratings + check badges
+    // Update user total_ratings (atomic increment) + check badges
     let newBadges: any[] = [];
     if (req.user) {
-      const countResult = await query<{ count: string }>(`SELECT COUNT(*) as count FROM ratings WHERE user_id = $1`, [req.user.id]);
-      const ratingCount = parseInt(countResult.rows[0]?.count || '0', 10);
-      await query(`UPDATE users SET total_ratings = $1 WHERE id = $2`, [ratingCount, req.user.id]);
+      await query(`UPDATE users SET total_ratings = total_ratings + 1 WHERE id = $1`, [req.user.id]);
       try {
         newBadges = await checkAndAwardBadges(req.user.id);
       } catch (badgeErr) {
@@ -394,10 +392,8 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response): Pro
     // Recalculate restaurant score
     await recalculateRestaurantScore(restaurantId);
 
-    // Update user total_ratings
-    const countResult = await query<{ count: string }>(`SELECT COUNT(*) as count FROM ratings WHERE user_id = $1`, [req.user.id]);
-    const ratingCount = parseInt(countResult.rows[0]?.count || '0', 10);
-    await query(`UPDATE users SET total_ratings = $1 WHERE id = $2`, [ratingCount, req.user.id]);
+    // Update user total_ratings (atomic decrement)
+    await query(`UPDATE users SET total_ratings = GREATEST(total_ratings - 1, 0) WHERE id = $1`, [req.user.id]);
 
     res.json({ message: 'Rating deleted' });
   } catch (err) {

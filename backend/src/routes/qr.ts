@@ -26,7 +26,8 @@ router.get('/:id/qr', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const url = `https://cleancheck.e-findo.de/rate/${id}`;
+    const baseUrl = process.env.APP_BASE_URL || 'https://cleancheck.e-findo.de';
+    const url = `${baseUrl}/rate/${id}`;
     const restaurant = result.rows[0];
 
     // Generate QR code as SVG using a simple QR generation approach

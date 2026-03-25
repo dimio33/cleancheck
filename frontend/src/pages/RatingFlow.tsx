@@ -473,7 +473,7 @@ export default function RatingFlow() {
               <div className="relative mb-4">
                 <img src={photoPreview} alt="" className="w-full h-48 object-cover rounded-xl" />
                 <button
-                  onClick={() => { setSelectedPhoto(null); setPhotoPreview(null); }}
+                  onClick={() => { if (photoPreview) URL.revokeObjectURL(photoPreview); setSelectedPhoto(null); setPhotoPreview(null); }}
                   className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -499,6 +499,7 @@ export default function RatingFlow() {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
+                      if (photoPreview) URL.revokeObjectURL(photoPreview);
                       setSelectedPhoto(file);
                       setPhotoPreview(URL.createObjectURL(file));
                     }
@@ -530,6 +531,7 @@ export default function RatingFlow() {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder={t('rating.addComment')}
+              maxLength={1000}
               className="w-full h-28 p-3 bg-stone-50 dark:bg-stone-800 rounded-xl border-0 text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 mb-6 transition-all"
             />
 
