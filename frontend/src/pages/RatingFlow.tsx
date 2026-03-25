@@ -278,8 +278,13 @@ export default function RatingFlow() {
  setStep(4);
  addToast(t('rating.savedOffline'), 'success');
  } else {
- const msg = err.response?.data?.error || 'Rating failed';
- addToast(msg, 'error');
+ const rawError = err.response?.data?.error || '';
+ if (rawError === 'TOO_FAR') {
+   addToast(t('geo.tooFar'), 'error');
+   setStep(1);
+ } else {
+   addToast(rawError || t('rating.submitFailed'), 'error');
+ }
  }
  } finally {
  setSubmitting(false);
