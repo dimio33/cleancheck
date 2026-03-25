@@ -13,6 +13,9 @@ export default defineConfig({
       includeAssets: ['favicon.svg'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/overpass-api\.de\/api\//,
