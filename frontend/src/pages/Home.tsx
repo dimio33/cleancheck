@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 import { motion } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { getDistance } from '../utils/geo';
+import { getDistance, getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useAuthStore } from '../stores/authStore';
 import RestaurantCard from '../components/ui/RestaurantCard';
