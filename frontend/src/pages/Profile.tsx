@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../stores/authStore';
-import { useThemeStore } from '../stores/themeStore';
 import { useFavoritesStore } from '../stores/favoritesStore';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useDraftStore } from '../stores/draftStore';
@@ -16,7 +15,6 @@ export default function Profile() {
  const { t, i18n } = useTranslation();
  const navigate = useNavigate();
  const { user, isAuthenticated, logout } = useAuthStore();
- const { mode: themeMode, setMode: setThemeMode } = useThemeStore();
 
  const [profileData, setProfileData] = useState<any>(null);
  const [userRatings, setUserRatings] = useState<Rating[]>([]);
@@ -74,18 +72,6 @@ export default function Profile() {
  i18n.changeLanguage(next);
  };
 
- const cycleTheme = () => {
- const modes: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system'];
- const idx = modes.indexOf(themeMode);
- setThemeMode(modes[(idx + 1) % modes.length]);
- };
-
- const themeLabels: Record<string, string> = {
- light: t('profile.themeLight'),
- dark: t('profile.themeDark'),
- system: t('profile.themeSystem'),
- };
-
  if (profileError) {
  return (
  <div className="flex-1 flex items-center justify-center pb-24">
@@ -99,57 +85,53 @@ export default function Profile() {
 
  return (
  <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
- {/* Header */}
- <div className="px-4 pt-6 pb-4 text-center">
+ {/* Teal Gradient Hero */}
+ <div className="bg-gradient-to-br from-teal-600 to-teal-500 px-5 pt-8 pb-12 text-center">
  <motion.div
- className="w-16 h-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center mx-auto mb-3"
+ className="w-[72px] h-[72px] rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3"
  initial={{ scale: 0 }}
  animate={{ scale: 1 }}
  transition={{ type: 'spring', damping: 12 }}
  >
- <span className="text-xl text-white font-semibold">
+ <span className="text-[28px] text-white font-bold">
  {displayUser?.username?.charAt(0)?.toUpperCase() || '?'}
  </span>
  </motion.div>
- <h2 className="text-lg font-semibold text-stone-800">{displayUser?.username}</h2>
- <p className="text-xs text-stone-400 mt-0.5">
+ <h2 className="text-xl font-bold text-white tracking-[-0.3px]">{displayUser?.username}</h2>
+ <p className="text-[13px] text-white/70 mt-0.5">
  {t('profile.memberSince')} {displayUser && new Date(displayUser.created_at).toLocaleDateString()}
  </p>
  </div>
 
- {/* Stats */}
- <div className="px-4 mb-6">
- <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 p-4">
+ {/* Overlapping Stat Cards */}
+ <div className="flex gap-2 px-5 -mt-6 relative z-10">
  {profileLoading ? (
- <div className="flex items-center justify-center py-4">
+ <div className="flex-1 flex items-center justify-center py-6">
  <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
  </div>
  ) : (
- <div className="grid grid-cols-3 divide-x divide-stone-100">
- {[
+ [
  { value: displayUser?.rating_count || 0, label: t('profile.totalRatings') },
  { value: displayUser?.restaurant_count || 0, label: t('profile.restaurants') },
  { value: (displayUser?.average_score || 0).toFixed(1), label: t('profile.avgScore') },
  ].map((stat, i) => (
  <motion.div
  key={stat.label}
- className="text-center px-2"
+ className="flex-1 bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4 text-center"
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: 0.1 + i * 0.1 }}
  >
- <span className="text-2xl font-light text-stone-800 block">{stat.value}</span>
- <span className="text-[10px] uppercase tracking-widest text-stone-400">{stat.label}</span>
+ <span className="text-[28px] font-extrabold text-stone-900 block">{stat.value}</span>
+ <span className="text-[11px] text-stone-400 font-medium mt-0.5 block">{stat.label}</span>
  </motion.div>
- ))}
- </div>
+ ))
  )}
- </div>
  </div>
 
  {/* Badges */}
  {badges.length > 0 && (
- <div className="px-4 mb-6">
+ <div className="px-4 mt-6 mb-6">
  <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.badges')}</h3>
  <div className="grid grid-cols-2 gap-2.5">
  {badges.map((badge: Badge, i: number) => (
@@ -167,7 +149,7 @@ export default function Profile() {
  <div className="px-4 mb-6">
  <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.saved')} (0)</h3>
  <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 p-6 text-center">
- <span className="text-2xl block mb-2">❤️</span>
+ <span className="text-2xl block mb-2">&#10084;&#65039;</span>
  <p className="text-sm text-stone-400">{t('profile.noSaved')}</p>
  </div>
  </div>
@@ -222,7 +204,7 @@ export default function Profile() {
  </div>
  )}
 
- {/* Rating History */}
+ {/* Rating History — Score-left mini cards */}
  <div className="px-4 mb-6">
  <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.history')}</h3>
  {userRatings.length === 0 ? (
@@ -235,7 +217,7 @@ export default function Profile() {
  <motion.div
  key={rating.id}
  className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-stone-50 transition-colors ${
- i < Math.min(userRatings.length, 5) - 1 ? 'border-b border-stone-50' : ''
+ i < Math.min(userRatings.length, 5) - 1 ? 'border-b border-stone-100' : ''
  }`}
  onClick={() => navigate(`/restaurant/${rating.restaurant_id}`)}
  initial={{ opacity: 0, x: -20 }}
@@ -243,12 +225,10 @@ export default function Profile() {
  transition={{ delay: 0.1 + i * 0.05 }}
  >
  <div
- className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
- style={{
- backgroundColor: `${getScoreColor(rating.overall_score)}12`,
- }}
+ className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0"
+ style={{ backgroundColor: getScoreColor(rating.overall_score) }}
  >
- <span className="text-[11px] font-semibold" style={{ color: getScoreColor(rating.overall_score) }}>
+ <span className="text-[13px] font-bold text-white">
  {Number(rating.overall_score).toFixed(1)}
  </span>
  </div>
@@ -278,14 +258,6 @@ export default function Profile() {
  <span className="text-sm text-teal-600 font-medium">
  {i18n.language.startsWith('de') ? 'Deutsch' : 'English'}
  </span>
- </button>
- <div className="h-px bg-stone-50" />
- <button
- onClick={cycleTheme}
- className="flex items-center justify-between w-full p-4 hover:bg-stone-50 transition-colors"
- >
- <span className="text-sm text-stone-700">{t('profile.theme')}</span>
- <span className="text-sm text-teal-600 font-medium">{themeLabels[themeMode]}</span>
  </button>
  {isAuthenticated && (
  <>
