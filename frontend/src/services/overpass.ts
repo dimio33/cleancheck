@@ -16,12 +16,25 @@ function getTimeout(radius: number): number {
   return 30;
 }
 
+// DACH region bounding box (Germany, Austria, Switzerland)
+const DACH_BOUNDS = { minLat: 45.8, maxLat: 55.1, minLng: 5.8, maxLng: 17.2 };
+
+function isInDACH(lat: number, lng: number): boolean {
+  return lat >= DACH_BOUNDS.minLat && lat <= DACH_BOUNDS.maxLat &&
+         lng >= DACH_BOUNDS.minLng && lng <= DACH_BOUNDS.maxLng;
+}
+
 export async function fetchNearbyRestaurants(
   lat: number,
   lng: number,
   radius: number = 5000,
   signal?: AbortSignal
 ): Promise<Restaurant[]> {
+  if (!isInDACH(lat, lng)) {
+    console.warn('Coordinates outside DACH region, skipping Overpass fetch');
+    return [];
+  }
+
   const maxResults = getMaxResults(radius);
   const timeout = getTimeout(radius);
 

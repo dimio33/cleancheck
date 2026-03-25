@@ -244,7 +244,7 @@ export default function Home() {
  if (q.length < 2) { setCityResults([]); return; }
  const id = ++searchIdRef.current;
  debounceRef.current = setTimeout(() => {
- fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&addressdetails=0`)
+ fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&addressdetails=0&countrycodes=de,at,ch`)
  .then(r => r.json())
  .then(data => { if (searchIdRef.current === id) setCityResults(data || []); })
  .catch(() => { if (searchIdRef.current === id) setCityResults([]); });
