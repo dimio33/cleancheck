@@ -376,9 +376,12 @@ export default function Home() {
  center={{ lat: effectiveLat, lng: effectiveLng }}
  zoom={mapZoom}
  mapId={import.meta.env.VITE_GOOGLE_MAPS_ID || undefined}
- gestureHandling="greedy"
- disableDefaultUI={true}
+ gestureHandling="cooperative"
+ disableDefaultUI={false}
  zoomControl={true}
+ mapTypeControl={false}
+ streetViewControl={false}
+ fullscreenControl={false}
  style={{ width: '100%', height: '100%' }}
  >
  {restaurantsWithDistance.slice(0, 20).map((r) => (
