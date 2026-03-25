@@ -70,7 +70,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-stone-100 pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-xl border-t border-black/[0.04] pb-safe" style={{ WebkitBackdropFilter: 'blur(20px)' }}>
       <div className="flex items-center h-16 max-w-lg mx-auto px-2">
         <Tab path="/" icon={<MapIcon />} label={t('nav.home')} />
         <Tab path="/trending" icon={<TrendingIcon />} label={t('nav.trending')} />
@@ -78,7 +78,7 @@ export default function BottomNav() {
         <div className="flex items-center justify-center flex-1">
           <button
             onClick={() => navigate('/rate')}
-            className="flex items-center justify-center w-12 h-12 -mt-5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-500/25 active:scale-95 transition-transform"
+            className="flex items-center justify-center w-12 h-12 -mt-5 rounded-full bg-teal-600 text-white shadow-[0_4px_16px_rgba(13,148,136,0.3)] active:scale-95 transition-transform"
           >
             <PlusIcon />
           </button>
