@@ -19,11 +19,12 @@ export default function Trending() {
  const navigate = useNavigate();
  const [restaurants, setRestaurants] = useState<TrendingRestaurant[]>([]);
  const [loading, setLoading] = useState(true);
+ const [error, setError] = useState(false);
 
  useEffect(() => {
  api.get('/restaurants/trending')
  .then(({ data }) => setRestaurants(data.restaurants || []))
- .catch(() => {})
+ .catch(() => setError(true))
  .finally(() => setLoading(false));
  }, []);
 
@@ -35,7 +36,18 @@ export default function Trending() {
  </div>
 
  <div className="px-4">
- {loading ? (
+ {error ? (
+ <div className="text-center py-16">
+ <span className="text-4xl block mb-3">⚠️</span>
+ <p className="text-sm text-stone-400 mb-4">Trends konnten nicht geladen werden</p>
+ <button
+ onClick={() => { setError(false); setLoading(true); api.get('/restaurants/trending').then(({ data }) => setRestaurants(data.restaurants || [])).catch(() => setError(true)).finally(() => setLoading(false)); }}
+ className="px-6 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-medium active:scale-95 transition-transform"
+ >
+ Nochmal versuchen
+ </button>
+ </div>
+ ) : loading ? (
  <div className="flex items-center justify-center py-16">
  <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
  </div>

@@ -18,12 +18,13 @@ function TrendingInline() {
  const { t } = useTranslation();
  const [items, setItems] = useState<{ id: string; name: string; clean_score: string | null; recent_ratings: string; city: string | null }[]>([]);
  const [loaded, setLoaded] = useState(false);
+ const [error, setError] = useState(false);
 
  useEffect(() => {
  let cancelled = false;
  api.get('/restaurants/trending')
  .then(({ data }) => { if (!cancelled) setItems(data.restaurants || []); })
- .catch(() => {})
+ .catch(() => { if (!cancelled) setError(true); })
  .finally(() => { if (!cancelled) setLoaded(true); });
  return () => { cancelled = true; };
  }, []);
@@ -32,6 +33,15 @@ function TrendingInline() {
  return (
  <div className="flex items-center justify-center py-8">
  <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+ </div>
+ );
+ }
+
+ if (error) {
+ return (
+ <div className="text-center py-8">
+ <span className="text-3xl block mb-2">⚠️</span>
+ <p className="text-sm text-stone-400">Trends konnten nicht geladen werden</p>
  </div>
  );
  }
@@ -365,7 +375,7 @@ export default function Home() {
  <Map
  center={{ lat: effectiveLat, lng: effectiveLng }}
  zoom={mapZoom}
- mapId="DEMO_MAP_ID"
+ mapId={import.meta.env.VITE_GOOGLE_MAPS_ID || undefined}
  gestureHandling="greedy"
  disableDefaultUI={true}
  zoomControl={true}

@@ -59,6 +59,7 @@ export default function RatingFlow() {
  const [honeypot, setHoneypot] = useState('');
  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+ const photoPreviewRef = useRef<string | null>(null);
  const [uploading, setUploading] = useState(false);
  const [submitting, setSubmitting] = useState(false);
  const [photoFailed, setPhotoFailed] = useState(false);
@@ -67,6 +68,13 @@ export default function RatingFlow() {
  // Reset loaded_at timestamp when component mounts
  useEffect(() => {
  loadedAtRef.current = Date.now();
+ }, []);
+
+ // Revoke photo preview URL on unmount to prevent memory leak
+ useEffect(() => {
+ return () => {
+ if (photoPreviewRef.current) URL.revokeObjectURL(photoPreviewRef.current);
+ };
  }, []);
 
  // Geo-verification state
@@ -133,7 +141,8 @@ export default function RatingFlow() {
  setGeoChecking(false);
  return true;
  } catch {
- // If geolocation fails, use the cached position from the hook
+ // If geolocation fails, use the cached position from watchPosition (recent enough)
+ console.warn('High-accuracy geolocation failed, falling back to cached position');
  const dist = getDistance(lat, lng, restaurant.lat, restaurant.lng);
  setGeoDistance(Math.round(dist));
 
@@ -491,7 +500,7 @@ export default function RatingFlow() {
  <div className="relative mb-4">
  <img src={photoPreview} alt="" className="w-full h-48 object-cover rounded-xl" />
  <button
- onClick={() => { if (photoPreview) URL.revokeObjectURL(photoPreview); setSelectedPhoto(null); setPhotoPreview(null); }}
+ onClick={() => { if (photoPreviewRef.current) URL.revokeObjectURL(photoPreviewRef.current); photoPreviewRef.current = null; setSelectedPhoto(null); setPhotoPreview(null); }}
  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white"
  >
  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -517,9 +526,11 @@ export default function RatingFlow() {
  onChange={(e) => {
  const file = e.target.files?.[0];
  if (file) {
- if (photoPreview) URL.revokeObjectURL(photoPreview);
+ if (photoPreviewRef.current) URL.revokeObjectURL(photoPreviewRef.current);
+ const url = URL.createObjectURL(file);
+ photoPreviewRef.current = url;
  setSelectedPhoto(file);
- setPhotoPreview(URL.createObjectURL(file));
+ setPhotoPreview(url);
  }
  }}
  />
