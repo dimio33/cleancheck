@@ -166,19 +166,31 @@ router.post('/', optionalAuth, async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    const result = await query(
-      `INSERT INTO restaurants (name, address, lat, lng, city, cuisine_type, osm_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
-      [name, address || null, lat, lng, city || null, cuisine_type || null, osm_id || null]
-    );
+    // Determine conflict column based on ID type
+    const externalId = osm_id || null;
+    const isGooglePlace = typeof osm_id === 'string' && osm_id.startsWith('google-');
+
+    let result;
+    if (externalId) {
+      // Upsert: eliminates race condition when two users create the same restaurant simultaneously
+      result = await query(
+        `INSERT INTO restaurants (name, address, lat, lng, city, cuisine_type, osm_id${isGooglePlace ? ', google_place_id' : ''})
+         VALUES ($1, $2, $3, $4, $5, $6, $7${isGooglePlace ? ', $7' : ''})
+         ON CONFLICT (osm_id) DO UPDATE SET name = EXCLUDED.name
+         RETURNING *`,
+        [name, address || null, lat, lng, city || null, cuisine_type || null, externalId]
+      );
+    } else {
+      result = await query(
+        `INSERT INTO restaurants (name, address, lat, lng, city, cuisine_type)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        [name, address || null, lat, lng, city || null, cuisine_type || null]
+      );
+    }
 
     res.status(201).json({ restaurant: result.rows[0] });
   } catch (err: unknown) {
-    if (err instanceof Error && 'code' in err && (err as Record<string, unknown>).code === '23505') {
-      res.status(409).json({ error: 'Restaurant with this OSM ID already exists' });
-      return;
-    }
     console.error('Create restaurant error:', err);
     res.status(500).json({ error: 'Failed to create restaurant' });
   }

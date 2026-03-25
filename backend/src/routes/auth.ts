@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { query } from '../utils/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { registerLimiter, loginLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -42,7 +43,7 @@ async function createRefreshToken(userId: string): Promise<string> {
 }
 
 // POST /api/auth/register
-router.post('/register', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/register', registerLimiter, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { username, email, password } = req.body;
 
@@ -93,6 +94,12 @@ router.post('/register', async (req: AuthRequest, res: Response): Promise<void> 
     const token = generateAccessToken(user);
     const refreshToken = await createRefreshToken(user.id);
 
+    console.log(JSON.stringify({
+      action: 'user_registered',
+      user_id: user.id,
+      timestamp: new Date().toISOString(),
+    }));
+
     res.status(201).json({
       token,
       refreshToken,
@@ -110,7 +117,7 @@ router.post('/register', async (req: AuthRequest, res: Response): Promise<void> 
 });
 
 // POST /api/auth/login
-router.post('/login', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/login', loginLimiter, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
@@ -149,6 +156,12 @@ router.post('/login', async (req: AuthRequest, res: Response): Promise<void> => 
 
     const token = generateAccessToken(user);
     const refreshToken = await createRefreshToken(user.id);
+
+    console.log(JSON.stringify({
+      action: 'user_login',
+      user_id: user.id,
+      timestamp: new Date().toISOString(),
+    }));
 
     res.json({
       token,

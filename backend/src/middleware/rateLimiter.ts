@@ -65,8 +65,11 @@ export function createRateLimiter(windowMs: number, maxRequests: number): Reques
   };
 }
 
-/** Auth endpoints: 15 requests per 15 minutes */
-export const authLimiter = createRateLimiter(15 * 60 * 1000, 15);
+/** Registration: 5 requests per 15 minutes */
+export const registerLimiter = createRateLimiter(15 * 60 * 1000, 5);
+
+/** Login: 10 requests per 15 minutes */
+export const loginLimiter = createRateLimiter(15 * 60 * 1000, 10);
 
 /** General API endpoints: 100 requests per 15 minutes */
 export const apiLimiter = createRateLimiter(15 * 60 * 1000, 100);

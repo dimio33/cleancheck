@@ -224,6 +224,15 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
       }
     }
 
+    console.log(JSON.stringify({
+      action: 'rating_created',
+      rating_id: result.rows[0]?.id,
+      restaurant_id,
+      user_id: userId || anonymousId,
+      score: overall_score,
+      timestamp: new Date().toISOString(),
+    }));
+
     res.status(201).json({
       rating: result.rows?.[0],
       restaurant_score: newScore,
@@ -312,6 +321,14 @@ router.post('/:id/photos', authenticate, upload.single('photo'), async (req: Aut
       [id, photoUrl]
     );
 
+    console.log(JSON.stringify({
+      action: 'photo_uploaded',
+      photo_id: photoResult.rows[0]?.id,
+      rating_id: id,
+      user_id: req.user.id,
+      timestamp: new Date().toISOString(),
+    }));
+
     res.status(201).json({ photo: photoResult.rows[0] });
   } catch (err) {
     console.error('Upload photo error:', err);
@@ -394,6 +411,14 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response): Pro
 
     // Update user total_ratings (atomic decrement)
     await query(`UPDATE users SET total_ratings = GREATEST(total_ratings - 1, 0) WHERE id = $1`, [req.user.id]);
+
+    console.log(JSON.stringify({
+      action: 'rating_deleted',
+      rating_id: id,
+      restaurant_id: restaurantId,
+      user_id: req.user.id,
+      timestamp: new Date().toISOString(),
+    }));
 
     res.json({ message: 'Rating deleted' });
   } catch (err) {
