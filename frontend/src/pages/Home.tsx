@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { getDistance, getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
