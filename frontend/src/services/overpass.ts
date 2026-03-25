@@ -30,6 +30,35 @@ const GOOGLE_INCLUDED_TYPES = [
   'cafe',
   'bar',
   'fast_food_restaurant',
+  'italian_restaurant',
+  'chinese_restaurant',
+  'japanese_restaurant',
+  'korean_restaurant',
+  'mexican_restaurant',
+  'indian_restaurant',
+  'thai_restaurant',
+  'greek_restaurant',
+  'turkish_restaurant',
+  'vietnamese_restaurant',
+  'american_restaurant',
+  'french_restaurant',
+  'german_restaurant',
+  'spanish_restaurant',
+  'mediterranean_restaurant',
+  'middle_eastern_restaurant',
+  'seafood_restaurant',
+  'steak_house',
+  'sushi_restaurant',
+  'ramen_restaurant',
+  'pizza_restaurant',
+  'hamburger_restaurant',
+  'brunch_restaurant',
+  'breakfast_restaurant',
+  'sandwich_shop',
+  'ice_cream_shop',
+  'coffee_shop',
+  'pub',
+  'wine_bar',
 ];
 
 // Friendly German names for Google Places types
@@ -38,6 +67,35 @@ const TYPE_DISPLAY_NAMES: Record<string, string> = {
   cafe: 'Café',
   bar: 'Bar',
   fast_food_restaurant: 'Fast Food',
+  italian_restaurant: 'Italienisch',
+  chinese_restaurant: 'Chinesisch',
+  japanese_restaurant: 'Japanisch',
+  korean_restaurant: 'Koreanisch',
+  mexican_restaurant: 'Mexikanisch',
+  indian_restaurant: 'Indisch',
+  thai_restaurant: 'Thai',
+  greek_restaurant: 'Griechisch',
+  turkish_restaurant: 'Türkisch',
+  vietnamese_restaurant: 'Vietnamesisch',
+  american_restaurant: 'Amerikanisch',
+  french_restaurant: 'Französisch',
+  german_restaurant: 'Deutsch',
+  spanish_restaurant: 'Spanisch',
+  mediterranean_restaurant: 'Mediterran',
+  middle_eastern_restaurant: 'Orientalisch',
+  seafood_restaurant: 'Fisch & Meeresfrüchte',
+  steak_house: 'Steakhaus',
+  sushi_restaurant: 'Sushi',
+  ramen_restaurant: 'Ramen',
+  pizza_restaurant: 'Pizzeria',
+  hamburger_restaurant: 'Burger',
+  brunch_restaurant: 'Brunch',
+  breakfast_restaurant: 'Frühstück',
+  sandwich_shop: 'Sandwiches',
+  ice_cream_shop: 'Eiscafé',
+  coffee_shop: 'Kaffee',
+  pub: 'Pub',
+  wine_bar: 'Weinbar',
 };
 
 interface GooglePlace {
@@ -51,20 +109,18 @@ interface GooglePlace {
   userRatingCount?: number;
 }
 
-async function fetchFromGooglePlaces(
+async function fetchGooglePlacesBatch(
   lat: number,
   lng: number,
   radius: number,
+  apiKey: string,
   signal?: AbortSignal,
-): Promise<Restaurant[]> {
-  const apiKey = import.meta.env.VITE_GOOGLE_PLACES_KEY;
-  if (!apiKey) {
-    console.warn('VITE_GOOGLE_PLACES_KEY not set, skipping Google Places');
-    throw new Error('Google Places API key not configured');
-  }
-
-  // Google Places max radius is 50000m, maxResultCount is 20
-  const clampedRadius = Math.min(radius, 50000);
+): Promise<GooglePlace[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+  const fetchSignal = signal
+    ? anySignal([signal, controller.signal])
+    : controller.signal;
 
   const body = {
     includedTypes: GOOGLE_INCLUDED_TYPES,
@@ -72,17 +128,11 @@ async function fetchFromGooglePlaces(
     locationRestriction: {
       circle: {
         center: { latitude: lat, longitude: lng },
-        radius: clampedRadius,
+        radius: Math.min(radius, 50000),
       },
     },
     languageCode: 'de',
   };
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10_000);
-  const fetchSignal = signal
-    ? anySignal([signal, controller.signal])
-    : controller.signal;
 
   const response = await fetch(GOOGLE_PLACES_URL, {
     method: 'POST',
@@ -102,7 +152,40 @@ async function fetchFromGooglePlaces(
   }
 
   const data = await response.json();
-  const places: GooglePlace[] = data.places || [];
+  return data.places || [];
+}
+
+async function fetchFromGooglePlaces(
+  lat: number,
+  lng: number,
+  radius: number,
+  signal?: AbortSignal,
+): Promise<Restaurant[]> {
+  const apiKey = import.meta.env.VITE_GOOGLE_PLACES_KEY;
+  if (!apiKey) {
+    console.warn('VITE_GOOGLE_PLACES_KEY not set, skipping Google Places');
+    throw new Error('Google Places API key not configured');
+  }
+
+  // Fetch 2 batches in parallel: close (2km) + wider (full radius)
+  // This gives us up to 40 unique results instead of 20
+  const nearRadius = Math.min(2000, radius);
+  const [nearPlaces, widePlaces] = await Promise.all([
+    fetchGooglePlacesBatch(lat, lng, nearRadius, apiKey, signal),
+    radius > 2000
+      ? fetchGooglePlacesBatch(lat, lng, radius, apiKey, signal)
+      : Promise.resolve([]),
+  ]);
+
+  // Merge and deduplicate by place ID
+  const seen = new Set<string>();
+  const places: GooglePlace[] = [];
+  for (const p of [...nearPlaces, ...widePlaces]) {
+    if (!seen.has(p.id)) {
+      seen.add(p.id);
+      places.push(p);
+    }
+  }
 
   // Haversine for sorting by distance
   const toRad = (x: number) => (x * Math.PI) / 180;
