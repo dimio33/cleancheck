@@ -1,6 +1,21 @@
 import type { Restaurant } from '../types';
 
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
+// Combine multiple AbortSignals into one
+function anySignal(signals: AbortSignal[]): AbortSignal {
+  const controller = new AbortController();
+  for (const s of signals) {
+    if (s.aborted) { controller.abort(s.reason); return controller.signal; }
+    s.addEventListener('abort', () => controller.abort(s.reason), { once: true });
+  }
+  return controller.signal;
+}
+
+// Multiple Overpass servers for failover
+const OVERPASS_SERVERS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
 
 function getMaxResults(radius: number): number {
   if (radius <= 1000) return 200;
@@ -47,16 +62,36 @@ export async function fetchNearbyRestaurants(
   `;
 
   try {
-    const response = await fetch(OVERPASS_URL, {
-      method: 'POST',
-      body: `data=${encodeURIComponent(query)}`,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      signal,
-    });
+    let data: any = null;
 
-    if (!response.ok) throw new Error('Overpass API error');
+    for (const server of OVERPASS_SERVERS) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout * 1000);
+        const fetchSignal = signal
+          ? anySignal([signal, controller.signal])
+          : controller.signal;
 
-    const data = await response.json();
+        const response = await fetch(server, {
+          method: 'POST',
+          body: `data=${encodeURIComponent(query)}`,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          signal: fetchSignal,
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) throw new Error(`${server} returned ${response.status}`);
+
+        data = await response.json();
+        break; // Success — stop trying other servers
+      } catch (err) {
+        if (signal?.aborted) throw err; // User-initiated abort — don't retry
+        console.warn(`Overpass server failed: ${server}`, err);
+        continue; // Try next server
+      }
+    }
+
+    if (!data) throw new Error('All Overpass servers failed');
 
     // Haversine for sorting by distance
     const toRad = (x: number) => (x * Math.PI) / 180;
