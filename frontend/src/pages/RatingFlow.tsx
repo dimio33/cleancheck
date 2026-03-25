@@ -413,14 +413,18 @@ export default function RatingFlow() {
  whileTap={{ scale: 0.98 }}
  disabled={geoChecking}
  >
+ {hasScore ? (
  <div
- className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 ${hasScore ? '' : 'bg-stone-100'}`}
- style={hasScore ? { backgroundColor: scoreBg } : undefined}
+ className="w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+ style={{ backgroundColor: scoreBg }}
  >
- <span className={`text-sm font-bold ${hasScore ? 'text-white' : 'text-stone-400'}`}>
- {hasScore ? r.clean_score!.toFixed(1) : '—'}
- </span>
+ <span className="text-[15px] font-bold text-white tracking-tight">{r.clean_score!.toFixed(1)}</span>
  </div>
+ ) : (
+ <div className="w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 bg-gradient-to-br from-teal-50 to-emerald-50 border-2 border-dashed border-teal-200">
+ <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+ </div>
+ )}
  <div className="flex-1 min-w-0">
  <span className="text-sm font-medium text-stone-800 block truncate">{r.name}</span>
  <span className="text-xs text-stone-400">
