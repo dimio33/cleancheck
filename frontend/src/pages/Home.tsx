@@ -11,6 +11,7 @@ import { getDistance, getScoreColor, getScoreLabel } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useAuthStore } from '../stores/authStore';
 import RestaurantCard from '../components/ui/RestaurantCard';
+import PullToRefresh from '../components/ui/PullToRefresh';
 import { RestaurantCardSkeleton } from '../components/ui/Skeleton';
 import api from '../services/api';
 import 'leaflet/dist/leaflet.css';
@@ -303,6 +304,11 @@ export default function Home() {
 
  const mapZoom = DEFAULT_MAP_ZOOM;
 
+ const handleRefresh = useCallback(async () => {
+   useRestaurantStore.getState().invalidate();
+   await fetchRestaurants(effectiveLat, effectiveLng);
+ }, [fetchRestaurants, effectiveLat, effectiveLng]);
+
  // User initial for avatar
  const userInitial = user?.username?.charAt(0)?.toUpperCase() || 'G';
 
@@ -562,6 +568,7 @@ export default function Home() {
  </div>
  </div>
 
+ <PullToRefresh onRefresh={handleRefresh}>
  {/* Section heading */}
  <div className="px-5 pb-2 pt-1">
  <p className="text-[11px] uppercase tracking-[1.5px] text-stone-400 font-medium mb-1">
@@ -600,6 +607,7 @@ export default function Home() {
  </div>
  )}
  </div>
+ </PullToRefresh>
  </div>
  );
 }
