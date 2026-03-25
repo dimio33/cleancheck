@@ -26,15 +26,15 @@ export default function BadgeCard({ badge, index = 0 }: BadgeCardProps) {
     <motion.div
       className={`flex flex-col items-center justify-center text-center p-4 rounded-2xl min-h-[130px] transition-all ${
         isEarned
-          ? 'bg-white dark:bg-stone-900 shadow-sm shadow-stone-200/50 dark:shadow-none ring-1 ring-teal-100 dark:ring-teal-900'
-          : 'bg-stone-50 dark:bg-stone-800 opacity-60'
+          ? 'bg-white shadow-sm shadow-stone-200/50 ring-1 ring-teal-100'
+          : 'bg-stone-50 opacity-60'
       }`}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: isEarned ? 1 : 0.6, scale: 1 }}
       transition={{ delay: index * 0.08, duration: 0.3 }}
     >
       <span className="text-2xl mb-2">{badge.icon}</span>
-      <h4 className="text-xs font-semibold text-stone-700 dark:text-stone-300 mb-0.5">{badgeName}</h4>
+      <h4 className="text-xs font-semibold text-stone-700 mb-0.5">{badgeName}</h4>
       <p className="text-[11px] text-stone-400 leading-tight">{badgeDesc}</p>
       {isEarned && badge.earned_at && (
         <span className="text-[10px] text-teal-600 font-medium mt-1.5">

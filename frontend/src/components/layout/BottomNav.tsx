@@ -51,7 +51,7 @@ export default function BottomNav() {
         aria-label={label}
         aria-current={active ? 'page' : undefined}
         className={`flex flex-col items-center justify-center flex-1 py-2 transition-colors relative ${
-          active ? 'text-teal-600' : 'text-stone-400 dark:text-stone-500'
+          active ? 'text-teal-600' : 'text-stone-400'
         }`}
       >
         <motion.div animate={{ scale: active ? 1.15 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
@@ -70,7 +70,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-stone-900 border-t border-stone-100 dark:border-stone-800 pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-stone-100 pb-safe">
       <div className="flex items-center h-16 max-w-lg mx-auto px-2">
         <Tab path="/" icon={<MapIcon />} label={t('nav.home')} />
         <Tab path="/trending" icon={<TrendingIcon />} label={t('nav.trending')} />

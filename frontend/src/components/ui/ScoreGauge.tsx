@@ -87,7 +87,7 @@ export default function ScoreGauge({
             {score !== null ? (
               <>
                 <motion.span
-                  className="font-light tracking-tight text-stone-800 dark:text-stone-200"
+                  className="font-light tracking-tight text-stone-800"
                   style={{ fontSize }}
                 >
                   {animatedScore}

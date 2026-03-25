@@ -72,14 +72,14 @@ export default function QRCodeModal({ isOpen, onClose, restaurantId, restaurantN
         >
           <div className="absolute inset-0 bg-black/50" onClick={onClose} />
           <motion.div
-            className="relative bg-white dark:bg-stone-900 rounded-2xl p-6 w-full max-w-sm shadow-xl"
+            className="relative bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl"
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.9, y: 20 }}
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500"
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-stone-100 text-stone-500"
               aria-label="Close"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -87,8 +87,8 @@ export default function QRCodeModal({ isOpen, onClose, restaurantId, restaurantN
               </svg>
             </button>
 
-            <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100 mb-1 pr-8">{restaurantName}</h3>
-            <p className="text-sm text-stone-500 dark:text-stone-400 mb-4">{t('qr.scanToRate')}</p>
+            <h3 className="text-lg font-semibold text-stone-900 mb-1 pr-8">{restaurantName}</h3>
+            <p className="text-sm text-stone-500 mb-4">{t('qr.scanToRate')}</p>
 
             <div className="flex justify-center mb-4 bg-white rounded-xl p-3">
               <canvas ref={canvasRef} style={{ width: 200, height: 200 }} />
@@ -105,7 +105,7 @@ export default function QRCodeModal({ isOpen, onClose, restaurantId, restaurantN
             <div className="flex gap-2">
               <button
                 onClick={handleDownload}
-                className="flex-1 py-2.5 rounded-xl bg-stone-100 dark:bg-stone-800 text-sm font-medium text-stone-700 dark:text-stone-300 active:scale-[0.98] transition-transform"
+                className="flex-1 py-2.5 rounded-xl bg-stone-100 text-sm font-medium text-stone-700 active:scale-[0.98] transition-transform"
               >
                 {t('qr.download')}
               </button>

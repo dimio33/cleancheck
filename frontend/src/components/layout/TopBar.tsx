@@ -13,12 +13,12 @@ export default function TopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white dark:bg-stone-950 border-b border-stone-100 dark:border-stone-800">
+    <header className="sticky top-0 z-50 bg-white border-b border-stone-100">
       <div className="flex items-center justify-between h-14 px-4 max-w-lg mx-auto">
         {showBack ? (
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center justify-center w-11 h-11 -ml-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+            className="flex items-center justify-center w-11 h-11 -ml-2 rounded-full hover:bg-stone-100 transition-colors"
             aria-label="Back"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -29,12 +29,12 @@ export default function TopBar() {
 
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500" />
-          <span className="font-semibold text-stone-800 dark:text-stone-200 tracking-tight">CleanCheck</span>
+          <span className="font-semibold text-stone-800 tracking-tight">CleanCheck</span>
         </div>
 
         <button
           onClick={toggleLang}
-          className="flex items-center justify-center w-11 h-11 -mr-2 rounded-full text-xs font-medium text-stone-400 dark:text-stone-500 uppercase tracking-widest hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+          className="flex items-center justify-center w-11 h-11 -mr-2 rounded-full text-xs font-medium text-stone-400 uppercase tracking-widest hover:bg-stone-100 transition-colors"
           aria-label="Toggle language"
         >
           {i18n.language.startsWith('de') ? 'EN' : 'DE'}
