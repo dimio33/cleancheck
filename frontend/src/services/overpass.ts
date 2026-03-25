@@ -10,7 +10,151 @@ function anySignal(signals: AbortSignal[]): AbortSignal {
   return controller.signal;
 }
 
-// Multiple Overpass servers for failover
+// ─── Google Places API (New, v1) ───────────────────────────────────────────
+
+const GOOGLE_PLACES_URL = 'https://places.googleapis.com/v1/places:searchNearby';
+
+const GOOGLE_FIELD_MASK = [
+  'places.id',
+  'places.displayName',
+  'places.location',
+  'places.formattedAddress',
+  'places.primaryType',
+  'places.primaryTypeDisplayName',
+  'places.rating',
+  'places.userRatingCount',
+].join(',');
+
+const GOOGLE_INCLUDED_TYPES = [
+  'restaurant',
+  'cafe',
+  'bar',
+  'fast_food_restaurant',
+  'bakery',
+  'ice_cream_shop',
+  'meal_takeaway',
+  'meal_delivery',
+];
+
+// Friendly German names for Google Places types
+const TYPE_DISPLAY_NAMES: Record<string, string> = {
+  restaurant: 'Restaurant',
+  cafe: 'Café',
+  bar: 'Bar',
+  fast_food_restaurant: 'Fast Food',
+  bakery: 'Bäckerei',
+  ice_cream_shop: 'Eisdiele',
+  meal_takeaway: 'Imbiss',
+  meal_delivery: 'Lieferservice',
+};
+
+interface GooglePlace {
+  id: string;
+  displayName?: { text: string; languageCode?: string };
+  location?: { latitude: number; longitude: number };
+  formattedAddress?: string;
+  primaryType?: string;
+  primaryTypeDisplayName?: { text: string };
+  rating?: number;
+  userRatingCount?: number;
+}
+
+async function fetchFromGooglePlaces(
+  lat: number,
+  lng: number,
+  radius: number,
+  signal?: AbortSignal,
+): Promise<Restaurant[]> {
+  const apiKey = import.meta.env.VITE_GOOGLE_PLACES_KEY;
+  if (!apiKey) {
+    console.warn('VITE_GOOGLE_PLACES_KEY not set, skipping Google Places');
+    throw new Error('Google Places API key not configured');
+  }
+
+  // Google Places max radius is 50000m, maxResultCount is 20
+  const clampedRadius = Math.min(radius, 50000);
+
+  const body = {
+    includedTypes: GOOGLE_INCLUDED_TYPES,
+    maxResultCount: 20,
+    locationRestriction: {
+      circle: {
+        center: { latitude: lat, longitude: lng },
+        radius: clampedRadius,
+      },
+    },
+    languageCode: 'de',
+  };
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+  const fetchSignal = signal
+    ? anySignal([signal, controller.signal])
+    : controller.signal;
+
+  const response = await fetch(GOOGLE_PLACES_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+      'X-Goog-FieldMask': GOOGLE_FIELD_MASK,
+    },
+    body: JSON.stringify(body),
+    signal: fetchSignal,
+  });
+  clearTimeout(timeoutId);
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    throw new Error(`Google Places returned ${response.status}: ${errorText}`);
+  }
+
+  const data = await response.json();
+  const places: GooglePlace[] = data.places || [];
+
+  // Haversine for sorting by distance
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const haversine = (lat2: number, lng2: number) => {
+    const R = 6371e3;
+    const dp = toRad(lat2 - lat);
+    const dl = toRad(lng2 - lng);
+    const a = Math.sin(dp / 2) ** 2 + Math.cos(toRad(lat)) * Math.cos(toRad(lat2)) * Math.sin(dl / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  const restaurants: Restaurant[] = places
+    .map((place): Restaurant | null => {
+      const name = place.displayName?.text;
+      if (!name) return null;
+
+      const plLat = place.location?.latitude;
+      const plLng = place.location?.longitude;
+      if (plLat == null || plLng == null) return null;
+
+      const cuisine =
+        place.primaryTypeDisplayName?.text ||
+        (place.primaryType ? TYPE_DISPLAY_NAMES[place.primaryType] : undefined) ||
+        'Restaurant';
+
+      return {
+        id: `google-${place.id}`,
+        name,
+        lat: plLat,
+        lng: plLng,
+        address: place.formattedAddress || undefined,
+        cuisine,
+        clean_score: null,
+        rating_count: 0,
+      };
+    })
+    .filter((r): r is Restaurant => r !== null)
+    .sort((a, b) => haversine(a.lat, a.lng) - haversine(b.lat, b.lng));
+
+  return restaurants;
+}
+
+// ─── Overpass API (Fallback) ───────────────────────────────────────────────
+
 const OVERPASS_SERVERS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
@@ -31,6 +175,110 @@ function getTimeout(radius: number): number {
   return 30;
 }
 
+async function fetchFromOverpass(
+  lat: number,
+  lng: number,
+  radius: number,
+  signal?: AbortSignal,
+): Promise<Restaurant[]> {
+  const maxResults = getMaxResults(radius);
+  const timeout = getTimeout(radius);
+
+  const query = `
+    [out:json][timeout:${timeout}];
+    (
+      nwr["amenity"~"restaurant|fast_food|cafe|bar|pub|biergarten|food_court|ice_cream"]["name"](around:${radius},${lat},${lng});
+    );
+    out center;
+  `;
+
+  let data: any = null;
+
+  for (const server of OVERPASS_SERVERS) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout * 1000);
+      const fetchSignal = signal
+        ? anySignal([signal, controller.signal])
+        : controller.signal;
+
+      const response = await fetch(server, {
+        method: 'POST',
+        body: `data=${encodeURIComponent(query)}`,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        signal: fetchSignal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) throw new Error(`${server} returned ${response.status}`);
+
+      data = await response.json();
+      break;
+    } catch (err) {
+      if (signal?.aborted) throw err;
+      console.warn(`Overpass server failed: ${server}`, err);
+      continue;
+    }
+  }
+
+  if (!data) throw new Error('All Overpass servers failed');
+
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const haversine = (lat2: number, lng2: number) => {
+    const R = 6371e3;
+    const dp = toRad(lat2 - lat);
+    const dl = toRad(lng2 - lng);
+    const a = Math.sin(dp / 2) ** 2 + Math.cos(toRad(lat)) * Math.cos(toRad(lat2)) * Math.sin(dl / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  const restaurants: Restaurant[] = data.elements
+    .map((el: Record<string, unknown>) => {
+      const tags = (el.tags || {}) as Record<string, string>;
+      const name = tags.name;
+      if (!name) return null;
+
+      let cuisine = tags.cuisine?.split(';')[0]?.trim();
+      if (cuisine) {
+        cuisine = cuisine.replace(/_/g, ' ');
+        cuisine = cuisine.charAt(0).toUpperCase() + cuisine.slice(1);
+      } else {
+        const amenity = tags.amenity;
+        if (amenity === 'cafe') cuisine = 'Cafe';
+        else if (amenity === 'fast_food') cuisine = 'Fast Food';
+        else if (amenity === 'biergarten') cuisine = 'Biergarten';
+        else if (amenity === 'ice_cream') cuisine = 'Eisdiele';
+        else if (amenity === 'food_court') cuisine = 'Food Court';
+        else cuisine = 'Restaurant';
+      }
+
+      const center = (el.center || {}) as Record<string, number>;
+      const elLat = (el.lat as number) || center.lat;
+      const elLng = (el.lon as number) || center.lon;
+      if (!elLat || !elLng) return null;
+
+      return {
+        id: `osm-${el.id}`,
+        name,
+        lat: elLat,
+        lng: elLng,
+        address: [tags['addr:street'], tags['addr:housenumber'], tags['addr:city']]
+          .filter(Boolean)
+          .join(' ') || undefined,
+        cuisine,
+        clean_score: null,
+        rating_count: 0,
+      } satisfies Restaurant;
+    })
+    .filter((r: Restaurant | null): r is Restaurant => r !== null)
+    .sort((a: Restaurant, b: Restaurant) => haversine(a.lat, a.lng) - haversine(b.lat, b.lng))
+    .slice(0, maxResults);
+
+  return restaurants;
+}
+
+// ─── Public API: Google Places primary, Overpass fallback ──────────────────
+
 // DACH region bounding box (Germany, Austria, Switzerland)
 const DACH_BOUNDS = { minLat: 45.8, maxLat: 55.1, minLng: 5.8, maxLng: 17.2 };
 
@@ -46,111 +294,31 @@ export async function fetchNearbyRestaurants(
   signal?: AbortSignal
 ): Promise<Restaurant[]> {
   if (!isInDACH(lat, lng)) {
-    console.warn('Coordinates outside DACH region, skipping Overpass fetch');
+    console.warn('Coordinates outside DACH region, skipping restaurant fetch');
     return [];
   }
 
-  const maxResults = getMaxResults(radius);
-  const timeout = getTimeout(radius);
-
-  const query = `
-    [out:json][timeout:${timeout}];
-    (
-      nwr["amenity"~"restaurant|fast_food|cafe|bar|pub|biergarten|food_court|ice_cream"]["name"](around:${radius},${lat},${lng});
-    );
-    out center;
-  `;
-
+  // Try Google Places first
   try {
-    let data: any = null;
-
-    for (const server of OVERPASS_SERVERS) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout * 1000);
-        const fetchSignal = signal
-          ? anySignal([signal, controller.signal])
-          : controller.signal;
-
-        const response = await fetch(server, {
-          method: 'POST',
-          body: `data=${encodeURIComponent(query)}`,
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          signal: fetchSignal,
-        });
-        clearTimeout(timeoutId);
-
-        if (!response.ok) throw new Error(`${server} returned ${response.status}`);
-
-        data = await response.json();
-        break; // Success — stop trying other servers
-      } catch (err) {
-        if (signal?.aborted) throw err; // User-initiated abort — don't retry
-        console.warn(`Overpass server failed: ${server}`, err);
-        continue; // Try next server
-      }
+    const results = await fetchFromGooglePlaces(lat, lng, radius, signal);
+    if (results.length > 0) {
+      console.log(`Google Places returned ${results.length} restaurants`);
+      return results;
     }
+    console.warn('Google Places returned 0 results, falling back to Overpass');
+  } catch (err) {
+    if (signal?.aborted) throw err;
+    console.warn('Google Places failed, falling back to Overpass:', err);
+  }
 
-    if (!data) throw new Error('All Overpass servers failed');
-
-    // Haversine for sorting by distance
-    const toRad = (x: number) => (x * Math.PI) / 180;
-    const haversine = (lat2: number, lng2: number) => {
-      const R = 6371e3;
-      const dp = toRad(lat2 - lat);
-      const dl = toRad(lng2 - lng);
-      const a = Math.sin(dp / 2) ** 2 + Math.cos(toRad(lat)) * Math.cos(toRad(lat2)) * Math.sin(dl / 2) ** 2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    };
-
-    const restaurants: Restaurant[] = data.elements
-      .map((el: Record<string, unknown>) => {
-        const tags = (el.tags || {}) as Record<string, string>;
-        const name = tags.name;
-        if (!name) return null;
-
-        // Capitalize first letter of cuisine
-        let cuisine = tags.cuisine?.split(';')[0]?.trim();
-        if (cuisine) {
-          cuisine = cuisine.replace(/_/g, ' ');
-          cuisine = cuisine.charAt(0).toUpperCase() + cuisine.slice(1);
-        } else {
-          // Fallback to amenity type
-          const amenity = tags.amenity;
-          if (amenity === 'cafe') cuisine = 'Cafe';
-          else if (amenity === 'fast_food') cuisine = 'Fast Food';
-          else if (amenity === 'biergarten') cuisine = 'Biergarten';
-          else if (amenity === 'ice_cream') cuisine = 'Eisdiele';
-          else if (amenity === 'food_court') cuisine = 'Food Court';
-          else cuisine = 'Restaurant';
-        }
-
-        // For ways/relations, coordinates are in center property
-        const center = (el.center || {}) as Record<string, number>;
-        const elLat = (el.lat as number) || center.lat;
-        const elLng = (el.lon as number) || center.lon;
-        if (!elLat || !elLng) return null;
-
-        return {
-          id: `osm-${el.id}`,
-          name,
-          lat: elLat,
-          lng: elLng,
-          address: [tags['addr:street'], tags['addr:housenumber'], tags['addr:city']]
-            .filter(Boolean)
-            .join(' ') || undefined,
-          cuisine,
-          clean_score: null,
-          rating_count: 0,
-        } satisfies Restaurant;
-      })
-      .filter((r: Restaurant | null): r is Restaurant => r !== null)
-      .sort((a: Restaurant, b: Restaurant) => haversine(a.lat, a.lng) - haversine(b.lat, b.lng))
-      .slice(0, maxResults);
-
-    return restaurants;
-  } catch (error) {
-    console.error('Failed to fetch from Overpass:', error);
+  // Fallback to Overpass
+  try {
+    const results = await fetchFromOverpass(lat, lng, radius, signal);
+    console.log(`Overpass fallback returned ${results.length} restaurants`);
+    return results;
+  } catch (err) {
+    if (signal?.aborted) throw err;
+    console.error('Both Google Places and Overpass failed:', err);
     return [];
   }
 }

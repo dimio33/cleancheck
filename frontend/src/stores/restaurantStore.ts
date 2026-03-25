@@ -65,28 +65,35 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
         try {
           const radiusKm = radius / 1000;
           const { data } = await api.get(`/restaurants?lat=${lat}&lng=${lng}&radius=${radiusKm}`);
-          const dbRestaurants: Record<string, { clean_score: number; total_ratings: number }> = {};
+
+          // Index DB restaurants by both osm_id and google_place_id
+          const byOsmId: Record<string, { clean_score: number; total_ratings: number }> = {};
+          const byGoogleId: Record<string, { clean_score: number; total_ratings: number }> = {};
           for (const r of data.restaurants || []) {
-            if (r.osm_id) {
-              const score = Number(r.clean_score);
-              dbRestaurants[String(r.osm_id)] = {
-                clean_score: isNaN(score) ? 0 : score,
-                total_ratings: parseInt(String(r.total_ratings), 10) || 0,
-              };
-            }
+            const score = Number(r.clean_score);
+            const entry = {
+              clean_score: isNaN(score) ? 0 : score,
+              total_ratings: parseInt(String(r.total_ratings), 10) || 0,
+            };
+            if (r.osm_id) byOsmId[String(r.osm_id)] = entry;
+            if (r.google_place_id) byGoogleId[String(r.google_place_id)] = entry;
           }
 
-          // Merge DB scores into Overpass results
+          // Merge DB scores into results (supports both osm- and google- prefixed IDs)
           for (const r of results) {
-            const osmId = r.id.replace('osm-', '');
-            const dbData = dbRestaurants[osmId];
+            let dbData: { clean_score: number; total_ratings: number } | undefined;
+            if (r.id.startsWith('osm-')) {
+              dbData = byOsmId[r.id.replace('osm-', '')];
+            } else if (r.id.startsWith('google-')) {
+              dbData = byGoogleId[r.id.replace('google-', '')];
+            }
             if (dbData && dbData.total_ratings > 0) {
               r.clean_score = dbData.clean_score;
               r.rating_count = dbData.total_ratings;
             }
           }
         } catch {
-          // Backend unavailable — show Overpass results without scores
+          // Backend unavailable — show results without scores
         }
 
         set({ restaurants: results, loading: false, lastFetchLocation: { lat, lng }, error: null });
