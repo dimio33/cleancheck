@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -9,15 +10,16 @@ export default function LocationPermission() {
  const { t } = useTranslation();
  const { permissionState, requestPermission, setPermissionAsked } = useGeoStore();
  const platform = detectPlatform();
+ const [loading, setLoading] = useState(false);
 
  const handleEnable = async () => {
+ setLoading(true);
  const result = await requestPermission();
  setPermissionAsked();
+ setLoading(false);
  if (result === 'granted') {
    navigate('/', { replace: true });
  } else {
-   // Denied or unavailable — show instructions briefly, then navigate
-   // Short delay so user sees the feedback before redirect
    setTimeout(() => navigate('/', { replace: true }), 1500);
  }
  };
@@ -117,13 +119,19 @@ export default function LocationPermission() {
  {/* Primary button */}
  <motion.button
  onClick={handleEnable}
- className="w-full py-3.5 rounded-xl bg-teal-600 text-white font-medium active:scale-[0.98] transition-transform mb-3"
+ disabled={loading}
+ className="w-full py-3.5 rounded-xl bg-teal-600 text-white font-medium active:scale-[0.98] transition-transform mb-3 disabled:opacity-70"
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: 0.5 }}
  whileTap={{ scale: 0.98 }}
  >
- {showInstructions ? t('locationPermission.tryAgain') : t('locationPermission.enableButton')}
+ {loading ? (
+   <span className="flex items-center justify-center gap-2">
+     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+     Standort wird gesucht...
+   </span>
+ ) : showInstructions ? t('locationPermission.tryAgain') : t('locationPermission.enableButton')}
  </motion.button>
 
  {/* Skip link */}
