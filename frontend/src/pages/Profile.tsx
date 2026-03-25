@@ -263,7 +263,7 @@ export default function Profile() {
  <>
  <div className="h-px bg-stone-50" />
  <button
- onClick={() => { logout(); navigate('/'); }}
+ onClick={() => { navigate('/'); setTimeout(logout, 50); }}
  className="flex items-center w-full p-4 hover:bg-stone-50 transition-colors"
  >
  <span className="text-sm text-rose-500 font-medium">{t('profile.logout')}</span>
