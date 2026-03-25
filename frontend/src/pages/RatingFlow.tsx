@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CriteriaSlider from '../components/ui/CriteriaSlider';
 import ScoreGauge from '../components/ui/ScoreGauge';
 import { useGeolocation, getHighAccuracyPosition } from '../hooks/useGeolocation';
-import { getDistance, formatDistance } from '../utils/geo';
+import { getDistance, formatDistance, getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 // authStore import kept for potential future use
 import { useToastStore } from '../components/ui/Toast';
@@ -368,16 +368,19 @@ export default function RatingFlow() {
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
  placeholder={t('rating.searchRestaurant')}
- className="w-full pl-11 pr-4 h-11 rounded-xl bg-stone-50 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+ className="w-full pl-11 pr-4 h-11 rounded-xl bg-stone-100 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
  />
  </div>
 
- <p className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-2">
+ <p className="text-[11px] uppercase tracking-[1.5px] text-stone-400 font-medium mb-2">
  {searchQuery ? t('search.placeholder') : t('rating.nearYou')}
  </p>
 
  <div className="space-y-2">
- {nearbyRestaurants.map((r) => (
+ {nearbyRestaurants.map((r) => {
+ const hasScore = r.clean_score != null && r.clean_score > 0;
+ const scoreBg = hasScore ? getScoreColor(r.clean_score!) : undefined;
+ return (
  <motion.button
  key={r.id}
  className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm shadow-stone-200/50 w-full text-left active:ring-2 active:ring-teal-500 transition-all"
@@ -385,8 +388,13 @@ export default function RatingFlow() {
  whileTap={{ scale: 0.98 }}
  disabled={geoChecking}
  >
- <div className="w-10 h-10 rounded-xl bg-stone-50 flex items-center justify-center text-base">
- 🏪
+ <div
+ className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 ${hasScore ? '' : 'bg-stone-100'}`}
+ style={hasScore ? { backgroundColor: scoreBg } : undefined}
+ >
+ <span className={`text-sm font-bold ${hasScore ? 'text-white' : 'text-stone-400'}`}>
+ {hasScore ? r.clean_score!.toFixed(1) : '—'}
+ </span>
  </div>
  <div className="flex-1 min-w-0">
  <span className="text-sm font-medium text-stone-800 block truncate">{r.name}</span>
@@ -398,7 +406,8 @@ export default function RatingFlow() {
  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
  </svg>
  </motion.button>
- ))}
+ );
+ })}
  </div>
  </motion.div>
  )}
@@ -448,7 +457,7 @@ export default function RatingFlow() {
 
  <button
  onClick={() => setStep(3)}
- className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform"
+ className="w-full py-3.5 rounded-xl bg-teal-600 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform"
  >
  {t('splash.next')}
  </button>
@@ -546,7 +555,7 @@ export default function RatingFlow() {
  <button
  onClick={handleSubmit}
  disabled={submitting}
- className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform disabled:opacity-50"
+ className="flex-1 py-3.5 rounded-xl bg-teal-600 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform disabled:opacity-50"
  >
  {submitting ? (
  <div className="flex items-center justify-center gap-2">
@@ -569,7 +578,7 @@ export default function RatingFlow() {
  >
  {/* Animated checkmark */}
  <motion.div
- className="w-20 h-20 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-teal-500/20"
+ className="w-20 h-20 rounded-[22px] bg-teal-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-teal-500/20"
  initial={{ scale: 0 }}
  animate={{ scale: 1 }}
  transition={{ type: 'spring', delay: 0.2, damping: 12 }}
@@ -616,7 +625,12 @@ export default function RatingFlow() {
  >
  <p className="text-sm text-stone-500 mb-4">{t('rating.yourScore')}</p>
  <div className="flex justify-center">
- <ScoreGauge score={overallScore} size={160} strokeWidth={12} />
+ <div
+ className="w-[100px] h-[100px] rounded-[28px] flex items-center justify-center"
+ style={{ backgroundColor: getScoreColor(overallScore) }}
+ >
+ <span className="text-3xl font-bold text-white">{overallScore.toFixed(1)}</span>
+ </div>
  </div>
  </motion.div>
 
@@ -647,7 +661,7 @@ export default function RatingFlow() {
  >
  <button
  onClick={() => navigate('/')}
- className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform"
+ className="w-full py-3.5 rounded-xl bg-teal-600 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform"
  >
  {t('rating.done')}
  </button>
