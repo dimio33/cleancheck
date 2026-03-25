@@ -373,10 +373,10 @@ export default function Home() {
  <div className="mx-5 mb-4 rounded-2xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.06)]" style={{ height: 300 }}>
  <APIProvider apiKey={import.meta.env.VITE_GOOGLE_PLACES_KEY || ''}>
  <Map
- center={{ lat: effectiveLat, lng: effectiveLng }}
- zoom={mapZoom}
+ defaultCenter={{ lat: effectiveLat, lng: effectiveLng }}
+ defaultZoom={mapZoom}
  mapId={import.meta.env.VITE_GOOGLE_MAPS_ID || undefined}
- gestureHandling="cooperative"
+ gestureHandling="greedy"
  disableDefaultUI={false}
  zoomControl={true}
  mapTypeControl={false}
