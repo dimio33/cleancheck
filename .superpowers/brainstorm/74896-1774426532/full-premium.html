@@ -1,0 +1,451 @@
+<h2>Full Premium Redesign</h2>
+<p class="subtitle">Nicht nur Farben — komplett neue UX, Animationen, Struktur</p>
+
+<div class="section">
+  <h3>Was "Premium" wirklich bedeutet</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0;">
+    <div style="padding:16px;background:#F5F5F4;border-radius:12px;">
+      <div style="font-size:24px;margin-bottom:8px;">🏗️</div>
+      <div style="font-weight:700;font-size:14px;color:#1C1917;margin-bottom:4px;">Struktur</div>
+      <div style="font-size:12px;color:#78716C;line-height:1.6;">Neue Seitenlayouts, bessere Informationsarchitektur, klarere Hierarchie</div>
+    </div>
+    <div style="padding:16px;background:#F5F5F4;border-radius:12px;">
+      <div style="font-size:24px;margin-bottom:8px;">✨</div>
+      <div style="font-weight:700;font-size:14px;color:#1C1917;margin-bottom:4px;">Micro-Interactions</div>
+      <div style="font-size:12px;color:#78716C;line-height:1.6;">Spring-Animationen, Haptic-Feedback, Stagger-Effekte, Skeleton-Loading</div>
+    </div>
+    <div style="padding:16px;background:#F5F5F4;border-radius:12px;">
+      <div style="font-size:24px;margin-bottom:8px;">💎</div>
+      <div style="font-weight:700;font-size:14px;color:#1C1917;margin-bottom:4px;">Polish</div>
+      <div style="font-size:12px;color:#78716C;line-height:1.6;">Konsistentes Spacing-System, perfekte Typografie-Skala, durchdachte Farbgebung</div>
+    </div>
+  </div>
+</div>
+
+<!-- HOME REDESIGN -->
+<div class="section">
+  <h3>1. Home — Komplett neu</h3>
+  <div class="mockup">
+    <div class="mockup-header">Home Screen — Premium</div>
+    <div class="mockup-body" style="background:#FAFAF9;padding:0;max-width:390px;margin:0 auto;overflow:hidden;">
+      <!-- Status bar feel -->
+      <div style="background:white;padding:16px 20px 12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:12px;color:#A8A29E;font-weight:500;">Guten Morgen 👋</div>
+            <div style="font-size:20px;font-weight:700;color:#1C1917;letter-spacing:-0.5px;margin-top:2px;">Kleve, NRW</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0D9488,#14B8A6);display:flex;align-items:center;justify-content:center;">
+              <span style="color:white;font-size:14px;font-weight:700;">D</span>
+            </div>
+          </div>
+        </div>
+        <!-- Search -->
+        <div style="margin-top:16px;background:#F5F5F4;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span style="font-size:14px;color:#A8A29E;">Restaurant oder Stadt suchen...</span>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div style="padding:16px 20px 8px;display:flex;gap:8px;">
+        <div style="flex:1;background:white;border-radius:12px;padding:12px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+          <div style="width:36px;height:36px;border-radius:10px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M13 7L18 2M18 2H13M18 2V7"/><path d="M3 17L9 11L13 15L21 7"/></svg>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#1C1917;">Top bewertet</div>
+        </div>
+        <div style="flex:1;background:white;border-radius:12px;padding:12px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+          <div style="width:36px;height:36px;border-radius:10px;background:#FEF3C7;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#1C1917;">Neu bewerten</div>
+        </div>
+        <div style="flex:1;background:white;border-radius:12px;padding:12px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+          <div style="width:36px;height:36px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><path d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#1C1917;">Karte</div>
+        </div>
+      </div>
+
+      <!-- Section: Nearby -->
+      <div style="padding:20px 20px 8px;display:flex;align-items:baseline;justify-content:space-between;">
+        <span style="font-size:16px;font-weight:700;color:#1C1917;letter-spacing:-0.3px;">In deiner Naehe</span>
+        <span style="font-size:13px;color:#0D9488;font-weight:500;">Alle →</span>
+      </div>
+
+      <!-- Premium Cards with stagger hint -->
+      <div style="padding:0 20px;display:flex;flex-direction:column;gap:10px;">
+        <div style="background:white;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.02);display:flex;align-items:center;gap:14px;">
+          <div style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:white;background:#10B981;flex-shrink:0;letter-spacing:-0.5px;">8.4</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:15px;color:#1C1917;letter-spacing:-0.2px;">Bella Italia</div>
+            <div style="font-size:13px;color:#A8A29E;margin-top:2px;">Italienisch &middot; 120m &middot; 24 Bewertungen</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="#D6D3D1" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div style="background:white;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.02);display:flex;align-items:center;gap:14px;">
+          <div style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:white;background:#F59E0B;flex-shrink:0;letter-spacing:-0.5px;">6.2</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:15px;color:#1C1917;letter-spacing:-0.2px;">Goldener Drache</div>
+            <div style="font-size:13px;color:#A8A29E;margin-top:2px;">Asiatisch &middot; 340m &middot; 8 Bewertungen</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="#D6D3D1" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div style="background:white;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.02);display:flex;align-items:center;gap:14px;">
+          <div style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:white;background:#EF4444;flex-shrink:0;letter-spacing:-0.5px;">3.1</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:15px;color:#1C1917;letter-spacing:-0.2px;">Burger Bude</div>
+            <div style="font-size:13px;color:#A8A29E;margin-top:2px;">Fast Food &middot; 580m &middot; 3 Bewertungen</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="#D6D3D1" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div style="height:80px;"></div>
+
+      <!-- BottomNav -->
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:6px 20px 14px;border-top:1px solid rgba(0,0,0,0.04);display:flex;align-items:center;justify-content:space-around;">
+        <div style="text-align:center;color:#0D9488;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+          <div style="font-size:10px;font-weight:600;margin-top:1px;">Karte</div>
+        </div>
+        <div style="text-align:center;color:#A8A29E;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 7L18 2M18 2H13M18 2V7"/><path d="M3 17L9 11L13 15L21 7"/></svg>
+          <div style="font-size:10px;font-weight:500;margin-top:1px;">Trends</div>
+        </div>
+        <div style="width:50px;height:50px;border-radius:50%;background:#0D9488;display:flex;align-items:center;justify-content:center;margin-top:-20px;box-shadow:0 4px 16px rgba(13,148,136,0.3);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        </div>
+        <div style="text-align:center;color:#A8A29E;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <div style="font-size:10px;font-weight:500;margin-top:1px;">Suche</div>
+        </div>
+        <div style="text-align:center;color:#A8A29E;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div style="font-size:10px;font-weight:500;margin-top:1px;">Profil</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p style="margin-top:8px;font-size:13px;color:#78716C;"><strong>Neu:</strong> Personalisierter Header ("Guten Morgen") &middot; Quick-Action Chips &middot; Section mit "Alle" Link &middot; Glassmorphism BottomNav (backdrop-blur) &middot; Kein starrer TopBar</p>
+</div>
+
+<!-- RESTAURANT DETAIL -->
+<div class="section">
+  <h3>2. Restaurant-Detail — Neu strukturiert</h3>
+  <div class="mockup">
+    <div class="mockup-header">Restaurant Detail</div>
+    <div class="mockup-body" style="background:#FAFAF9;padding:0;max-width:390px;margin:0 auto;">
+      <!-- Hero -->
+      <div style="background:linear-gradient(180deg,#0D9488 0%,#14B8A6 100%);padding:24px 20px 40px;position:relative;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            </div>
+          </div>
+        </div>
+        <div style="color:white;">
+          <div style="font-size:24px;font-weight:700;letter-spacing:-0.5px;">Bella Italia</div>
+          <div style="font-size:14px;opacity:0.8;margin-top:4px;">Italienisch &middot; Musterstrasse 12, Kleve</div>
+        </div>
+      </div>
+
+      <!-- Score Card overlapping -->
+      <div style="padding:0 20px;margin-top:-24px;position:relative;z-index:1;">
+        <div style="background:white;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.06);display:flex;align-items:center;gap:20px;">
+          <div style="text-align:center;">
+            <div style="width:64px;height:64px;border-radius:18px;background:#10B981;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:white;letter-spacing:-1px;">8.4</div>
+            <div style="font-size:10px;color:#A8A29E;margin-top:4px;font-weight:500;">CleanScore</div>
+          </div>
+          <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+              <div style="font-size:11px;color:#A8A29E;">Sauberkeit</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
+                <div style="flex:1;height:3px;border-radius:2px;background:#E5E7EB;"><div style="width:85%;height:100%;border-radius:2px;background:#10B981;"></div></div>
+                <span style="font-size:11px;font-weight:600;color:#1C1917;">4.3</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#A8A29E;">Geruch</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
+                <div style="flex:1;height:3px;border-radius:2px;background:#E5E7EB;"><div style="width:80%;height:100%;border-radius:2px;background:#10B981;"></div></div>
+                <span style="font-size:11px;font-weight:600;color:#1C1917;">4.0</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#A8A29E;">Ausstattung</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
+                <div style="flex:1;height:3px;border-radius:2px;background:#E5E7EB;"><div style="width:90%;height:100%;border-radius:2px;background:#10B981;"></div></div>
+                <span style="font-size:11px;font-weight:600;color:#1C1917;">4.5</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#A8A29E;">Wartung</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
+                <div style="flex:1;height:3px;border-radius:2px;background:#E5E7EB;"><div style="width:70%;height:100%;border-radius:2px;background:#F59E0B;"></div></div>
+                <span style="font-size:11px;font-weight:600;color:#1C1917;">3.5</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div style="padding:16px 20px;">
+        <div style="background:#0D9488;border-radius:14px;padding:14px;text-align:center;color:white;font-weight:600;font-size:15px;box-shadow:0 4px 12px rgba(13,148,136,0.2);">
+          Jetzt bewerten
+        </div>
+      </div>
+
+      <!-- Reviews section -->
+      <div style="padding:4px 20px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;">
+          <span style="font-size:16px;font-weight:700;color:#1C1917;">Bewertungen (24)</span>
+          <span style="font-size:13px;color:#0D9488;font-weight:500;">Neueste</span>
+        </div>
+        <!-- Review -->
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04);margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#F5F5F4;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#78716C;">A</div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;color:#1C1917;">Anna M.</div>
+              <div style="font-size:11px;color:#A8A29E;">Heute</div>
+            </div>
+            <div style="background:#10B981;color:white;font-size:12px;font-weight:700;padding:4px 10px;border-radius:8px;">9.2</div>
+          </div>
+          <div style="font-size:13px;color:#57534E;line-height:1.6;">Sehr sauber, gut ausgestattet. Seife und Papier vorhanden.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p style="margin-top:8px;font-size:13px;color:#78716C;"><strong>Neu:</strong> Teal Hero-Header &middot; Overlapping Score-Card &middot; Inline Kriterien-Bars &middot; Prominenter CTA &middot; Review-Cards mit Avatar</p>
+</div>
+
+<!-- ANIMATIONS -->
+<div class="section">
+  <h3>3. Premium Animationen</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;">
+    <div style="padding:16px;background:white;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+      <div style="font-weight:700;font-size:13px;color:#1C1917;margin-bottom:8px;">Page Transitions</div>
+      <div style="font-size:12px;color:#78716C;line-height:1.7;">
+        Shared Element Transitions zwischen Cards → Detail (Score-Badge morpht zum Hero-Score). <code>layoutId</code> mit Framer Motion.
+      </div>
+    </div>
+    <div style="padding:16px;background:white;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+      <div style="font-weight:700;font-size:13px;color:#1C1917;margin-bottom:8px;">Stagger Lists</div>
+      <div style="font-size:12px;color:#78716C;line-height:1.7;">
+        Restaurant-Cards erscheinen nacheinander (50ms delay). Wie iOS App Store. Nicht alle auf einmal.
+      </div>
+    </div>
+    <div style="padding:16px;background:white;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+      <div style="font-weight:700;font-size:13px;color:#1C1917;margin-bottom:8px;">Score Animation</div>
+      <div style="font-size:12px;color:#78716C;line-height:1.7;">
+        Score-Zahl zaehlt beim Erscheinen hoch (0 → 8.4). Score-Gauge fuellt sich animiert. Spring-Physik.
+      </div>
+    </div>
+    <div style="padding:16px;background:white;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+      <div style="font-weight:700;font-size:13px;color:#1C1917;margin-bottom:8px;">Pull-to-Refresh</div>
+      <div style="font-size:12px;color:#78716C;line-height:1.7;">
+        Native-feel Pull-to-Refresh mit Custom-Spinner. Overscroll-Bounce wie iOS.
+      </div>
+    </div>
+    <div style="padding:16px;background:white;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+      <div style="font-weight:700;font-size:13px;color:#1C1917;margin-bottom:8px;">Glassmorphism Nav</div>
+      <div style="font-size:12px;color:#78716C;line-height:1.7;">
+        BottomNav mit <code>backdrop-filter: blur(20px)</code> — Content scrollt dahinter durch. Wie iOS Tab Bar.
+      </div>
+    </div>
+    <div style="padding:16px;background:white;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+      <div style="font-weight:700;font-size:13px;color:#1C1917;margin-bottom:8px;">Slider Haptics</div>
+      <div style="font-size:12px;color:#78716C;line-height:1.7;">
+        Rating-Slider mit Tick-Marks, Snap-Punkte, und <code>navigator.vibrate()</code> bei jedem Step.
+      </div>
+    </div>
+    <div style="padding:16px;background:white;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+      <div style="font-weight:700;font-size:13px;color:#1C1917;margin-bottom:8px;">Skeleton Loading</div>
+      <div style="font-size:12px;color:#78716C;line-height:1.7;">
+        Pulsierende Skeleton-Cards beim Laden statt Spinner. Exakt gleiche Dimensionen wie echte Cards.
+      </div>
+    </div>
+    <div style="padding:16px;background:white;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+      <div style="font-weight:700;font-size:13px;color:#1C1917;margin-bottom:8px;">Success Celebration</div>
+      <div style="font-size:12px;color:#78716C;line-height:1.7;">
+        Rating-Erfolg: Konfetti-Regen + Score morpht gross + Badge-Unlock mit Shine-Effekt.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RATING FLOW -->
+<div class="section">
+  <h3>4. Rating-Flow — Komplett ueberarbeitet</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">Neue Slider mit Snap + Labels</div>
+      <div class="mockup-body" style="background:#FAFAF9;padding:20px;">
+        <div style="font-size:18px;font-weight:700;color:#1C1917;margin-bottom:16px;">Bewerte die Toilette</div>
+        <!-- Criteria -->
+        <div style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:14px;font-weight:500;color:#1C1917;">🧹 Sauberkeit</span>
+            <span style="font-size:20px;font-weight:700;color:#10B981;">4</span>
+          </div>
+          <div style="position:relative;height:32px;display:flex;align-items:center;">
+            <div style="position:absolute;left:0;right:0;height:4px;background:#E5E7EB;border-radius:2px;">
+              <div style="width:75%;height:100%;background:linear-gradient(90deg,#EF4444,#F59E0B,#10B981);border-radius:2px;"></div>
+            </div>
+            <div style="position:absolute;left:75%;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;background:white;border:3px solid #10B981;box-shadow:0 2px 8px rgba(0,0,0,0.1);"></div>
+            <!-- Tick marks -->
+            <div style="position:absolute;left:0;right:0;top:20px;display:flex;justify-content:space-between;padding:0 4px;">
+              <span style="font-size:9px;color:#D6D3D1;">1</span>
+              <span style="font-size:9px;color:#D6D3D1;">2</span>
+              <span style="font-size:9px;color:#D6D3D1;">3</span>
+              <span style="font-size:9px;color:#D6D3D1;font-weight:700;color:#10B981;">4</span>
+              <span style="font-size:9px;color:#D6D3D1;">5</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:14px;font-weight:500;color:#1C1917;">👃 Geruch</span>
+            <span style="font-size:20px;font-weight:700;color:#F59E0B;">3</span>
+          </div>
+          <div style="position:relative;height:32px;display:flex;align-items:center;">
+            <div style="position:absolute;left:0;right:0;height:4px;background:#E5E7EB;border-radius:2px;">
+              <div style="width:50%;height:100%;background:linear-gradient(90deg,#EF4444,#F59E0B);border-radius:2px;"></div>
+            </div>
+            <div style="position:absolute;left:50%;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;background:white;border:3px solid #F59E0B;box-shadow:0 2px 8px rgba(0,0,0,0.1);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">Erfolg mit Konfetti</div>
+      <div class="mockup-body" style="background:#FAFAF9;padding:30px 20px;text-align:center;">
+        <div style="position:relative;">
+          <!-- Confetti dots -->
+          <div style="position:absolute;top:-10px;left:20%;width:8px;height:8px;border-radius:50%;background:#10B981;opacity:0.6;"></div>
+          <div style="position:absolute;top:5px;right:15%;width:6px;height:6px;border-radius:50%;background:#F59E0B;opacity:0.6;"></div>
+          <div style="position:absolute;top:-5px;right:30%;width:10px;height:10px;border-radius:50%;background:#0D9488;opacity:0.4;"></div>
+          <div style="position:absolute;top:15px;left:10%;width:5px;height:5px;border-radius:50%;background:#3B82F6;opacity:0.5;"></div>
+
+          <div style="width:80px;height:80px;border-radius:22px;background:#0D9488;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 24px rgba(13,148,136,0.25);">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+          </div>
+        </div>
+        <div style="font-size:22px;font-weight:700;color:#1C1917;letter-spacing:-0.5px;">Danke!</div>
+        <div style="font-size:14px;color:#A8A29E;margin:8px 0 24px;">Dein CleanScore fuer Bella Italia</div>
+
+        <div style="width:100px;height:100px;border-radius:28px;background:#10B981;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 8px 24px rgba(16,185,129,0.25);">
+          <span style="font-size:32px;font-weight:800;color:white;letter-spacing:-1px;">8.2</span>
+        </div>
+
+        <div style="background:#0D9488;border-radius:14px;padding:14px;color:white;font-weight:600;font-size:15px;">Fertig</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div class="section">
+  <h3>5. Profil — Stats Dashboard</h3>
+  <div class="mockup">
+    <div class="mockup-header">Premium Profil</div>
+    <div class="mockup-body" style="background:#FAFAF9;padding:0;max-width:390px;margin:0 auto;">
+      <!-- Hero gradient -->
+      <div style="background:linear-gradient(135deg,#0D9488,#14B8A6);padding:32px 20px 48px;text-align:center;">
+        <div style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px;color:white;font-weight:700;">D</div>
+        <div style="font-size:20px;font-weight:700;color:white;letter-spacing:-0.3px;">Dimitri</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:4px;">Mitglied seit Maerz 2026</div>
+      </div>
+      <!-- Stats Cards overlapping -->
+      <div style="padding:0 20px;margin-top:-24px;display:flex;gap:8px;">
+        <div style="flex:1;background:white;border-radius:14px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <div style="font-size:28px;font-weight:800;color:#1C1917;">12</div>
+          <div style="font-size:11px;color:#A8A29E;font-weight:500;margin-top:2px;">Bewertungen</div>
+        </div>
+        <div style="flex:1;background:white;border-radius:14px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <div style="font-size:28px;font-weight:800;color:#1C1917;">8</div>
+          <div style="font-size:11px;color:#A8A29E;font-weight:500;margin-top:2px;">Restaurants</div>
+        </div>
+        <div style="flex:1;background:white;border-radius:14px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <div style="font-size:28px;font-weight:800;color:#1C1917;">7.4</div>
+          <div style="font-size:11px;color:#A8A29E;font-weight:500;margin-top:2px;">Avg Score</div>
+        </div>
+      </div>
+      <!-- Recent activity -->
+      <div style="padding:20px;">
+        <div style="font-size:16px;font-weight:700;color:#1C1917;margin-bottom:12px;">Letzte Aktivitaet</div>
+        <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+          <div style="padding:12px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #F5F5F4;">
+            <div style="width:36px;height:36px;border-radius:10px;background:#10B981;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;">8.4</div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;color:#1C1917;">Bella Italia</div>
+              <div style="font-size:11px;color:#A8A29E;">Heute</div>
+            </div>
+          </div>
+          <div style="padding:12px 14px;display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;border-radius:10px;background:#F59E0B;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;">6.2</div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;color:#1C1917;">Goldener Drache</div>
+              <div style="font-size:11px;color:#A8A29E;">Gestern</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div style="margin-top:24px;padding:24px;background:white;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+  <h3 style="margin-top:0;color:#1C1917;">Zusammenfassung: Full Premium</h3>
+  <table style="width:100%;font-size:13px;border-collapse:collapse;">
+    <tr style="border-bottom:1px solid #F5F5F4;">
+      <td style="padding:8px 0;font-weight:600;color:#1C1917;">Dark Mode</td>
+      <td style="padding:8px 0;color:#78716C;">Komplett entfernen (20 Dateien)</td>
+    </tr>
+    <tr style="border-bottom:1px solid #F5F5F4;">
+      <td style="padding:8px 0;font-weight:600;color:#1C1917;">Home</td>
+      <td style="padding:8px 0;color:#78716C;">Personalisierter Header, Quick Actions, "Alle" Link</td>
+    </tr>
+    <tr style="border-bottom:1px solid #F5F5F4;">
+      <td style="padding:8px 0;font-weight:600;color:#1C1917;">Cards</td>
+      <td style="padding:8px 0;color:#78716C;">Score-Badge links (Squircle), subtile Schatten</td>
+    </tr>
+    <tr style="border-bottom:1px solid #F5F5F4;">
+      <td style="padding:8px 0;font-weight:600;color:#1C1917;">Detail-Seite</td>
+      <td style="padding:8px 0;color:#78716C;">Teal Hero, Overlapping Score-Card, Kriterien-Bars inline</td>
+    </tr>
+    <tr style="border-bottom:1px solid #F5F5F4;">
+      <td style="padding:8px 0;font-weight:600;color:#1C1917;">Rating-Flow</td>
+      <td style="padding:8px 0;color:#78716C;">Gradient-Slider, Tick-Marks, Snap-Haptics, Konfetti</td>
+    </tr>
+    <tr style="border-bottom:1px solid #F5F5F4;">
+      <td style="padding:8px 0;font-weight:600;color:#1C1917;">Profil</td>
+      <td style="padding:8px 0;color:#78716C;">Teal Hero-Gradient, Overlapping Stats, Activity-Feed</td>
+    </tr>
+    <tr style="border-bottom:1px solid #F5F5F4;">
+      <td style="padding:8px 0;font-weight:600;color:#1C1917;">BottomNav</td>
+      <td style="padding:8px 0;color:#78716C;">Glassmorphism (backdrop-blur), solider Teal FAB</td>
+    </tr>
+    <tr style="border-bottom:1px solid #F5F5F4;">
+      <td style="padding:8px 0;font-weight:600;color:#1C1917;">Animationen</td>
+      <td style="padding:8px 0;color:#78716C;">Shared Element, Stagger, Score-Counter, Pull-to-Refresh</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 0;font-weight:600;color:#1C1917;">Splash</td>
+      <td style="padding:8px 0;color:#78716C;">Cleaner, kein Dark, sonst beibehalten</td>
+    </tr>
+  </table>
+</div>

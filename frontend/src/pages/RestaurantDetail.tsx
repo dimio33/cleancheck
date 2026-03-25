@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import QRCodeModal from '../components/ui/QRCodeModal';
+import AnimatedScore from '../components/ui/AnimatedScore';
 import { getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useFavoritesStore } from '../stores/favoritesStore';
@@ -246,7 +247,7 @@ export default function RestaurantDetail() {
                   className="w-16 h-16 rounded-[18px] flex items-center justify-center"
                   style={{ backgroundColor: scoreColor }}
                 >
-                  <span className="text-2xl font-extrabold text-white">{score.toFixed(1)}</span>
+                  <AnimatedScore value={score} className="text-2xl font-extrabold text-white" />
                 </div>
                 <span className="text-[10px] text-stone-400 font-medium mt-1.5">CleanScore</span>
               </div>

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 import { motion } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { getDistance, getScoreColor } from '../utils/geo';
+import { getDistance } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useAuthStore } from '../stores/authStore';
 import RestaurantCard from '../components/ui/RestaurantCard';
@@ -78,33 +78,6 @@ function TrendingInline() {
 
 const DEFAULT_MAP_ZOOM = 14;
 
-/** Score-colored marker for a restaurant on Google Maps */
-function ScoreMarker({ restaurant, onClick }: { restaurant: { lat: number; lng: number; clean_score: number | null }; onClick: () => void }) {
- const score = restaurant.clean_score;
- const hasScore = score !== null;
- const color = hasScore ? getScoreColor(score) : '#D6D3D1';
-
- return (
- <AdvancedMarker
- position={{ lat: restaurant.lat, lng: restaurant.lng }}
- onClick={onClick}
- >
- <div style={{
- width: 32, height: 32, borderRadius: '50%',
- background: hasScore ? color : '#F5F5F4',
- border: '2px solid white',
- display: 'flex', alignItems: 'center', justifyContent: 'center',
- fontSize: 11, fontWeight: 700, color: hasScore ? 'white' : '#A8A29E',
- boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
- cursor: 'pointer',
- fontFamily: "'Inter', system-ui, sans-serif",
- }}>
- {hasScore ? score!.toFixed(1) : '?'}
- </div>
- </AdvancedMarker>
- );
-}
-
 /** Time-based greeting */
 function getGreeting(): string {
  const h = new Date().getHours();
@@ -127,7 +100,7 @@ export default function Home() {
  const [searchOverride, setSearchOverride] = useState<{ lat: number; lng: number } | null>(null);
  const [nameFilter, setNameFilter] = useState('');
  const [cuisineFilter, setCuisineFilter] = useState('All');
- const [showMap, setShowMap] = useState(false);
+ const [showMap, setShowMap] = useState(true);
  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
  const searchIdRef = useRef(0);
 
@@ -387,24 +360,45 @@ export default function Home() {
 
  {/* Map (toggled by Karte quick action) */}
  {showMap && (
- <div className="mx-5 mb-4 rounded-2xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.06)]" style={{ height: 240 }}>
+ <div className="mx-5 mb-4 rounded-2xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.06)]" style={{ height: 300 }}>
  <APIProvider apiKey={import.meta.env.VITE_GOOGLE_PLACES_KEY || ''}>
  <Map
- defaultCenter={{ lat: effectiveLat, lng: effectiveLng }}
- defaultZoom={mapZoom}
- mapId="cleancheck"
+ center={{ lat: effectiveLat, lng: effectiveLng }}
+ zoom={mapZoom}
+ mapId="DEMO_MAP_ID"
  gestureHandling="greedy"
  disableDefaultUI={true}
+ zoomControl={true}
  style={{ width: '100%', height: '100%' }}
  >
- {restaurantsWithDistance.map((r) => (
- <ScoreMarker key={r.id} restaurant={r} onClick={() => navigate(`/restaurant/${r.id}`)} />
+ {restaurantsWithDistance.slice(0, 20).map((r) => (
+ <AdvancedMarker
+   key={r.id}
+   position={{ lat: r.lat, lng: r.lng }}
+   onClick={() => navigate(`/restaurant/${r.id}`)}
+ >
+   <div style={{
+     width: 36, height: 36, borderRadius: '50%',
+     background: r.clean_score !== null
+       ? (r.clean_score >= 7 ? '#10B981' : r.clean_score >= 4 ? '#F59E0B' : '#EF4444')
+       : '#E7E5E4',
+     border: '3px solid white',
+     display: 'flex', alignItems: 'center', justifyContent: 'center',
+     fontSize: 11, fontWeight: 700,
+     color: r.clean_score !== null ? 'white' : '#A8A29E',
+     boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+     cursor: 'pointer',
+     fontFamily: "'Inter', system-ui, sans-serif",
+   }}>
+     {r.clean_score !== null ? r.clean_score.toFixed(1) : '?'}
+   </div>
+ </AdvancedMarker>
  ))}
  <AdvancedMarker position={{ lat: effectiveLat, lng: effectiveLng }}>
  <div style={{
- width: 14, height: 14, borderRadius: '50%',
+ width: 16, height: 16, borderRadius: '50%',
  background: '#0D9488', border: '3px solid white',
- boxShadow: '0 0 0 4px rgba(13,148,136,0.2)',
+ boxShadow: '0 0 0 6px rgba(13,148,136,0.2), 0 2px 4px rgba(0,0,0,0.15)',
  }} />
  </AdvancedMarker>
  </Map>

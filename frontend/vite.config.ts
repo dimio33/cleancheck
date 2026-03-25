@@ -18,17 +18,6 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/overpass-api\.de\/api\//,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'overpass-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60,
-              },
-            },
-          },
-          {
             urlPattern: /\/api\//,
             handler: 'NetworkFirst',
             options: {
@@ -38,17 +27,6 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 5,
               },
               networkTimeoutSeconds: 5,
-            },
-          },
-          {
-            urlPattern: /^https:\/\/[abc]\.tile\.openstreetmap\.org\//,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'map-tiles',
-              expiration: {
-                maxEntries: 500,
-                maxAgeSeconds: 60 * 60 * 24 * 30,
-              },
             },
           },
           {
