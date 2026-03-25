@@ -15,7 +15,11 @@ export function formatDistance(meters: number): string {
   if (meters < 1000) {
     return `${Math.round(meters)} m`;
   }
-  return `${(meters / 1000).toFixed(1)} km`;
+  const km = meters / 1000;
+  if (km >= 100) {
+    return `${Math.round(km)} km`;
+  }
+  return `${km.toFixed(1)} km`;
 }
 
 export function getScoreColor(score: number | null): string {

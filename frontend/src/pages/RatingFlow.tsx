@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import CriteriaSlider from '../components/ui/CriteriaSlider';
 import ScoreGauge from '../components/ui/ScoreGauge';
+import AnimatedScore from '../components/ui/AnimatedScore';
 import { useGeolocation, getHighAccuracyPosition } from '../hooks/useGeolocation';
 import { getDistance, formatDistance, getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
@@ -373,8 +374,16 @@ export default function RatingFlow() {
  </div>
 
  <p className="text-[11px] uppercase tracking-[1.5px] text-stone-400 font-medium mb-2">
- {searchQuery ? t('search.placeholder') : t('rating.nearYou')}
+ {searchQuery ? `${nearbyRestaurants.length} ${t('home.ratings')}` : t('rating.nearYou')}
  </p>
+
+ {nearbyRestaurants.length === 0 && (
+   <div className="text-center py-8">
+     <p className="text-sm text-stone-400">
+       {searchQuery ? t('search.noResults') : t('search.noResultsDesc')}
+     </p>
+   </div>
+ )}
 
  <div className="space-y-2">
  {nearbyRestaurants.map((r) => {
@@ -629,7 +638,7 @@ export default function RatingFlow() {
  className="w-[100px] h-[100px] rounded-[28px] flex items-center justify-center"
  style={{ backgroundColor: getScoreColor(overallScore) }}
  >
- <span className="text-3xl font-bold text-white">{overallScore.toFixed(1)}</span>
+ <AnimatedScore value={overallScore} className="text-3xl font-bold text-white" />
  </div>
  </div>
  </motion.div>

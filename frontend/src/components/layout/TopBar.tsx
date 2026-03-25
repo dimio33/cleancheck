@@ -5,7 +5,7 @@ export default function TopBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { i18n } = useTranslation();
-  const showBack = location.pathname !== '/' && location.pathname !== '/search' && location.pathname !== '/profile' && location.pathname !== '/trending';
+  const showBack = location.pathname !== '/' && location.pathname !== '/search' && location.pathname !== '/profile';
 
   const toggleLang = () => {
     const next = i18n.language.startsWith('de') ? 'en' : 'de';

@@ -569,8 +569,20 @@ export default function Home() {
  </div>
 
  <PullToRefresh onRefresh={handleRefresh}>
- {/* Section heading */}
+ {/* Section heading with location info */}
  <div className="px-5 pb-2 pt-1">
+ {searchOverride && (
+   <div className="flex items-center justify-between mb-2 px-3 py-2 bg-teal-50 rounded-xl">
+     <div className="flex items-center gap-2">
+       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2"><path d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+       <span className="text-[13px] font-medium text-teal-700">{citySearch || 'Gesuchter Ort'}</span>
+     </div>
+     <button onClick={resetToGps} className="text-[12px] font-medium text-teal-600 flex items-center gap-1">
+       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4m0 12v4m10-10h-4M6 12H2m15.07-5.07l-2.83 2.83M9.76 14.24l-2.83 2.83m0-10.14l2.83 2.83m4.48 4.48l2.83 2.83"/></svg>
+       Mein Standort
+     </button>
+   </div>
+ )}
  <p className="text-[11px] uppercase tracking-[1.5px] text-stone-400 font-medium mb-1">
  {t('home.nearby')}
  </p>
