@@ -18,643 +18,643 @@ const GEO_MAX_DISTANCE_METERS = 500;
 const IS_DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
 const CRITERIA = [
-  { key: 'cleanliness' as const, icon: '🧹' },
-  { key: 'smell' as const, icon: '👃' },
-  { key: 'supplies' as const, icon: '🧻' },
-  { key: 'maintenance' as const, icon: '🔧' },
-  { key: 'accessibility' as const, icon: '♿' },
+ { key: 'cleanliness' as const, icon: '🧹' },
+ { key: 'smell' as const, icon: '👃' },
+ { key: 'supplies' as const, icon: '🧻' },
+ { key: 'maintenance' as const, icon: '🔧' },
+ { key: 'accessibility' as const, icon: '♿' },
 ];
 
 export default function RatingFlow() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { t } = useTranslation();
-  const geo = useGeolocation();
-  const { lat, lng, permissionState } = geo;
-  // Anonymous ratings allowed - no token check needed
-  const addToast = useToastStore((s) => s.addToast);
+ const navigate = useNavigate();
+ const location = useLocation();
+ const { t } = useTranslation();
+ const geo = useGeolocation();
+ const { lat, lng, permissionState } = geo;
+ // Anonymous ratings allowed - no token check needed
+ const addToast = useToastStore((s) => s.addToast);
 
-  const { restaurants, fetchRestaurants } = useRestaurantStore();
+ const { restaurants, fetchRestaurants } = useRestaurantStore();
 
-  // Fetch restaurants when geo is ready (same as Search/Home pages)
-  useEffect(() => {
-    if (!geo.loading) fetchRestaurants(lat, lng);
-  }, [lat, lng, geo.loading, fetchRestaurants]);
+ // Fetch restaurants when geo is ready (same as Search/Home pages)
+ useEffect(() => {
+ if (!geo.loading) fetchRestaurants(lat, lng);
+ }, [lat, lng, geo.loading, fetchRestaurants]);
 
-  const preselectedId = (location.state as { restaurantId?: string } | null)?.restaurantId;
-  const preselected = preselectedId ? restaurants.find((r) => r.id === preselectedId) : undefined;
+ const preselectedId = (location.state as { restaurantId?: string } | null)?.restaurantId;
+ const preselected = preselectedId ? restaurants.find((r) => r.id === preselectedId) : undefined;
 
-  const [step, setStep] = useState(preselected ? 2 : 1);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(preselected || null);
-  const [scores, setScores] = useState<CriteriaScores>({
-    cleanliness: 3,
-    smell: 3,
-    supplies: 3,
-    maintenance: 3,
-    accessibility: 3,
-  });
-  const [comment, setComment] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [honeypot, setHoneypot] = useState('');
-  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [photoFailed, setPhotoFailed] = useState(false);
-  const loadedAtRef = useRef(Date.now());
+ const [step, setStep] = useState(preselected ? 2 : 1);
+ const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(preselected || null);
+ const [scores, setScores] = useState<CriteriaScores>({
+ cleanliness: 3,
+ smell: 3,
+ supplies: 3,
+ maintenance: 3,
+ accessibility: 3,
+ });
+ const [comment, setComment] = useState('');
+ const [searchQuery, setSearchQuery] = useState('');
+ const [honeypot, setHoneypot] = useState('');
+ const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+ const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+ const [uploading, setUploading] = useState(false);
+ const [submitting, setSubmitting] = useState(false);
+ const [photoFailed, setPhotoFailed] = useState(false);
+ const loadedAtRef = useRef(Date.now());
 
-  // Reset loaded_at timestamp when component mounts
-  useEffect(() => {
-    loadedAtRef.current = Date.now();
-  }, []);
+ // Reset loaded_at timestamp when component mounts
+ useEffect(() => {
+ loadedAtRef.current = Date.now();
+ }, []);
 
-  // Geo-verification state
-  const [geoChecking, setGeoChecking] = useState(false);
-  const [geoBlocked, setGeoBlocked] = useState(false);
-  const [geoDistance, setGeoDistance] = useState<number | null>(null);
+ // Geo-verification state
+ const [geoChecking, setGeoChecking] = useState(false);
+ const [geoBlocked, setGeoBlocked] = useState(false);
+ const [geoDistance, setGeoDistance] = useState<number | null>(null);
 
-  const overallScore = useMemo(() => {
-    const vals = Object.values(scores);
-    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-    return (avg / 5) * 10;
-  }, [scores]);
+ const overallScore = useMemo(() => {
+ const vals = Object.values(scores);
+ const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+ return (avg / 5) * 10;
+ }, [scores]);
 
-  const nearbyRestaurants = useMemo(() => {
-    return restaurants.map((r) => ({
-      ...r,
-      distance: getDistance(lat, lng, r.lat, r.lng),
-    }))
-      .filter((r) => {
-        if (!searchQuery) return true;
-        return r.name.toLowerCase().includes(searchQuery.toLowerCase());
-      })
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, searchQuery ? 10 : 3);
-  }, [lat, lng, searchQuery, restaurants]);
+ const nearbyRestaurants = useMemo(() => {
+ return restaurants.map((r) => ({
+ ...r,
+ distance: getDistance(lat, lng, r.lat, r.lng),
+ }))
+ .filter((r) => {
+ if (!searchQuery) return true;
+ return r.name.toLowerCase().includes(searchQuery.toLowerCase());
+ })
+ .sort((a, b) => a.distance - b.distance)
+ .slice(0, searchQuery ? 10 : 3);
+ }, [lat, lng, searchQuery, restaurants]);
 
-  const updateScore = useCallback((key: keyof CriteriaScores, value: number) => {
-    setScores((prev) => ({ ...prev, [key]: value }));
-  }, []);
+ const updateScore = useCallback((key: keyof CriteriaScores, value: number) => {
+ setScores((prev) => ({ ...prev, [key]: value }));
+ }, []);
 
-  /**
-   * Verify user is close enough to the restaurant.
-   * In demo mode, always passes.
-   */
-  const verifyGeoLocation = async (restaurant: Restaurant): Promise<boolean> => {
-    // Block if location permission denied
-    if (permissionState === 'denied' || permissionState === 'unavailable') {
-      setGeoBlocked(true);
-      setGeoChecking(false);
-      return false;
-    }
+ /**
+ * Verify user is close enough to the restaurant.
+ * In demo mode, always passes.
+ */
+ const verifyGeoLocation = async (restaurant: Restaurant): Promise<boolean> => {
+ // Block if location permission denied
+ if (permissionState === 'denied' || permissionState === 'unavailable') {
+ setGeoBlocked(true);
+ setGeoChecking(false);
+ return false;
+ }
 
-    if (IS_DEMO_MODE) {
-      setGeoBlocked(false);
-      setGeoDistance(0);
-      return true;
-    }
+ if (IS_DEMO_MODE) {
+ setGeoBlocked(false);
+ setGeoDistance(0);
+ return true;
+ }
 
-    setGeoChecking(true);
-    setGeoBlocked(false);
-    setGeoDistance(null);
+ setGeoChecking(true);
+ setGeoBlocked(false);
+ setGeoDistance(null);
 
-    try {
-      const pos = await getHighAccuracyPosition();
-      const dist = getDistance(pos.lat, pos.lng, restaurant.lat, restaurant.lng);
-      setGeoDistance(Math.round(dist));
+ try {
+ const pos = await getHighAccuracyPosition();
+ const dist = getDistance(pos.lat, pos.lng, restaurant.lat, restaurant.lng);
+ setGeoDistance(Math.round(dist));
 
-      if (dist > GEO_MAX_DISTANCE_METERS) {
-        setGeoBlocked(true);
-        setGeoChecking(false);
-        return false;
-      }
+ if (dist > GEO_MAX_DISTANCE_METERS) {
+ setGeoBlocked(true);
+ setGeoChecking(false);
+ return false;
+ }
 
-      setGeoChecking(false);
-      return true;
-    } catch {
-      // If geolocation fails, use the cached position from the hook
-      const dist = getDistance(lat, lng, restaurant.lat, restaurant.lng);
-      setGeoDistance(Math.round(dist));
+ setGeoChecking(false);
+ return true;
+ } catch {
+ // If geolocation fails, use the cached position from the hook
+ const dist = getDistance(lat, lng, restaurant.lat, restaurant.lng);
+ setGeoDistance(Math.round(dist));
 
-      if (dist > GEO_MAX_DISTANCE_METERS) {
-        setGeoBlocked(true);
-        setGeoChecking(false);
-        return false;
-      }
+ if (dist > GEO_MAX_DISTANCE_METERS) {
+ setGeoBlocked(true);
+ setGeoChecking(false);
+ return false;
+ }
 
-      setGeoChecking(false);
-      return true;
-    }
-  };
+ setGeoChecking(false);
+ return true;
+ }
+ };
 
-  const handleRefreshLocation = async () => {
-    if (!selectedRestaurant) return;
-    await verifyGeoLocation(selectedRestaurant);
-  };
+ const handleRefreshLocation = async () => {
+ if (!selectedRestaurant) return;
+ await verifyGeoLocation(selectedRestaurant);
+ };
 
-  const handleSelectRestaurant = async (r: Restaurant) => {
-    if (geoChecking) return; // Prevent concurrent geo checks
-    setSelectedRestaurant(r);
-    const allowed = await verifyGeoLocation(r);
-    if (allowed) {
-      setStep(2);
-    }
-    // If not allowed, geoBlocked state is set and we stay on step 1 showing the blocker
-  };
+ const handleSelectRestaurant = async (r: Restaurant) => {
+ if (geoChecking) return; // Prevent concurrent geo checks
+ setSelectedRestaurant(r);
+ const allowed = await verifyGeoLocation(r);
+ if (allowed) {
+ setStep(2);
+ }
+ // If not allowed, geoBlocked state is set and we stay on step 1 showing the blocker
+ };
 
-  const handleSubmit = async () => {
-    if (!selectedRestaurant || submitting) return;
-    setSubmitting(true);
+ const handleSubmit = async () => {
+ if (!selectedRestaurant || submitting) return;
+ setSubmitting(true);
 
-    try {
-      let restaurantId = selectedRestaurant.id;
-      if (restaurantId.startsWith('osm-')) {
-        const osmId = parseInt(restaurantId.replace('osm-', ''), 10);
-        try {
-          const { data } = await api.post('/restaurants', {
-            name: selectedRestaurant.name,
-            lat: selectedRestaurant.lat,
-            lng: selectedRestaurant.lng,
-            address: selectedRestaurant.address,
-            cuisine_type: selectedRestaurant.cuisine,
-            osm_id: osmId,
-          });
-          restaurantId = data.restaurant.id;
-        } catch (createErr: any) {
-          if (createErr.response?.status === 409) {
-            // Restaurant already exists — look it up by searching nearby
-            const { data: searchData } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=0.5`);
-            const existing = (searchData.restaurants || []).find((r: any) => String(r.osm_id) === String(osmId));
-            if (existing) {
-              restaurantId = existing.id;
-            } else {
-              // Couldn't find by search — try wider radius
-              const { data: widerSearch } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=5`);
-              const wider = (widerSearch.restaurants || []).find((r: any) => String(r.osm_id) === String(osmId));
-              if (wider) {
-                restaurantId = wider.id;
-              } else {
-                throw createErr;
-              }
-            }
-          } else {
-            throw createErr;
-          }
-        }
-      }
+ try {
+ let restaurantId = selectedRestaurant.id;
+ if (restaurantId.startsWith('osm-')) {
+ const osmId = parseInt(restaurantId.replace('osm-', ''), 10);
+ try {
+ const { data } = await api.post('/restaurants', {
+ name: selectedRestaurant.name,
+ lat: selectedRestaurant.lat,
+ lng: selectedRestaurant.lng,
+ address: selectedRestaurant.address,
+ cuisine_type: selectedRestaurant.cuisine,
+ osm_id: osmId,
+ });
+ restaurantId = data.restaurant.id;
+ } catch (createErr: any) {
+ if (createErr.response?.status === 409) {
+ // Restaurant already exists — look it up by searching nearby
+ const { data: searchData } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=0.5`);
+ const existing = (searchData.restaurants || []).find((r: any) => String(r.osm_id) === String(osmId));
+ if (existing) {
+ restaurantId = existing.id;
+ } else {
+ // Couldn't find by search — try wider radius
+ const { data: widerSearch } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=5`);
+ const wider = (widerSearch.restaurants || []).find((r: any) => String(r.osm_id) === String(osmId));
+ if (wider) {
+ restaurantId = wider.id;
+ } else {
+ throw createErr;
+ }
+ }
+ } else {
+ throw createErr;
+ }
+ }
+ }
 
-      const { data: ratingData } = await api.post('/ratings', {
-        restaurant_id: restaurantId,
-        cleanliness: scores.cleanliness,
-        smell: scores.smell,
-        supplies: scores.supplies,
-        condition: scores.maintenance,
-        accessibility: scores.accessibility,
-        comment: comment || undefined,
-        _website: honeypot || undefined,
-        _loaded_at: loadedAtRef.current,
-      }, {
-        headers: {
-          'X-User-Lat': String(lat),
-          'X-User-Lng': String(lng),
-        },
-      });
+ const { data: ratingData } = await api.post('/ratings', {
+ restaurant_id: restaurantId,
+ cleanliness: scores.cleanliness,
+ smell: scores.smell,
+ supplies: scores.supplies,
+ condition: scores.maintenance,
+ accessibility: scores.accessibility,
+ comment: comment || undefined,
+ _website: honeypot || undefined,
+ _loaded_at: loadedAtRef.current,
+ }, {
+ headers: {
+ 'X-User-Lat': String(lat),
+ 'X-User-Lng': String(lng),
+ },
+ });
 
-      // Upload photo if selected
-      if (selectedPhoto && ratingData.rating?.id && ratingData.rating.id !== 'ok') {
-        try {
-          setUploading(true);
-          const formData = new FormData();
-          formData.append('photo', selectedPhoto);
-          await api.post(`/ratings/${ratingData.rating.id}/photos`, formData, {
-            headers: { 'Content-Type': undefined }, // Let axios set boundary automatically
-          });
-        } catch {
-          setPhotoFailed(true);
-          addToast(t('rating.photoUploadFailed'), 'error');
-        } finally {
-          setUploading(false);
-        }
-      }
+ // Upload photo if selected
+ if (selectedPhoto && ratingData.rating?.id && ratingData.rating.id !== 'ok') {
+ try {
+ setUploading(true);
+ const formData = new FormData();
+ formData.append('photo', selectedPhoto);
+ await api.post(`/ratings/${ratingData.rating.id}/photos`, formData, {
+ headers: { 'Content-Type': undefined }, // Let axios set boundary automatically
+ });
+ } catch {
+ setPhotoFailed(true);
+ addToast(t('rating.photoUploadFailed'), 'error');
+ } finally {
+ setUploading(false);
+ }
+ }
 
-      // Update store immediately so score shows without reload
-      if (ratingData.restaurant_score != null) {
-        const storeId = selectedRestaurant.id;
-        useRestaurantStore.getState().updateRestaurantScore(
-          storeId,
-          ratingData.restaurant_score,
-          (selectedRestaurant.rating_count || 0) + 1
-        );
-      }
-      // Invalidate so home page refetches fresh data on return
-      useRestaurantStore.getState().invalidate();
+ // Update store immediately so score shows without reload
+ if (ratingData.restaurant_score != null) {
+ const storeId = selectedRestaurant.id;
+ useRestaurantStore.getState().updateRestaurantScore(
+ storeId,
+ ratingData.restaurant_score,
+ (selectedRestaurant.rating_count || 0) + 1
+ );
+ }
+ // Invalidate so home page refetches fresh data on return
+ useRestaurantStore.getState().invalidate();
 
-      setStep(4);
-      addToast(t('rating.thankYou'), 'success');
-    } catch (err: any) {
-      console.error('Rating failed:', err);
-      // Offline: save as draft
-      if (!navigator.onLine || err.code === 'ERR_NETWORK') {
-        useDraftStore.getState().addDraft({
-          restaurantId: selectedRestaurant?.id || '',
-          scores,
-          comment: comment || undefined,
-          lat,
-          lng,
-          timestamp: loadedAtRef.current,
-        });
-        setStep(4);
-        addToast(t('rating.savedOffline'), 'success');
-      } else {
-        const msg = err.response?.data?.error || 'Rating failed';
-        addToast(msg, 'error');
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
+ setStep(4);
+ addToast(t('rating.thankYou'), 'success');
+ } catch (err: any) {
+ console.error('Rating failed:', err);
+ // Offline: save as draft
+ if (!navigator.onLine || err.code === 'ERR_NETWORK') {
+ useDraftStore.getState().addDraft({
+ restaurantId: selectedRestaurant?.id || '',
+ scores,
+ comment: comment || undefined,
+ lat,
+ lng,
+ timestamp: loadedAtRef.current,
+ });
+ setStep(4);
+ addToast(t('rating.savedOffline'), 'success');
+ } else {
+ const msg = err.response?.data?.error || 'Rating failed';
+ addToast(msg, 'error');
+ }
+ } finally {
+ setSubmitting(false);
+ }
+ };
 
-  return (
-    <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
-      {/* Progress bar */}
-      <div className="px-4 pt-4 pb-2">
-        <div className="flex gap-1.5">
-          {(preselected ? [2, 4] : [1, 2, 3, 4]).map((s) => (
-            <div
-              key={s}
-              className={`h-0.5 rounded-full flex-1 transition-all duration-300 ${
-                s <= step ? 'bg-gradient-to-r from-teal-500 to-emerald-500' : 'bg-stone-200 dark:bg-stone-700'
-              }`}
-            />
-          ))}
-        </div>
-      </div>
+ return (
+ <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
+ {/* Progress bar */}
+ <div className="px-4 pt-4 pb-2">
+ <div className="flex gap-1.5">
+ {(preselected ? [2, 4] : [1, 2, 3, 4]).map((s) => (
+ <div
+ key={s}
+ className={`h-0.5 rounded-full flex-1 transition-all duration-300 ${
+ s <= step ? 'bg-gradient-to-r from-teal-500 to-emerald-500' : 'bg-stone-200'
+ }`}
+ />
+ ))}
+ </div>
+ </div>
 
-      <AnimatePresence mode="wait">
-        {/* Step 1: Restaurant Selection */}
-        {step === 1 && (
-          <motion.div
-            key="step1"
-            className="px-4 pt-4"
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            transition={{ duration: 0.3 }}
-          >
-            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">{t('rating.step1Title')}</h2>
-            <p className="text-sm text-stone-500 dark:text-stone-400 mt-1 mb-4">{t('rating.step1Desc')}</p>
+ <AnimatePresence mode="wait">
+ {/* Step 1: Restaurant Selection */}
+ {step === 1 && (
+ <motion.div
+ key="step1"
+ className="px-4 pt-4"
+ initial={{ opacity: 0, x: 40 }}
+ animate={{ opacity: 1, x: 0 }}
+ exit={{ opacity: 0, x: -40 }}
+ transition={{ duration: 0.3 }}
+ >
+ <h2 className="text-xl font-semibold text-stone-900">{t('rating.step1Title')}</h2>
+ <p className="text-sm text-stone-500 mt-1 mb-4">{t('rating.step1Desc')}</p>
 
-            {/* Geo-checking indicator */}
-            {geoChecking && (
-              <div className="flex items-center gap-2 p-3 bg-teal-50 dark:bg-teal-900/30 rounded-xl mb-4">
-                <svg className="w-4 h-4 text-teal-500 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                <span className="text-sm text-teal-700 dark:text-teal-300">{t('geo.checking')}</span>
-              </div>
-            )}
+ {/* Geo-checking indicator */}
+ {geoChecking && (
+ <div className="flex items-center gap-2 p-3 bg-teal-50 rounded-xl mb-4">
+ <svg className="w-4 h-4 text-teal-500 animate-spin" fill="none" viewBox="0 0 24 24">
+ <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+ <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+ </svg>
+ <span className="text-sm text-teal-700">{t('geo.checking')}</span>
+ </div>
+ )}
 
-            {/* Geo-blocked message */}
-            {geoBlocked && !geoChecking && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-xl mb-4"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-5 h-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.75h.007v.008H12v-.008z" />
-                  </svg>
-                  <h3 className="text-sm font-semibold text-rose-700">
-                    {(permissionState === 'denied' || permissionState === 'unavailable') ? t('geo.locationRequired') : t('geo.tooFar')}
-                  </h3>
-                </div>
-                <p className="text-xs text-rose-600 mb-3">
-                  {(permissionState === 'denied' || permissionState === 'unavailable') ? t('locationPermission.deniedDescription') : t('geo.tooFarDesc')}
-                </p>
+ {/* Geo-blocked message */}
+ {geoBlocked && !geoChecking && (
+ <motion.div
+ initial={{ opacity: 0, y: -10 }}
+ animate={{ opacity: 1, y: 0 }}
+ className="p-4 bg-rose-50 border border-rose-200 rounded-xl mb-4"
+ >
+ <div className="flex items-center gap-2 mb-2">
+ <svg className="w-5 h-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+ <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.75h.007v.008H12v-.008z" />
+ </svg>
+ <h3 className="text-sm font-semibold text-rose-700">
+ {(permissionState === 'denied' || permissionState === 'unavailable') ? t('geo.locationRequired') : t('geo.tooFar')}
+ </h3>
+ </div>
+ <p className="text-xs text-rose-600 mb-3">
+ {(permissionState === 'denied' || permissionState === 'unavailable') ? t('locationPermission.deniedDescription') : t('geo.tooFarDesc')}
+ </p>
 
-                {geoDistance !== null && (
-                  <div className="flex gap-4 mb-3">
-                    <div className="text-xs text-rose-600">
-                      <span className="font-medium">{t('geo.currentDistance')}:</span> {geoDistance}m
-                    </div>
-                    <div className="text-xs text-rose-600">
-                      <span className="font-medium">{t('geo.maxDistance')}:</span> {GEO_MAX_DISTANCE_METERS}m
-                    </div>
-                  </div>
-                )}
+ {geoDistance !== null && (
+ <div className="flex gap-4 mb-3">
+ <div className="text-xs text-rose-600">
+ <span className="font-medium">{t('geo.currentDistance')}:</span> {geoDistance}m
+ </div>
+ <div className="text-xs text-rose-600">
+ <span className="font-medium">{t('geo.maxDistance')}:</span> {GEO_MAX_DISTANCE_METERS}m
+ </div>
+ </div>
+ )}
 
-                <button
-                  onClick={handleRefreshLocation}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-rose-200 text-xs font-medium text-rose-600 active:scale-[0.97] transition-transform"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-                  </svg>
-                  {t('geo.updateLocation')}
-                </button>
-              </motion.div>
-            )}
+ <button
+ onClick={handleRefreshLocation}
+ className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-rose-200 text-xs font-medium text-rose-600 active:scale-[0.97] transition-transform"
+ >
+ <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+ </svg>
+ {t('geo.updateLocation')}
+ </button>
+ </motion.div>
+ )}
 
-            {/* Search */}
-            <div className="relative mb-4">
-              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('rating.searchRestaurant')}
-                className="w-full pl-11 pr-4 h-11 rounded-xl bg-stone-50 dark:bg-stone-800 border-0 text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
-              />
-            </div>
+ {/* Search */}
+ <div className="relative mb-4">
+ <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+ </svg>
+ <input
+ type="text"
+ value={searchQuery}
+ onChange={(e) => setSearchQuery(e.target.value)}
+ placeholder={t('rating.searchRestaurant')}
+ className="w-full pl-11 pr-4 h-11 rounded-xl bg-stone-50 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+ />
+ </div>
 
-            <p className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-2">
-              {searchQuery ? t('search.placeholder') : t('rating.nearYou')}
-            </p>
+ <p className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-2">
+ {searchQuery ? t('search.placeholder') : t('rating.nearYou')}
+ </p>
 
-            <div className="space-y-2">
-              {nearbyRestaurants.map((r) => (
-                <motion.button
-                  key={r.id}
-                  className="flex items-center gap-3 p-3 bg-white dark:bg-stone-900 rounded-xl shadow-sm shadow-stone-200/50 dark:shadow-none w-full text-left active:ring-2 active:ring-teal-500 transition-all"
-                  onClick={() => handleSelectRestaurant(r)}
-                  whileTap={{ scale: 0.98 }}
-                  disabled={geoChecking}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-stone-50 dark:bg-stone-800 flex items-center justify-center text-base">
-                    🏪
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-stone-800 dark:text-stone-200 block truncate">{r.name}</span>
-                    <span className="text-xs text-stone-400">
-                      {r.cuisine && `${r.cuisine} · `}{formatDistance(r.distance)}
-                    </span>
-                  </div>
-                  <svg className="w-4 h-4 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-        )}
+ <div className="space-y-2">
+ {nearbyRestaurants.map((r) => (
+ <motion.button
+ key={r.id}
+ className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm shadow-stone-200/50 w-full text-left active:ring-2 active:ring-teal-500 transition-all"
+ onClick={() => handleSelectRestaurant(r)}
+ whileTap={{ scale: 0.98 }}
+ disabled={geoChecking}
+ >
+ <div className="w-10 h-10 rounded-xl bg-stone-50 flex items-center justify-center text-base">
+ 🏪
+ </div>
+ <div className="flex-1 min-w-0">
+ <span className="text-sm font-medium text-stone-800 block truncate">{r.name}</span>
+ <span className="text-xs text-stone-400">
+ {r.cuisine && `${r.cuisine} · `}{formatDistance(r.distance)}
+ </span>
+ </div>
+ <svg className="w-4 h-4 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+ </svg>
+ </motion.button>
+ ))}
+ </div>
+ </motion.div>
+ )}
 
-        {/* Step 2: Rate Criteria */}
-        {step === 2 && (
-          <motion.div
-            key="step2"
-            className="px-4 pt-4"
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            transition={{ duration: 0.3 }}
-          >
-            {selectedRestaurant && (
-              <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 bg-stone-100 dark:bg-stone-800 rounded-full">
-                <span className="text-sm">🏪</span>
-                <span className="text-xs font-medium text-stone-600 dark:text-stone-300">{selectedRestaurant.name}</span>
-              </div>
-            )}
+ {/* Step 2: Rate Criteria */}
+ {step === 2 && (
+ <motion.div
+ key="step2"
+ className="px-4 pt-4"
+ initial={{ opacity: 0, x: 40 }}
+ animate={{ opacity: 1, x: 0 }}
+ exit={{ opacity: 0, x: -40 }}
+ transition={{ duration: 0.3 }}
+ >
+ {selectedRestaurant && (
+ <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 bg-stone-100 rounded-full">
+ <span className="text-sm">🏪</span>
+ <span className="text-xs font-medium text-stone-600">{selectedRestaurant.name}</span>
+ </div>
+ )}
 
-            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">{t('rating.step2Title')}</h2>
-            <p className="text-sm text-stone-500 dark:text-stone-400 mt-1 mb-2">{t('rating.step2Desc')}</p>
+ <h2 className="text-xl font-semibold text-stone-900">{t('rating.step2Title')}</h2>
+ <p className="text-sm text-stone-500 mt-1 mb-2">{t('rating.step2Desc')}</p>
 
-            <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none p-4 mb-4">
-              {CRITERIA.map((c) => (
-                <CriteriaSlider
-                  key={c.key}
-                  icon={c.icon}
-                  label={t(`restaurant.criteria.${c.key}`)}
-                  value={scores[c.key]}
-                  onChange={(v) => updateScore(c.key, v)}
-                />
-              ))}
-            </div>
+ <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 p-4 mb-4">
+ {CRITERIA.map((c) => (
+ <CriteriaSlider
+ key={c.key}
+ icon={c.icon}
+ label={t(`restaurant.criteria.${c.key}`)}
+ value={scores[c.key]}
+ onChange={(v) => updateScore(c.key, v)}
+ />
+ ))}
+ </div>
 
-            {/* Overall score preview */}
-            <div className="flex items-center justify-center gap-4 p-4 bg-white dark:bg-stone-900 rounded-2xl shadow-sm shadow-stone-200/50 dark:shadow-none mb-6">
-              <ScoreGauge score={overallScore} size={80} strokeWidth={6} />
-              <div>
-                <p className="text-xs uppercase tracking-widest text-stone-400 font-medium">{t('rating.overall')}</p>
-                <p className="text-2xl font-light text-stone-800 dark:text-stone-200">{overallScore.toFixed(1)}</p>
-              </div>
-            </div>
+ {/* Overall score preview */}
+ <div className="flex items-center justify-center gap-4 p-4 bg-white rounded-2xl shadow-sm shadow-stone-200/50 mb-6">
+ <ScoreGauge score={overallScore} size={80} strokeWidth={6} />
+ <div>
+ <p className="text-xs uppercase tracking-widest text-stone-400 font-medium">{t('rating.overall')}</p>
+ <p className="text-2xl font-light text-stone-800">{overallScore.toFixed(1)}</p>
+ </div>
+ </div>
 
-            {/* Comment + Photo moved to Step 3 for all flows */}
+ {/* Comment + Photo moved to Step 3 for all flows */}
 
-            <button
-              onClick={() => setStep(3)}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform"
-            >
-              {t('splash.next')}
-            </button>
-          </motion.div>
-        )}
+ <button
+ onClick={() => setStep(3)}
+ className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform"
+ >
+ {t('splash.next')}
+ </button>
+ </motion.div>
+ )}
 
-        {/* Step 3: Photo + Comment */}
-        {step === 3 && (
-          <motion.div
-            key="step3"
-            className="px-4 pt-4"
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            transition={{ duration: 0.3 }}
-          >
-            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">{t('rating.step3Title')}</h2>
-            <p className="text-sm text-stone-500 dark:text-stone-400 mt-1 mb-6">{t('rating.step3Desc')}</p>
+ {/* Step 3: Photo + Comment */}
+ {step === 3 && (
+ <motion.div
+ key="step3"
+ className="px-4 pt-4"
+ initial={{ opacity: 0, x: 40 }}
+ animate={{ opacity: 1, x: 0 }}
+ exit={{ opacity: 0, x: -40 }}
+ transition={{ duration: 0.3 }}
+ >
+ <h2 className="text-xl font-semibold text-stone-900">{t('rating.step3Title')}</h2>
+ <p className="text-sm text-stone-500 mt-1 mb-6">{t('rating.step3Desc')}</p>
 
-            {/* Photo upload */}
-            {photoPreview ? (
-              <div className="relative mb-4">
-                <img src={photoPreview} alt="" className="w-full h-48 object-cover rounded-xl" />
-                <button
-                  onClick={() => { if (photoPreview) URL.revokeObjectURL(photoPreview); setSelectedPhoto(null); setPhotoPreview(null); }}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/50 rounded-lg text-xs text-white">
-                  {t('rating.photoAdded')}
-                </span>
-              </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center w-full py-8 bg-white dark:bg-stone-900 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 cursor-pointer hover:border-teal-400 transition-colors mb-4">
-                <svg className="w-8 h-8 text-stone-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
-                </svg>
-                <span className="text-sm text-stone-400">{t('rating.addPhoto')}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      if (photoPreview) URL.revokeObjectURL(photoPreview);
-                      setSelectedPhoto(file);
-                      setPhotoPreview(URL.createObjectURL(file));
-                    }
-                  }}
-                />
-              </label>
-            )}
-            {uploading && (
-              <div className="flex items-center gap-2 mb-4 text-sm text-teal-600">
-                <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
-                {t('rating.uploading')}
-              </div>
-            )}
+ {/* Photo upload */}
+ {photoPreview ? (
+ <div className="relative mb-4">
+ <img src={photoPreview} alt="" className="w-full h-48 object-cover rounded-xl" />
+ <button
+ onClick={() => { if (photoPreview) URL.revokeObjectURL(photoPreview); setSelectedPhoto(null); setPhotoPreview(null); }}
+ className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white"
+ >
+ <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+ <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/50 rounded-lg text-xs text-white">
+ {t('rating.photoAdded')}
+ </span>
+ </div>
+ ) : (
+ <label className="flex flex-col items-center justify-center w-full py-8 bg-white rounded-xl border border-dashed border-stone-200 cursor-pointer hover:border-teal-400 transition-colors mb-4">
+ <svg className="w-8 h-8 text-stone-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+ <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+ </svg>
+ <span className="text-sm text-stone-400">{t('rating.addPhoto')}</span>
+ <input
+ type="file"
+ accept="image/*"
+ capture="environment"
+ className="hidden"
+ onChange={(e) => {
+ const file = e.target.files?.[0];
+ if (file) {
+ if (photoPreview) URL.revokeObjectURL(photoPreview);
+ setSelectedPhoto(file);
+ setPhotoPreview(URL.createObjectURL(file));
+ }
+ }}
+ />
+ </label>
+ )}
+ {uploading && (
+ <div className="flex items-center gap-2 mb-4 text-sm text-teal-600">
+ <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+ {t('rating.uploading')}
+ </div>
+ )}
 
-            {/* Honeypot - hidden from humans */}
-            <div style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }}>
-              <input
-                type="text"
-                name="_website"
-                tabIndex={-1}
-                autoComplete="off"
-                value={honeypot}
-                onChange={(e) => setHoneypot(e.target.value)}
-              />
-            </div>
+ {/* Honeypot - hidden from humans */}
+ <div style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }}>
+ <input
+ type="text"
+ name="_website"
+ tabIndex={-1}
+ autoComplete="off"
+ value={honeypot}
+ onChange={(e) => setHoneypot(e.target.value)}
+ />
+ </div>
 
-            {/* Comment */}
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder={t('rating.addComment')}
-              maxLength={1000}
-              className="w-full h-28 p-3 bg-stone-50 dark:bg-stone-800 rounded-xl border-0 text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 mb-6 transition-all"
-            />
+ {/* Comment */}
+ <textarea
+ value={comment}
+ onChange={(e) => setComment(e.target.value)}
+ placeholder={t('rating.addComment')}
+ maxLength={1000}
+ className="w-full h-28 p-3 bg-stone-50 rounded-xl border-0 text-sm text-stone-900 placeholder:text-stone-400 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 mb-6 transition-all"
+ />
 
-            <div className="flex gap-3">
-              <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="flex-1 py-3.5 text-stone-400 text-sm font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
-              >
-                {t('rating.skip')}
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform disabled:opacity-50"
-              >
-                {submitting ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  </div>
-                ) : t('rating.submit')}
-              </button>
-            </div>
-          </motion.div>
-        )}
+ <div className="flex gap-3">
+ <button
+ onClick={handleSubmit}
+ disabled={submitting}
+ className="flex-1 py-3.5 text-stone-400 text-sm font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
+ >
+ {t('rating.skip')}
+ </button>
+ <button
+ onClick={handleSubmit}
+ disabled={submitting}
+ className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform disabled:opacity-50"
+ >
+ {submitting ? (
+ <div className="flex items-center justify-center gap-2">
+ <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+ </div>
+ ) : t('rating.submit')}
+ </button>
+ </div>
+ </motion.div>
+ )}
 
-        {/* Step 4: Confirmation */}
-        {step === 4 && (
-          <motion.div
-            key="step4"
-            className="px-4 pt-16 text-center"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', damping: 20 }}
-          >
-            {/* Animated checkmark */}
-            <motion.div
-              className="w-20 h-20 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-teal-500/20"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', delay: 0.2, damping: 12 }}
-            >
-              <motion.svg
-                className="w-10 h-10 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ delay: 0.5, duration: 0.4 }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </motion.svg>
-            </motion.div>
+ {/* Step 4: Confirmation */}
+ {step === 4 && (
+ <motion.div
+ key="step4"
+ className="px-4 pt-16 text-center"
+ initial={{ opacity: 0, scale: 0.9 }}
+ animate={{ opacity: 1, scale: 1 }}
+ transition={{ type: 'spring', damping: 20 }}
+ >
+ {/* Animated checkmark */}
+ <motion.div
+ className="w-20 h-20 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-teal-500/20"
+ initial={{ scale: 0 }}
+ animate={{ scale: 1 }}
+ transition={{ type: 'spring', delay: 0.2, damping: 12 }}
+ >
+ <motion.svg
+ className="w-10 h-10 text-white"
+ fill="none"
+ viewBox="0 0 24 24"
+ stroke="currentColor"
+ strokeWidth={2.5}
+ initial={{ pathLength: 0, opacity: 0 }}
+ animate={{ pathLength: 1, opacity: 1 }}
+ transition={{ delay: 0.5, duration: 0.4 }}
+ >
+ <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+ </motion.svg>
+ </motion.div>
 
-            <motion.h2
-              className="text-lg font-medium text-stone-800 dark:text-stone-200 mb-2"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              {t('rating.thankYou')}
-            </motion.h2>
+ <motion.h2
+ className="text-lg font-medium text-stone-800 mb-2"
+ initial={{ opacity: 0, y: 20 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ delay: 0.4 }}
+ >
+ {t('rating.thankYou')}
+ </motion.h2>
 
-            {photoFailed && (
-              <motion.p
-                className="text-xs text-amber-600 dark:text-amber-400 mb-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                {t('rating.photoUploadFailed')}
-              </motion.p>
-            )}
+ {photoFailed && (
+ <motion.p
+ className="text-xs text-amber-600 mb-2"
+ initial={{ opacity: 0 }}
+ animate={{ opacity: 1 }}
+ transition={{ delay: 0.5 }}
+ >
+ {t('rating.photoUploadFailed')}
+ </motion.p>
+ )}
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="mb-8"
-            >
-              <p className="text-sm text-stone-500 dark:text-stone-400 mb-4">{t('rating.yourScore')}</p>
-              <div className="flex justify-center">
-                <ScoreGauge score={overallScore} size={160} strokeWidth={12} />
-              </div>
-            </motion.div>
+ <motion.div
+ initial={{ opacity: 0, y: 20 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ delay: 0.6 }}
+ className="mb-8"
+ >
+ <p className="text-sm text-stone-500 mb-4">{t('rating.yourScore')}</p>
+ <div className="flex justify-center">
+ <ScoreGauge score={overallScore} size={160} strokeWidth={12} />
+ </div>
+ </motion.div>
 
-            {/* Confetti-like dots */}
-            {[...Array(12)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1.5 h-1.5 rounded-full"
-                style={{
-                  backgroundColor: ['#14B8A6', '#10B981', '#F59E0B', '#3B82F6'][i % 4],
-                  left: `${20 + Math.random() * 60}%`,
-                  top: `${10 + Math.random() * 30}%`,
-                }}
-                initial={{ opacity: 0, scale: 0, y: 0 }}
-                animate={{
-                  opacity: [0, 1, 0],
-                  scale: [0, 1.5, 0],
-                  y: [0, -50 - Math.random() * 100],
-                }}
-                transition={{ delay: 0.3 + i * 0.05, duration: 1.5 }}
-              />
-            ))}
+ {/* Confetti-like dots */}
+ {[...Array(12)].map((_, i) => (
+ <motion.div
+ key={i}
+ className="absolute w-1.5 h-1.5 rounded-full"
+ style={{
+ backgroundColor: ['#14B8A6', '#10B981', '#F59E0B', '#3B82F6'][i % 4],
+ left: `${20 + Math.random() * 60}%`,
+ top: `${10 + Math.random() * 30}%`,
+ }}
+ initial={{ opacity: 0, scale: 0, y: 0 }}
+ animate={{
+ opacity: [0, 1, 0],
+ scale: [0, 1.5, 0],
+ y: [0, -50 - Math.random() * 100],
+ }}
+ transition={{ delay: 0.3 + i * 0.05, duration: 1.5 }}
+ />
+ ))}
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 }}
-            >
-              <button
-                onClick={() => navigate('/')}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform"
-              >
-                {t('rating.done')}
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+ <motion.div
+ initial={{ opacity: 0, y: 20 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ delay: 1 }}
+ >
+ <button
+ onClick={() => navigate('/')}
+ className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-transform"
+ >
+ {t('rating.done')}
+ </button>
+ </motion.div>
+ </motion.div>
+ )}
+ </AnimatePresence>
+ </div>
+ );
 }
