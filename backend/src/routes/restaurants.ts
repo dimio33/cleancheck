@@ -166,19 +166,26 @@ router.post('/', optionalAuth, async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    // Determine conflict column based on ID type
-    const externalId = osm_id || null;
-    const isGooglePlace = typeof osm_id === 'string' && osm_id.startsWith('google-');
+    const { google_place_id } = req.body;
 
     let result;
-    if (externalId) {
-      // Upsert: eliminates race condition when two users create the same restaurant simultaneously
+    if (google_place_id) {
+      // Google Places restaurant — upsert by google_place_id
       result = await query(
-        `INSERT INTO restaurants (name, address, lat, lng, city, cuisine_type, osm_id${isGooglePlace ? ', google_place_id' : ''})
-         VALUES ($1, $2, $3, $4, $5, $6, $7${isGooglePlace ? ', $7' : ''})
+        `INSERT INTO restaurants (name, address, lat, lng, city, cuisine_type, google_place_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (google_place_id) DO UPDATE SET name = EXCLUDED.name
+         RETURNING *`,
+        [name, address || null, lat, lng, city || null, cuisine_type || null, google_place_id]
+      );
+    } else if (osm_id) {
+      // OSM restaurant — upsert by osm_id
+      result = await query(
+        `INSERT INTO restaurants (name, address, lat, lng, city, cuisine_type, osm_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (osm_id) DO UPDATE SET name = EXCLUDED.name
          RETURNING *`,
-        [name, address || null, lat, lng, city || null, cuisine_type || null, externalId]
+        [name, address || null, lat, lng, city || null, cuisine_type || null, osm_id]
       );
     } else {
       result = await query(

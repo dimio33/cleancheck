@@ -178,8 +178,12 @@ export default function RatingFlow() {
 
  try {
  let restaurantId = selectedRestaurant.id;
- if (restaurantId.startsWith('osm-')) {
- const osmId = parseInt(restaurantId.replace('osm-', ''), 10);
+ // Google Places or OSM restaurants need to be created in our DB first
+ if (restaurantId.startsWith('osm-') || restaurantId.startsWith('google-')) {
+ const isGoogle = restaurantId.startsWith('google-');
+ const externalId = isGoogle
+   ? restaurantId.replace('google-', '')
+   : parseInt(restaurantId.replace('osm-', ''), 10);
  try {
  const { data } = await api.post('/restaurants', {
  name: selectedRestaurant.name,
@@ -187,26 +191,24 @@ export default function RatingFlow() {
  lng: selectedRestaurant.lng,
  address: selectedRestaurant.address,
  cuisine_type: selectedRestaurant.cuisine,
- osm_id: osmId,
+ ...(isGoogle ? { google_place_id: externalId } : { osm_id: externalId }),
  });
  restaurantId = data.restaurant.id;
  } catch (createErr: any) {
  if (createErr.response?.status === 409) {
- // Restaurant already exists — look it up by searching nearby
- const { data: searchData } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=0.5`);
- const existing = (searchData.restaurants || []).find((r: any) => String(r.osm_id) === String(osmId));
- if (existing) {
- restaurantId = existing.id;
- } else {
- // Couldn't find by search — try wider radius
- const { data: widerSearch } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=5`);
- const wider = (widerSearch.restaurants || []).find((r: any) => String(r.osm_id) === String(osmId));
- if (wider) {
- restaurantId = wider.id;
- } else {
- throw createErr;
- }
- }
+   const { data: searchData } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=0.5`);
+   const existing = (searchData.restaurants || []).find((r: any) =>
+     isGoogle ? r.google_place_id === externalId : String(r.osm_id) === String(externalId)
+   );
+   if (existing) {
+     restaurantId = existing.id;
+   } else {
+     const { data: widerSearch } = await api.get(`/restaurants?lat=${selectedRestaurant.lat}&lng=${selectedRestaurant.lng}&radius=5`);
+     const wider = (widerSearch.restaurants || []).find((r: any) =>
+       isGoogle ? r.google_place_id === externalId : String(r.osm_id) === String(externalId)
+     );
+     restaurantId = wider ? wider.id : restaurantId;
+   }
  } else {
  throw createErr;
  }
