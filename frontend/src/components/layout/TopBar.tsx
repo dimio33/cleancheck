@@ -18,7 +18,7 @@ export default function TopBar() {
         {showBack ? (
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center justify-center w-11 h-11 -ml-2 rounded-full hover:bg-stone-100 transition-colors"
+            className="flex items-center justify-center w-11 h-11 -ml-2"
             aria-label="Back"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -34,7 +34,7 @@ export default function TopBar() {
 
         <button
           onClick={toggleLang}
-          className="flex items-center justify-center w-11 h-11 -mr-2 rounded-full text-xs font-medium text-stone-400 uppercase tracking-widest hover:bg-stone-100 transition-colors"
+          className="flex items-center justify-center w-11 h-11 -mr-2 text-xs font-medium text-stone-400 uppercase tracking-widest"
           aria-label="Toggle language"
         >
           {i18n.language.startsWith('de') ? 'EN' : 'DE'}
