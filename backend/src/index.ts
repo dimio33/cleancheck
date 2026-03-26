@@ -46,7 +46,15 @@ app.use(helmet({
   crossOriginOpenerPolicy: false,
 }));
 app.use(cors({
-  origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'https://cleancheck.e-findo.de', 'capacitor://localhost'],
+  origin: (origin, callback) => {
+    const allowed = process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'https://cleancheck.e-findo.de', 'capacitor://localhost'];
+    // Allow requests with no origin (mobile apps, curl) or matching origins
+    if (!origin || allowed.includes(origin) || origin.startsWith('capacitor://')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all for now — tighten after native app is stable
+    }
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '1mb' }));
