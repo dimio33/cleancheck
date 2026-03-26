@@ -156,7 +156,11 @@
     "invalidCredentials": "Invalid email or password",
     "errorUsernameShort": "Username must be at least 3 characters",
     "errorPasswordShort": "Password must be at least 6 characters",
-    "errorEmailInvalid": "Please enter a valid email address"
+    "errorEmailInvalid": "Please enter a valid email address",
+    "orContinueWith": "or continue with",
+    "signInWithGoogle": "Sign in with Google",
+    "signInWithApple": "Sign in with Apple",
+    "socialLoginFailed": "Sign in failed. Please try again."
   },
   "badges": {
     "firstRating": {

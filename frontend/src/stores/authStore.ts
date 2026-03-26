@@ -8,6 +8,8 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
+  loginWithApple: (idToken: string, appleUser?: { name?: { firstName?: string; lastName?: string } }) => Promise<void>;
   logout: () => void;
   setUser: (user: User) => void;
   loginAsGuest: () => void;
@@ -57,6 +59,42 @@ export const useAuthStore = create<AuthState>((set) => ({
       email: data.user.email,
       avatar: data.user.avatar_url || undefined,
       created_at: data.user.created_at,
+      rating_count: data.user.total_ratings || 0,
+      restaurant_count: 0,
+      average_score: 0,
+      badges: [],
+    };
+    localStorage.setItem('cleancheck_user', JSON.stringify(user));
+    set({ user, token: data.token, isAuthenticated: true });
+  },
+
+  loginWithGoogle: async (idToken: string) => {
+    const { data } = await api.post('/auth/google', { id_token: idToken });
+    storeTokens(data.token, data.refreshToken);
+    const user: User = {
+      id: data.user.id,
+      username: data.user.username,
+      email: data.user.email,
+      avatar: data.user.avatar_url || undefined,
+      created_at: data.user.created_at || new Date().toISOString(),
+      rating_count: data.user.total_ratings || 0,
+      restaurant_count: 0,
+      average_score: 0,
+      badges: [],
+    };
+    localStorage.setItem('cleancheck_user', JSON.stringify(user));
+    set({ user, token: data.token, isAuthenticated: true });
+  },
+
+  loginWithApple: async (idToken: string, appleUser?: { name?: { firstName?: string; lastName?: string } }) => {
+    const { data } = await api.post('/auth/apple', { id_token: idToken, user: appleUser });
+    storeTokens(data.token, data.refreshToken);
+    const user: User = {
+      id: data.user.id,
+      username: data.user.username,
+      email: data.user.email,
+      avatar: data.user.avatar_url || undefined,
+      created_at: data.user.created_at || new Date().toISOString(),
       rating_count: data.user.total_ratings || 0,
       restaurant_count: 0,
       average_score: 0,

@@ -1,10 +1,13 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+import crypto, { createPublicKey } from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 import { query } from '../utils/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { registerLimiter, loginLimiter } from '../middleware/rateLimiter';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = Router();
 
@@ -147,6 +150,13 @@ router.post('/login', loginLimiter, async (req: AuthRequest, res: Response): Pro
     }
 
     const user = result.rows[0];
+
+    // Social-login users have no password — they must sign in via their provider
+    if (!user.password_hash) {
+      res.status(401).json({ error: 'This account uses social login. Please sign in with Google or Apple.' });
+      return;
+    }
+
     const valid = await bcrypt.compare(password, user.password_hash);
 
     if (!valid) {
@@ -317,6 +327,206 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response): Promise
   } catch (err) {
     console.error('Get me error:', err);
     res.status(500).json({ error: 'Failed to get user' });
+  }
+});
+
+// Helper: build user response object
+function userResponse(user: any) {
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    avatar_url: user.avatar_url,
+    total_ratings: user.total_ratings,
+    locale: user.locale,
+  };
+}
+
+// Helper: ensure unique username
+async function ensureUniqueUsername(desiredUsername: string): Promise<string> {
+  let username = desiredUsername.replace(/<[^>]*>/g, '').trim().substring(0, 50);
+  if (username.length < 1) username = 'user';
+  const existing = await query('SELECT id FROM users WHERE username = $1', [username]);
+  if (existing.rows.length > 0) {
+    username = `${username.substring(0, 44)}_${Math.random().toString(36).substring(2, 6)}`;
+  }
+  return username;
+}
+
+// POST /api/auth/google — Sign in with Google
+router.post('/google', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id_token } = req.body;
+    if (!id_token) {
+      res.status(400).json({ error: 'id_token is required' });
+      return;
+    }
+
+    // Verify Google ID token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: id_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      res.status(400).json({ error: 'Invalid Google token' });
+      return;
+    }
+
+    const { email, sub: googleId, name, picture } = payload;
+
+    // Check if user exists with this email
+    const userResult = await query(
+      'SELECT * FROM users WHERE email = $1',
+      [email.toLowerCase()]
+    );
+
+    let user;
+    if (userResult.rows.length > 0) {
+      user = userResult.rows[0];
+      // Link Google provider if not already linked
+      if (!user.provider_id || user.auth_provider === 'email') {
+        await query(
+          'UPDATE users SET auth_provider = $2, provider_id = $3, avatar_url = COALESCE(avatar_url, $4) WHERE id = $1',
+          [user.id, 'google', googleId, picture || null]
+        );
+        user.auth_provider = 'google';
+        user.provider_id = googleId;
+        if (!user.avatar_url && picture) user.avatar_url = picture;
+      }
+    } else {
+      // Create new user
+      const username = await ensureUniqueUsername(name || email.split('@')[0]);
+
+      const result = await query(
+        `INSERT INTO users (username, email, auth_provider, provider_id, avatar_url)
+         VALUES ($1, $2, 'google', $3, $4) RETURNING *`,
+        [username, email.toLowerCase(), googleId, picture || null]
+      );
+      user = result.rows[0];
+    }
+
+    const token = generateAccessToken(user as { id: string; username: string; email: string });
+    const refreshToken = await createRefreshToken(user.id);
+
+    console.log(JSON.stringify({
+      action: 'social_login',
+      provider: 'google',
+      user_id: user.id,
+      timestamp: new Date().toISOString(),
+    }));
+
+    res.json({
+      token,
+      refreshToken,
+      user: userResponse(user),
+    });
+  } catch (err) {
+    console.error('Google auth error:', err);
+    res.status(401).json({ error: 'Google authentication failed' });
+  }
+});
+
+// POST /api/auth/apple — Sign in with Apple
+router.post('/apple', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id_token, user: appleUser } = req.body;
+    if (!id_token) {
+      res.status(400).json({ error: 'id_token is required' });
+      return;
+    }
+
+    // Fetch Apple's public keys and verify the JWT
+    const appleKeysResponse = await fetch('https://appleid.apple.com/auth/keys');
+    const appleKeys = await appleKeysResponse.json() as { keys: any[] };
+
+    // Decode the token header to find the matching key
+    const tokenHeader = JSON.parse(Buffer.from(id_token.split('.')[0], 'base64url').toString());
+    const appleKey = appleKeys.keys.find((k: any) => k.kid === tokenHeader.kid);
+
+    if (!appleKey) {
+      res.status(401).json({ error: 'Invalid Apple token - key not found' });
+      return;
+    }
+
+    // Convert JWK to PEM for jwt.verify
+    const publicKey = createPublicKey({ key: appleKey, format: 'jwk' });
+
+    const decoded = jwt.verify(id_token, publicKey, {
+      algorithms: ['RS256'],
+      issuer: 'https://appleid.apple.com',
+      audience: process.env.APPLE_CLIENT_ID || 'com.efindo.cleancheck',
+    }) as any;
+
+    const { sub: appleId, email } = decoded;
+
+    if (!email && !appleId) {
+      res.status(400).json({ error: 'Invalid Apple token payload' });
+      return;
+    }
+
+    // Apple only sends email on FIRST login — after that only sub
+    // So we need to find by provider_id OR email
+    let userResult;
+    if (email) {
+      userResult = await query(
+        'SELECT * FROM users WHERE email = $1 OR (auth_provider = $2 AND provider_id = $3)',
+        [email.toLowerCase(), 'apple', appleId]
+      );
+    } else {
+      userResult = await query(
+        'SELECT * FROM users WHERE auth_provider = $1 AND provider_id = $2',
+        ['apple', appleId]
+      );
+    }
+
+    let user;
+    if (userResult.rows.length > 0) {
+      user = userResult.rows[0];
+      // Link Apple provider if not already
+      if (user.auth_provider !== 'apple') {
+        await query(
+          'UPDATE users SET auth_provider = $2, provider_id = $3 WHERE id = $1',
+          [user.id, 'apple', appleId]
+        );
+        user.auth_provider = 'apple';
+        user.provider_id = appleId;
+      }
+    } else {
+      // Create new user — Apple may provide name only on first auth
+      const firstName = appleUser?.name?.firstName || '';
+      const lastName = appleUser?.name?.lastName || '';
+      const desiredName = `${firstName} ${lastName}`.trim() || (email ? email.split('@')[0] : `user_${appleId.substring(0, 8)}`);
+      const username = await ensureUniqueUsername(desiredName);
+
+      const userEmail = email || `${appleId}@privaterelay.appleid.com`;
+
+      const result = await query(
+        `INSERT INTO users (username, email, auth_provider, provider_id)
+         VALUES ($1, $2, 'apple', $3) RETURNING *`,
+        [username, userEmail.toLowerCase(), appleId]
+      );
+      user = result.rows[0];
+    }
+
+    const token = generateAccessToken(user as { id: string; username: string; email: string });
+    const refreshToken = await createRefreshToken(user.id);
+
+    console.log(JSON.stringify({
+      action: 'social_login',
+      provider: 'apple',
+      user_id: user.id,
+      timestamp: new Date().toISOString(),
+    }));
+
+    res.json({
+      token,
+      refreshToken,
+      user: userResponse(user),
+    });
+  } catch (err) {
+    console.error('Apple auth error:', err);
+    res.status(401).json({ error: 'Apple authentication failed' });
   }
 });
 
