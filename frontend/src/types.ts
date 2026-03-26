@@ -50,6 +50,12 @@ export interface User {
   restaurant_count: number;
   average_score: number;
   badges: Badge[];
+  xp?: number;
+  level?: number;
+  rank?: string;
+  streak?: number;
+  xp_for_next_level?: number;
+  xp_progress?: number;
 }
 
 export interface Badge {

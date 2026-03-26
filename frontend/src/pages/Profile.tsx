@@ -7,6 +7,7 @@ import { useFavoritesStore } from '../stores/favoritesStore';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useDraftStore } from '../stores/draftStore';
 import BadgeCard from '../components/ui/BadgeCard';
+import XpBar from '../components/ui/XpBar';
 import { getScoreColor } from '../utils/geo';
 import api from '../services/api';
 import type { Badge, Rating } from '../types';
@@ -46,6 +47,13 @@ export default function Profile() {
  : null;
 
  const badges: Badge[] = profileData?.badges || [];
+
+ const gamification = profileData?.gamification || {};
+ const xp = gamification.xp ?? profileData?.user?.xp ?? 0;
+ const level = gamification.level ?? profileData?.user?.level ?? 1;
+ const rank = gamification.rank ?? profileData?.user?.rank ?? 'newbie';
+ const xpForNextLevel = gamification.xp_for_next_level ?? 100;
+ const xpProgress = gamification.xp_progress ?? 0;
 
  if (!user) {
  return (
@@ -87,8 +95,9 @@ export default function Profile() {
  <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
  {/* Teal Gradient Hero */}
  <div className="bg-gradient-to-br from-teal-600 to-teal-500 px-5 pt-8 pb-12 text-center">
+ <div className="relative w-[72px] h-[72px] mx-auto mb-3">
  <motion.div
- className="w-[72px] h-[72px] rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3"
+ className="w-full h-full rounded-full bg-white/20 flex items-center justify-center"
  initial={{ scale: 0 }}
  animate={{ scale: 1 }}
  transition={{ type: 'spring', damping: 12 }}
@@ -97,10 +106,24 @@ export default function Profile() {
  {displayUser?.username?.charAt(0)?.toUpperCase() || '?'}
  </span>
  </motion.div>
- <h2 className="text-xl font-bold text-white tracking-[-0.3px]">{displayUser?.username}</h2>
+ {/* Level badge */}
+ <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-teal-500 border-2 border-white flex items-center justify-center">
+ <span className="text-[11px] font-bold text-white">{level}</span>
+ </div>
+ </div>
+ <h2 className="text-xl font-bold text-white tracking-[-0.3px]">
+ {displayUser?.username}
+ <span className="text-sm font-normal text-white/60 ml-1.5">
+ — {t(`gamification.ranks.${rank}`, rank)}
+ </span>
+ </h2>
  <p className="text-[13px] text-white/70 mt-0.5">
  {t('profile.memberSince')} {displayUser && new Date(displayUser.created_at).toLocaleDateString()}
  </p>
+ {/* XP Bar */}
+ <div className="mt-4 px-4">
+ <XpBar xp={xp} level={level} rank={rank} xpForNextLevel={xpForNextLevel} progress={xpProgress} />
+ </div>
  </div>
 
  {/* Overlapping Stat Cards */}

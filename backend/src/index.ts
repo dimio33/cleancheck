@@ -9,6 +9,8 @@ import restaurantRoutes from './routes/restaurants';
 import ratingRoutes from './routes/ratings';
 import userRoutes from './routes/users';
 import qrRoutes from './routes/qr';
+import leaderboardRoutes from './routes/leaderboard';
+import contestRoutes from './routes/contests';
 import { initModeration, getModerationStatus } from './services/moderationService';
 import { apiLimiter, ratingLimiter } from './middleware/rateLimiter';
 import { query } from './utils/db';
@@ -59,6 +61,8 @@ app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/ratings', ratingRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/qr', qrRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/contests', contestRoutes);
 
 // Health check
 app.get('/api/health', (_req: Request, res: Response) => {

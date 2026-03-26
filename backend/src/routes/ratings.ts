@@ -9,6 +9,9 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { optionalAuth } from '../middleware/optionalAuth';
 import { calculateOverallScore, recalculateRestaurantScore } from '../services/scoreService';
 import { checkAndAwardBadges } from '../services/badgeService';
+import { awardXp, updateStreak, getStreakBonus } from '../services/xpService';
+import { updateLeaderboard } from '../services/leaderboardService';
+import { updateContestEntry } from '../services/contestService';
 import { geoVerify, calculateDistance } from '../middleware/geoVerify';
 import { validateImageFile, moderateImage, generateImageHash } from '../services/moderationService';
 import { uploadPhoto, isR2Configured } from '../services/storageService';
@@ -213,14 +216,48 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
     // Recalculate restaurant score
     const newScore = await recalculateRestaurantScore(restaurant_id);
 
-    // Update user total_ratings (atomic increment) + check badges
+    // Update user total_ratings (atomic increment) + check badges + gamification
     let newBadges: any[] = [];
+    let xpResult: any = null;
+    let streak = 0;
     if (req.user) {
       await query(`UPDATE users SET total_ratings = total_ratings + 1 WHERE id = $1`, [req.user.id]);
       try {
         newBadges = await checkAndAwardBadges(req.user.id);
       } catch (badgeErr) {
         console.error('Badge check failed (non-fatal):', badgeErr);
+      }
+
+      // Gamification: streak, XP, leaderboard, first rater, contest
+      try {
+        const ratingId = result.rows[0]?.id;
+        streak = await updateStreak(req.user.id);
+        const streakBonus = getStreakBonus(streak);
+        const commentBonus = (sanitizedComment && sanitizedComment.length > 0) ? 10 : 0;
+        const xpAmount = 50 + streakBonus + commentBonus;
+        xpResult = await awardXp(req.user.id, xpAmount, 'rating', ratingId);
+
+        // Get restaurant city for leaderboard
+        const restResult = await query<{ city: string | null }>(
+          `SELECT city FROM restaurants WHERE id = $1`,
+          [restaurant_id]
+        );
+        const restaurantCity = restResult.rows[0]?.city || null;
+
+        await updateLeaderboard(req.user.id, restaurantCity);
+
+        // First rater
+        await query(
+          `INSERT INTO first_raters (restaurant_id, user_id, rated_at) VALUES ($1, $2, NOW()) ON CONFLICT DO NOTHING`,
+          [restaurant_id, req.user.id]
+        );
+
+        // Contest entry
+        if (restaurantCity) {
+          await updateContestEntry(req.user.id, restaurantCity);
+        }
+      } catch (xpErr) {
+        console.error('Gamification failed (non-fatal):', xpErr);
       }
     }
 
@@ -237,6 +274,8 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
       rating: result.rows?.[0],
       restaurant_score: newScore,
       new_badges: newBadges,
+      xp: xpResult,
+      streak,
     });
   } catch (err) {
     console.error('Create rating error:', err);
@@ -321,6 +360,14 @@ router.post('/:id/photos', authenticate, upload.single('photo'), async (req: Aut
       [id, photoUrl]
     );
 
+    // Award 20 XP for photo upload
+    let photoXpResult: any = null;
+    try {
+      photoXpResult = await awardXp(req.user.id, 20, 'photo', id as string);
+    } catch (xpErr) {
+      console.error('Photo XP award failed (non-fatal):', xpErr);
+    }
+
     console.log(JSON.stringify({
       action: 'photo_uploaded',
       photo_id: photoResult.rows[0]?.id,
@@ -329,7 +376,7 @@ router.post('/:id/photos', authenticate, upload.single('photo'), async (req: Aut
       timestamp: new Date().toISOString(),
     }));
 
-    res.status(201).json({ photo: photoResult.rows[0] });
+    res.status(201).json({ photo: photoResult.rows[0], xp: photoXpResult });
   } catch (err) {
     console.error('Upload photo error:', err);
     res.status(500).json({ error: 'Failed to upload photo' });

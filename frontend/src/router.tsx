@@ -13,6 +13,7 @@ const Splash = lazy(() => import('./pages/Splash'));
 const Trending = lazy(() => import('./pages/Trending'));
 const QuickRate = lazy(() => import('./pages/QuickRate'));
 const LocationPermission = lazy(() => import('./pages/LocationPermission'));
+const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 
 function PageLoader() {
  return (
@@ -59,6 +60,7 @@ export default function AppRouter() {
  <Route path="/profile" element={<Profile />} />
  <Route path="/auth" element={<Auth />} />
  <Route path="/trending" element={<Trending />} />
+ <Route path="/leaderboard" element={<Leaderboard />} />
  <Route path="*" element={<NotFound />} />
  </Routes>
  </ErrorBoundary>

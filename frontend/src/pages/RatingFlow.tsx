@@ -11,6 +11,9 @@ import { useRestaurantStore } from '../stores/restaurantStore';
 // authStore import kept for potential future use
 import { useToastStore } from '../components/ui/Toast';
 import { useDraftStore } from '../stores/draftStore';
+import { useGamificationStore } from '../stores/gamificationStore';
+import XpGainToast from '../components/ui/XpGainToast';
+import LevelUpOverlay from '../components/ui/LevelUpOverlay';
 import api from '../services/api';
 import type { Restaurant, CriteriaScores } from '../types';
 
@@ -63,6 +66,11 @@ export default function RatingFlow() {
  const [uploading, setUploading] = useState(false);
  const [submitting, setSubmitting] = useState(false);
  const [photoFailed, setPhotoFailed] = useState(false);
+ const [ratingXpGains, setRatingXpGains] = useState<{ amount: number; source: string }[]>([]);
+ const [showLevelUp, setShowLevelUp] = useState(false);
+ const [newLevel, setNewLevel] = useState(1);
+ const [newRank, setNewRank] = useState('newbie');
+ const { addXpGain } = useGamificationStore();
  const loadedAtRef = useRef(Date.now());
 
  // Reset loaded_at timestamp when component mounts
@@ -260,6 +268,18 @@ export default function RatingFlow() {
  }
  // Invalidate so home page refetches fresh data on return
  useRestaurantStore.getState().invalidate();
+
+ // Parse gamification response
+ if (ratingData.xp_gained) {
+ const gains = [{ amount: ratingData.xp_gained, source: 'rating' }];
+ setRatingXpGains(gains);
+ addXpGain(ratingData.xp_gained, 'rating');
+ }
+ if (ratingData.level_up) {
+ setNewLevel(ratingData.new_level || 2);
+ setNewRank(ratingData.rank || 'newbie');
+ setShowLevelUp(true);
+ }
 
  setStep(4);
  addToast(t('rating.thankYou'), 'success');
@@ -607,6 +627,13 @@ export default function RatingFlow() {
  animate={{ opacity: 1, scale: 1 }}
  transition={{ type: 'spring', damping: 20 }}
  >
+ {/* XP Gain Toast */}
+ <XpGainToast gains={ratingXpGains} onDone={() => setRatingXpGains([])} />
+
+ {/* Level Up Overlay */}
+ {showLevelUp && (
+ <LevelUpOverlay level={newLevel} rank={newRank} onClose={() => setShowLevelUp(false)} />
+ )}
  {/* Animated checkmark */}
  <motion.div
  className="w-20 h-20 rounded-[22px] bg-teal-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-teal-500/20"

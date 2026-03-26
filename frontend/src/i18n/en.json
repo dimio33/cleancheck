@@ -248,6 +248,33 @@
     "updateAvailable": "Update available",
     "update": "Update"
   },
+  "gamification": {
+    "level": "Level",
+    "xp": "XP",
+    "xpGained": "+{{amount}} XP",
+    "levelUp": "Level Up!",
+    "newLevel": "Level {{level}} reached!",
+    "streak": "{{days}} days",
+    "streakLabel": "Streak",
+    "streakMotivation": "Rate today to keep your streak!",
+    "streakBroken": "Streak broken — start a new one!",
+    "dailyBonus": "Daily Bonus",
+    "dailyBonusClaimed": "+15 XP daily bonus!",
+    "leaderboard": "Leaderboard",
+    "weeklyTop": "Top 10 this week",
+    "yourRank": "You're #{{rank}} in {{city}}!",
+    "allCities": "All Cities",
+    "cityChampion": "City Champion",
+    "firstRater": "First!",
+    "ranks": {
+      "newbie": "Newbie",
+      "regular": "Regular",
+      "inspector": "Hygiene Inspector",
+      "master": "Hygiene Master",
+      "expert": "Cleanliness Expert",
+      "legend": "CleanCheck Legend"
+    }
+  },
   "common": {
     "back": "Back",
     "cancel": "Cancel",

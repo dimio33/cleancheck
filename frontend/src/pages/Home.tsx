@@ -7,8 +7,11 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import { getDistance, getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useAuthStore } from '../stores/authStore';
+import { useGamificationStore } from '../stores/gamificationStore';
 import RestaurantCard from '../components/ui/RestaurantCard';
 import PullToRefresh from '../components/ui/PullToRefresh';
+import StreakBadge from '../components/ui/StreakBadge';
+import XpGainToast from '../components/ui/XpGainToast';
 import { RestaurantCardSkeleton } from '../components/ui/Skeleton';
 import api from '../services/api';
 
@@ -115,6 +118,17 @@ export default function Home() {
  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
  const searchIdRef = useRef(0);
 
+ const { streak, xpGains, fetchGamification, recordDailyLogin, clearXpGains } = useGamificationStore();
+
+ // Fetch gamification data and record daily login on mount
+ useEffect(() => {
+ if (user && user.id !== 'guest') {
+ fetchGamification(user.id);
+ recordDailyLogin(user.id);
+ }
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [user?.id]);
+
  const searchCity = useCallback((q: string) => {
  if (debounceRef.current) clearTimeout(debounceRef.current);
  setCitySearch(q);
@@ -209,11 +223,17 @@ export default function Home() {
  {t(getGreetingKey())} 👋
  </h1>
  </div>
+ <div className="flex items-center gap-2">
+ <StreakBadge streak={streak} />
  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm">
  <span className="text-[14px] font-bold text-white">{userInitial}</span>
  </div>
  </div>
  </div>
+ </div>
+
+ {/* XP Gain Toast */}
+ <XpGainToast gains={xpGains} onDone={clearXpGains} />
 
  {/* City Search */}
  <div className="px-5 pb-3">
@@ -285,8 +305,11 @@ export default function Home() {
  {t(getGreetingKey())} 👋
  </h1>
  </div>
+ <div className="flex items-center gap-2">
+ <StreakBadge streak={streak} />
  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm">
  <span className="text-[14px] font-bold text-white">{userInitial}</span>
+ </div>
  </div>
  </div>
  </div>
@@ -368,6 +391,18 @@ export default function Home() {
  </svg>
  </div>
  <span className="text-[11px] font-semibold text-stone-900">{t('home.mapAction')}</span>
+ </button>
+
+ <button
+ onClick={() => navigate('/leaderboard')}
+ className="flex-1 bg-white rounded-xl p-3 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+ >
+ <div className="w-9 h-9 rounded-[10px] bg-purple-50 flex items-center justify-center mx-auto mb-1.5">
+ <svg className="w-[18px] h-[18px] text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.023 6.023 0 01-2.77.896m5.25-6.624a48.374 48.374 0 00-6-1.5m12.915 2.52a48.374 48.374 0 00-6-1.5m.915 4.98a6.023 6.023 0 01-2.77-.896" />
+ </svg>
+ </div>
+ <span className="text-[11px] font-semibold text-stone-900">{t('gamification.leaderboard')}</span>
  </button>
  </div>
 
