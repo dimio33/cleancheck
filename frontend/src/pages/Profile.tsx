@@ -114,7 +114,7 @@ export default function Profile() {
  <h2 className="text-xl font-bold text-white tracking-[-0.3px]">
  {displayUser?.username}
  <span className="text-sm font-normal text-white/60 ml-1.5">
- — {t(`gamification.ranks.${rank}`, rank)}
+ — {String(t(`gamification.ranks.${rank}`, rank))}
  </span>
  </h2>
  <p className="text-[13px] text-white/70 mt-0.5">
