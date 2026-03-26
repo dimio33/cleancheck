@@ -51,9 +51,12 @@ export default function Profile() {
  const gamification = profileData?.gamification || {};
  const xp = gamification.xp ?? profileData?.user?.xp ?? 0;
  const level = gamification.level ?? profileData?.user?.level ?? 1;
- const rank = gamification.rank ?? profileData?.user?.rank ?? 'newbie';
- const xpForNextLevel = gamification.xp_for_next_level ?? 100;
- const xpProgress = gamification.xp_progress ?? 0;
+ const rankObj = gamification.rank;
+ const rank = typeof rankObj === 'object' && rankObj !== null
+   ? (i18n.language === 'de' ? rankObj.de : rankObj.en) || 'newbie'
+   : rankObj ?? 'newbie';
+ const xpForNextLevel = gamification.xpForNextLevel ?? 100;
+ const xpProgress = gamification.progress ?? 0;
 
  if (!user) {
  return (
@@ -114,7 +117,7 @@ export default function Profile() {
  <h2 className="text-xl font-bold text-white tracking-[-0.3px]">
  {displayUser?.username}
  <span className="text-sm font-normal text-white/60 ml-1.5">
- — {String(t(`gamification.ranks.${rank}`, rank))}
+ — {rank}
  </span>
  </h2>
  <p className="text-[13px] text-white/70 mt-0.5">

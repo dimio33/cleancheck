@@ -9,9 +9,9 @@ interface XpBarProps {
   progress: number;
 }
 
-export default function XpBar({ xp, level, rank, xpForNextLevel, progress }: XpBarProps) {
+export default function XpBar({ level, rank, xpForNextLevel, progress }: XpBarProps) {
   const { t } = useTranslation();
-  const clampedProgress = Math.min(Math.max(progress, 0), 100);
+  const clampedProgress = Math.min(Math.max(progress * 100, 0), 100);
 
   return (
     <div className="w-full">
@@ -20,7 +20,7 @@ export default function XpBar({ xp, level, rank, xpForNextLevel, progress }: XpB
           {t('gamification.level')} {level}
         </span>
         <span className="text-xs text-white/70">
-          {xp} / {xpForNextLevel} {t('gamification.xp')}
+          {Math.round(progress * xpForNextLevel)} / {xpForNextLevel} {t('gamification.xp')}
         </span>
       </div>
       <div className="w-full h-2.5 bg-white/20 rounded-full overflow-hidden">
@@ -32,7 +32,7 @@ export default function XpBar({ xp, level, rank, xpForNextLevel, progress }: XpB
         />
       </div>
       <p className="text-[11px] text-white/60 mt-1 text-center">
-        {t(`gamification.ranks.${rank}`, rank)}
+        {rank}
       </p>
     </div>
   );
