@@ -85,7 +85,7 @@ export default function Trending() {
  <div className="flex-1 min-w-0">
  <span className="text-sm font-medium text-stone-800 block truncate">{r.name}</span>
  <span className="text-xs text-stone-400">
- {r.city || ''} · {r.recent_ratings} {t('trending.recentRatings')}
+ {r.city || ''} · {r.recent_ratings} {t('trending.recentRatings', { count: Number(r.recent_ratings) })}
  </span>
  </div>
  <div className="flex items-center gap-1 text-teal-500">

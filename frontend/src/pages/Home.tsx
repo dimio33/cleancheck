@@ -77,7 +77,7 @@ function TrendingInline() {
  </div>
  <div className="flex-1 min-w-0">
  <span className="text-sm font-medium text-stone-800 block truncate">{r.name}</span>
- <span className="text-xs text-stone-400">{r.city || ''} · {r.recent_ratings} {t('trending.recentRatings')}</span>
+ <span className="text-xs text-stone-400">{r.city || ''} · {r.recent_ratings} {t('trending.recentRatings', { count: Number(r.recent_ratings) })}</span>
  </div>
  </motion.button>
  );
@@ -88,12 +88,12 @@ function TrendingInline() {
 
 const DEFAULT_MAP_ZOOM = 14;
 
-/** Time-based greeting */
-function getGreeting(): string {
+/** Time-based greeting key */
+function getGreetingKey(): string {
  const h = new Date().getHours();
- if (h < 12) return 'Guten Morgen';
- if (h < 18) return 'Guten Tag';
- return 'Guten Abend';
+ if (h < 12) return 'home.greetingMorning';
+ if (h < 18) return 'home.greetingAfternoon';
+ return 'home.greetingEvening';
 }
 
 export default function Home() {
@@ -203,7 +203,7 @@ export default function Home() {
  <div>
  <p className="text-[12px] text-stone-400 font-medium">{t('home.searchCity')}</p>
  <h1 className="text-[20px] font-bold text-stone-900 tracking-[-0.5px]">
- {getGreeting()} 👋
+ {t(getGreetingKey())} 👋
  </h1>
  </div>
  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm">
@@ -279,7 +279,7 @@ export default function Home() {
  {searchOverride ? citySearch || t('home.searchCity') : t('home.myLocation')}
  </p>
  <h1 className="text-[20px] font-bold text-stone-900 tracking-[-0.5px]">
- {getGreeting()} 👋
+ {t(getGreetingKey())} 👋
  </h1>
  </div>
  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm">
@@ -340,7 +340,7 @@ export default function Home() {
  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
  </svg>
  </div>
- <span className="text-[11px] font-semibold text-stone-900">Top bewertet</span>
+ <span className="text-[11px] font-semibold text-stone-900">{t('home.topRated')}</span>
  </button>
 
  <button
@@ -352,7 +352,7 @@ export default function Home() {
  <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
  </svg>
  </div>
- <span className="text-[11px] font-semibold text-stone-900">Bewerten</span>
+ <span className="text-[11px] font-semibold text-stone-900">{t('home.rateAction')}</span>
  </button>
 
  <button
@@ -364,7 +364,7 @@ export default function Home() {
  <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
  </svg>
  </div>
- <span className="text-[11px] font-semibold text-stone-900">Karte</span>
+ <span className="text-[11px] font-semibold text-stone-900">{t('home.mapAction')}</span>
  </button>
  </div>
 
@@ -438,7 +438,7 @@ export default function Home() {
  sortBy === 'score' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-400'
  }`}
  >
- Score
+ {t('home.sortScore')}
  </button>
  </div>
 

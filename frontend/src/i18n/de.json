@@ -42,7 +42,16 @@
     "searchCity": "Stadt oder Ort suchen...",
     "myLocation": "Mein Standort",
     "enableLocationHint": "Standort aktivieren für die Karte",
-    "enableLocationHintDesc": "Aktiviere deinen Standort oder suche nach einer Stadt, um Restaurants zu sehen."
+    "enableLocationHintDesc": "Aktiviere deinen Standort oder suche nach einer Stadt, um Restaurants zu sehen.",
+    "greetingMorning": "Guten Morgen",
+    "greetingAfternoon": "Guten Tag",
+    "greetingEvening": "Guten Abend",
+    "topRated": "Top bewertet",
+    "rateAction": "Bewerten",
+    "mapAction": "Karte",
+    "beFirstToRate": "Als Erster bewerten →",
+    "sortDistance": "Entfernung",
+    "sortScore": "Score"
   },
   "search": {
     "placeholder": "Restaurant suchen...",
@@ -212,7 +221,9 @@
     "title": "Trending",
     "desc": "Die meistbewerteten Restaurants der letzten 7 Tage",
     "empty": "Noch keine Trends. Bewerte Restaurants, um Trends zu sehen!",
-    "recentRatings": "Bewertungen diese Woche"
+    "recentRatings": "Bewertungen diese Woche",
+    "recentRatings_one": "Bewertung diese Woche",
+    "recentRatings_other": "Bewertungen diese Woche"
   },
   "share": {
     "title": "Teilen",

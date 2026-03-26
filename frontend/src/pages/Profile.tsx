@@ -38,7 +38,7 @@ export default function Profile() {
  email: profileData.user.email,
  created_at: profileData.user.created_at,
  rating_count: profileData.stats?.total_ratings || 0,
- restaurant_count: profileData.stats?.cities_visited || 0,
+ restaurant_count: profileData.stats?.unique_restaurants || 0,
  average_score: profileData.stats?.avg_score || 0,
  }
  : user

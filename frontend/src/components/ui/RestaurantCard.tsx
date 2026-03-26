@@ -71,7 +71,7 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
           {subtitleParts.join(' \u00B7 ')}
         </p>
         {!hasScore && (
-          <p className="text-[11px] text-teal-500 font-medium mt-0.5">Als Erster bewerten →</p>
+          <p className="text-[11px] text-teal-500 font-medium mt-0.5">{t('home.beFirstToRate')}</p>
         )}
       </div>
 

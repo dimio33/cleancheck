@@ -37,19 +37,18 @@ router.get('/:id/profile', async (req: Request, res: Response): Promise<void> =>
     const statsResult = await query<{
       total_ratings: string;
       avg_score: string;
-      cities_visited: string;
+      unique_restaurants: string;
     }>(
       `SELECT
         COUNT(*) as total_ratings,
         COALESCE(AVG(r.overall_score), 0) as avg_score,
-        COUNT(DISTINCT rest.city) as cities_visited
+        COUNT(DISTINCT r.restaurant_id) as unique_restaurants
        FROM ratings r
-       LEFT JOIN restaurants rest ON r.restaurant_id = rest.id
        WHERE r.user_id = $1`,
       [id]
     );
 
-    const stats = statsResult.rows[0] || { total_ratings: '0', avg_score: '0', cities_visited: '0' };
+    const stats = statsResult.rows[0] || { total_ratings: '0', avg_score: '0', unique_restaurants: '0' };
 
     res.json({
       user: userResult.rows[0],
@@ -57,7 +56,7 @@ router.get('/:id/profile', async (req: Request, res: Response): Promise<void> =>
       stats: {
         total_ratings: parseInt(stats.total_ratings || '0', 10),
         avg_score: Math.round(parseFloat(stats.avg_score || '0') * 10) / 10,
-        cities_visited: parseInt(stats.cities_visited || '0', 10),
+        unique_restaurants: parseInt(stats.unique_restaurants || '0', 10),
       },
     });
   } catch (err) {

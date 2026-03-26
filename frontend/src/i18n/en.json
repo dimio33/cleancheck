@@ -42,7 +42,16 @@
     "searchCity": "Search city or place...",
     "myLocation": "My Location",
     "enableLocationHint": "Enable location for the map",
-    "enableLocationHintDesc": "Enable your location or search for a city to see restaurants."
+    "enableLocationHintDesc": "Enable your location or search for a city to see restaurants.",
+    "greetingMorning": "Good Morning",
+    "greetingAfternoon": "Good Afternoon",
+    "greetingEvening": "Good Evening",
+    "topRated": "Top Rated",
+    "rateAction": "Rate",
+    "mapAction": "Map",
+    "beFirstToRate": "Be the first to rate →",
+    "sortDistance": "Distance",
+    "sortScore": "Score"
   },
   "search": {
     "placeholder": "Search restaurants...",
@@ -212,7 +221,9 @@
     "title": "Trending",
     "desc": "Most rated restaurants in the last 7 days",
     "empty": "No trends yet. Rate restaurants to see trends!",
-    "recentRatings": "ratings this week"
+    "recentRatings": "ratings this week",
+    "recentRatings_one": "rating this week",
+    "recentRatings_other": "ratings this week"
   },
   "share": {
     "title": "Share",

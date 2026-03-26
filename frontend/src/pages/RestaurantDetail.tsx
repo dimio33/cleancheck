@@ -93,6 +93,12 @@ export default function RestaurantDetail() {
             setApiRatings(detail.ratings || []);
             if (detail.restaurant) setApiRestaurant(detail.restaurant);
           }
+        } else if (id.startsWith('google-')) {
+          // Google Places restaurant — try backend lookup by google_place_id
+          const { data } = await api.get(`/restaurants/${id}`);
+          if (cancelled) return;
+          setApiRatings(data.ratings || []);
+          if (data.restaurant) setApiRestaurant(data.restaurant);
         } else {
           const { data } = await api.get(`/restaurants/${id}`);
           if (cancelled) return;

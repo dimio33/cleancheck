@@ -73,22 +73,30 @@ router.get('/trending', async (_req: Request, res: Response): Promise<void> => {
   }
 });
 
-// GET /api/restaurants/:id — full restaurant details
+// GET /api/restaurants/:id — full restaurant details (supports UUID or google_place_id)
 router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const id = req.params.id as string;
 
-    // Validate UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(id)) {
+    let restaurantResult;
+
+    if (uuidRegex.test(id)) {
+      restaurantResult = await query(
+        `SELECT * FROM restaurants WHERE id = $1`,
+        [id]
+      );
+    } else if (id.startsWith('google-')) {
+      // Lookup by google_place_id
+      const placeId = id.replace('google-', '');
+      restaurantResult = await query(
+        `SELECT * FROM restaurants WHERE google_place_id = $1`,
+        [placeId]
+      );
+    } else {
       res.status(400).json({ error: 'Invalid restaurant ID format' });
       return;
     }
-
-    const restaurantResult = await query(
-      `SELECT * FROM restaurants WHERE id = $1`,
-      [id]
-    );
 
     if (restaurantResult.rows.length === 0) {
       res.status(404).json({ error: 'Restaurant not found' });
