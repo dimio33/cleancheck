@@ -313,8 +313,15 @@ export default function RatingFlow() {
 
  return (
  <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
+ {/* Back button */}
+ <div className="px-4 pb-1" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
+ <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-stone-500 text-sm active:scale-95 transition-transform">
+ <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+ {t('common.back', 'Zurück')}
+ </button>
+ </div>
  {/* Progress bar */}
- <div className="px-4 pt-4 pb-2">
+ <div className="px-4 pt-2 pb-2">
  <div className="flex gap-1.5">
  {(preselected ? [2, 4] : [1, 2, 3, 4]).map((s) => (
  <div

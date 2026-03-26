@@ -227,11 +227,13 @@ export default function Home() {
  </div>
  <div className="flex items-center gap-2">
  <StreakBadge streak={streak} />
+ <button onClick={() => navigate('/profile')} className="active:scale-95 transition-transform">
  <AvatarFrame frame={activeFrame} size="sm">
  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm">
  <span className="text-[14px] font-bold text-white">{userInitial}</span>
  </div>
  </AvatarFrame>
+ </button>
  </div>
  </div>
  </div>
@@ -311,11 +313,13 @@ export default function Home() {
  </div>
  <div className="flex items-center gap-2">
  <StreakBadge streak={streak} />
+ <button onClick={() => navigate('/profile')} className="active:scale-95 transition-transform">
  <AvatarFrame frame={activeFrame} size="sm">
  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm">
  <span className="text-[14px] font-bold text-white">{userInitial}</span>
  </div>
  </AvatarFrame>
+ </button>
  </div>
  </div>
  </div>

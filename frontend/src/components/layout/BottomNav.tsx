@@ -70,7 +70,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-xl border-t border-black/[0.04] pb-safe" style={{ WebkitBackdropFilter: 'blur(20px)' }}>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-xl border-t border-black/[0.04]" style={{ WebkitBackdropFilter: 'blur(20px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       <div className="flex items-center h-16 max-w-lg mx-auto px-2">
         <Tab path="/" icon={<MapIcon />} label={t('nav.home')} />
         <Tab path="/trending" icon={<TrendingIcon />} label={t('nav.trending')} />

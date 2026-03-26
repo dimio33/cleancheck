@@ -7,13 +7,17 @@ export default function TopBar() {
   const { i18n } = useTranslation();
   const showBack = location.pathname !== '/' && location.pathname !== '/search' && location.pathname !== '/profile';
 
+  // Hide TopBar on pages that have their own hero/header
+  const hideTopBar = location.pathname.startsWith('/restaurant/') || location.pathname === '/rate' || location.pathname === '/profile';
+  if (hideTopBar) return null;
+
   const toggleLang = () => {
     const next = i18n.language.startsWith('de') ? 'en' : 'de';
     i18n.changeLanguage(next);
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-stone-100">
+    <header className="sticky top-0 z-50 bg-white border-b border-stone-100" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       <div className="flex items-center justify-between h-14 px-4 max-w-lg mx-auto">
         {showBack ? (
           <button

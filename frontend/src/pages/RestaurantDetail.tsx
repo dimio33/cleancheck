@@ -182,7 +182,7 @@ export default function RestaurantDetail() {
   return (
     <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
       {/* Teal Hero Header */}
-      <div className="bg-gradient-to-br from-teal-600 to-teal-500 px-5 pt-5 pb-12">
+      <div className="bg-gradient-to-br from-teal-600 to-teal-500 px-5 pb-12" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)' }}>
         {/* Top row: back + fav/share/qr */}
         <div className="flex items-center justify-between mb-4">
           <button

@@ -103,13 +103,13 @@ export default function Profile() {
  <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
  {/* Teal Gradient Hero */}
  <div
-   className={`px-5 pt-8 pb-12 text-center ${hasAnimatedProfile ? 'animate-gradient-shift bg-[length:200%_200%]' : ''}`}
+   className={`px-5 pb-14 text-center ${hasAnimatedProfile ? 'animate-gradient-shift bg-[length:200%_200%]' : ''}`}
    style={hasAnimatedProfile
-     ? { backgroundImage: 'linear-gradient(135deg, #0d9488, #14b8a6, #0891b2, #0d9488)' }
-     : { backgroundImage: 'linear-gradient(to bottom right, #0d9488, #14b8a6)' }
+     ? { backgroundImage: 'linear-gradient(135deg, #0d9488, #14b8a6, #0891b2, #0d9488)', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 2.5rem)' }
+     : { backgroundImage: 'linear-gradient(to bottom right, #0d9488, #14b8a6)', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 2.5rem)' }
    }
  >
- <div className="relative w-[72px] h-[72px] mx-auto mb-3">
+ <div className="relative w-[72px] h-[72px] mx-auto mb-4">
  <AvatarFrame frame={activeFrame} size="lg">
  <motion.div
  className="w-full h-full rounded-full bg-white/20 flex items-center justify-center"
@@ -133,11 +133,11 @@ export default function Profile() {
  — {rank}
  </span>
  </h2>
- <p className="text-[13px] text-white/70 mt-0.5">
+ <p className="text-[13px] text-white/70 mt-1.5">
  {t('profile.memberSince')} {displayUser && new Date(displayUser.created_at).toLocaleDateString()}
  </p>
  {/* XP Bar */}
- <div className="mt-4 px-4">
+ <div className="mt-5 px-4">
  <XpBar xp={xp} level={level} rank={rank} xpForNextLevel={xpForNextLevel} progress={xpProgress} />
  </div>
  </div>
