@@ -41,7 +41,10 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 app.set('trust proxy', 1);
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: false,
+}));
 app.use(cors({
   origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'https://cleancheck.e-findo.de', 'capacitor://localhost'],
   credentials: true,
