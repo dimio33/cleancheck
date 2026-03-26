@@ -111,6 +111,7 @@ export default function Home() {
  const [nameFilter, setNameFilter] = useState('');
  const [cuisineFilter, setCuisineFilter] = useState('All');
  const [showMap, setShowMap] = useState(true);
+ const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
  const searchIdRef = useRef(0);
 
@@ -131,6 +132,7 @@ export default function Home() {
  const newLat = parseFloat(result.lat);
  const newLng = parseFloat(result.lon);
  setSearchOverride({ lat: newLat, lng: newLng });
+ setMapCenter({ lat: newLat, lng: newLng });
  setCitySearch(result.display_name.split(',')[0]);
  setCityResults([]);
  useRestaurantStore.setState({ lastFetchLocation: null });
@@ -138,6 +140,7 @@ export default function Home() {
 
  const resetToGps = () => {
  setSearchOverride(null);
+ setMapCenter(lat && lng ? { lat, lng } : null);
  setCitySearch('');
  useRestaurantStore.setState({ lastFetchLocation: null });
  };
@@ -373,8 +376,9 @@ export default function Home() {
  <div className="mx-5 mb-4 rounded-2xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.06)]" style={{ height: 300 }}>
  <APIProvider apiKey={import.meta.env.VITE_GOOGLE_PLACES_KEY || ''}>
  <Map
- defaultCenter={{ lat: effectiveLat, lng: effectiveLng }}
+ center={mapCenter || { lat: effectiveLat, lng: effectiveLng }}
  defaultZoom={mapZoom}
+ onCameraChanged={(ev) => setMapCenter(ev.detail.center)}
  mapId={import.meta.env.VITE_GOOGLE_MAPS_ID || undefined}
  gestureHandling="greedy"
  disableDefaultUI={false}
