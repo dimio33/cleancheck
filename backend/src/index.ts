@@ -66,6 +66,20 @@ app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/contests', contestRoutes);
 app.use('/api/rewards', rewardsRoutes);
 
+// Client error logging (for debugging native apps)
+const clientLogs: Array<{ timestamp: string; level: string; message: string; meta?: unknown }> = [];
+app.post('/api/client-logs', (req: Request, res: Response) => {
+  const { level, message, meta } = req.body;
+  const entry = { timestamp: new Date().toISOString(), level, message, meta };
+  clientLogs.push(entry);
+  if (clientLogs.length > 200) clientLogs.shift();
+  console.log(`[CLIENT ${level?.toUpperCase()}]`, message, meta ? JSON.stringify(meta) : '');
+  res.json({ ok: true });
+});
+app.get('/api/client-logs', (_req: Request, res: Response) => {
+  res.json(clientLogs);
+});
+
 // Health check
 app.get('/api/health', (_req: Request, res: Response) => {
   const moderation = getModerationStatus();
