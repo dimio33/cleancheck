@@ -435,19 +435,32 @@ export default function Home() {
  >
  {Capacitor.isNativePlatform() ? (
    <>
-     {restaurantsWithDistance.slice(0, 20).map((r) => (
-       <Marker
-         key={r.id}
-         position={{ lat: r.lat, lng: r.lng }}
-         onClick={() => navigate(`/restaurant/${r.id}`)}
-         label={{
-           text: r.clean_score !== null ? r.clean_score.toFixed(1) : '?',
-           fontSize: '11px',
-           fontWeight: '700',
-           color: 'white',
-         }}
-       />
-     ))}
+     {restaurantsWithDistance.slice(0, 20).map((r) => {
+       const markerColor = r.clean_score !== null
+         ? (r.clean_score >= 7 ? '#10B981' : r.clean_score >= 4 ? '#F59E0B' : '#EF4444')
+         : '#9CA3AF';
+       return (
+         <Marker
+           key={r.id}
+           position={{ lat: r.lat, lng: r.lng }}
+           onClick={() => navigate(`/restaurant/${r.id}`)}
+           icon={{
+             path: 0,
+             scale: 14,
+             fillColor: markerColor,
+             fillOpacity: 1,
+             strokeColor: 'white',
+             strokeWeight: 2.5,
+           }}
+           label={{
+             text: r.clean_score !== null ? r.clean_score.toFixed(1) : '?',
+             fontSize: '10px',
+             fontWeight: '700',
+             color: 'white',
+           }}
+         />
+       );
+     })}
      <Marker
        position={{ lat: effectiveLat, lng: effectiveLng }}
        icon={{

@@ -180,6 +180,40 @@ export default function Profile() {
  </div>
  )}
 
+ {/* Reward Roadmap */}
+ <div className="px-4 mb-6">
+ <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.rewardRoadmap', 'Belohnungen & Level')}</h3>
+ <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 p-4">
+ {[
+   { lvl: 5, icon: '🥉', title: t('rewards.bronze', 'Bronze-Rahmen'), desc: t('rewards.bronzeDesc', 'Dein erster Rahmen') },
+   { lvl: 10, icon: '🥈', title: t('rewards.silver', 'Silber-Rahmen'), desc: t('rewards.silverDesc', 'Exklusiver Silber-Look') },
+   { lvl: 15, icon: '🥇', title: t('rewards.gold', 'Gold-Rahmen + 5€ Gutschein'), desc: t('rewards.goldDesc', 'Dein erster echter Reward') },
+   { lvl: 20, icon: '✏️', title: t('rewards.customTitle', 'Custom Titel'), desc: t('rewards.customTitleDesc', 'Wähle deinen eigenen Titel') },
+   { lvl: 25, icon: '💎', title: t('rewards.diamond', 'Diamant-Rahmen + 10€ Gutschein'), desc: t('rewards.diamondDesc', 'Premium-Status freigeschaltet') },
+   { lvl: 30, icon: '✨', title: t('rewards.animated', 'Animiertes Profil'), desc: t('rewards.animatedDesc', 'Dein Profil wird lebendig') },
+   { lvl: 40, icon: '👑', title: t('rewards.legendary', 'Legendärer Rahmen + 25€ Gutschein'), desc: t('rewards.legendaryDesc', 'Der ultimative Reward') },
+ ].map((reward, i) => {
+   const reached = level >= reward.lvl;
+   return (
+     <div key={reward.lvl} className="flex items-start gap-3 relative">
+       {i < 6 && <div className={`absolute left-[15px] top-[32px] w-[2px] h-[calc(100%)] ${reached ? 'bg-teal-300' : 'bg-stone-200'}`} />}
+       <div className={`w-[32px] h-[32px] rounded-full flex items-center justify-center shrink-0 text-sm z-10 ${reached ? 'bg-teal-100 ring-2 ring-teal-400' : 'bg-stone-100'}`}>
+         {reward.icon}
+       </div>
+       <div className={`flex-1 pb-4 ${!reached ? 'opacity-50' : ''}`}>
+         <div className="flex items-center gap-2">
+           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${reached ? 'bg-teal-100 text-teal-700' : 'bg-stone-100 text-stone-400'}`}>Level {reward.lvl}</span>
+           {reached && <span className="text-[10px] text-teal-500 font-medium">✓</span>}
+         </div>
+         <p className="text-sm font-medium text-stone-800 mt-0.5">{reward.title}</p>
+         <p className="text-xs text-stone-400">{reward.desc}</p>
+       </div>
+     </div>
+   );
+ })}
+ </div>
+ </div>
+
  {/* Saved Restaurants */}
  {(() => {
  const favorites = useFavoritesStore((s) => s.favorites);

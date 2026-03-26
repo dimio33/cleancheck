@@ -31,8 +31,8 @@ export default function TopBar() {
           </button>
         ) : <div className="w-11" />}
 
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500" />
+        <div className="flex items-center gap-2">
+          <img src="/logo.png" alt="" className="w-6 h-6" />
           <span className="font-semibold text-stone-800 tracking-tight">CleanCheck</span>
         </div>
 
@@ -41,7 +41,7 @@ export default function TopBar() {
           className="flex items-center justify-center w-11 h-11 -mr-2 text-xs font-medium text-stone-400 uppercase tracking-widest"
           aria-label="Toggle language"
         >
-          {i18n.language.startsWith('de') ? 'EN' : 'DE'}
+          <span className="text-lg">{i18n.language.startsWith('de') ? '🇬🇧' : '🇩🇪'}</span>
         </button>
       </div>
     </header>

@@ -8,7 +8,7 @@ import AnimatedScore from '../components/ui/AnimatedScore';
 import { useGeolocation, getHighAccuracyPosition } from '../hooks/useGeolocation';
 import { getDistance, formatDistance, getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
-// authStore import kept for potential future use
+import { useAuthStore } from '../stores/authStore';
 import { useToastStore } from '../components/ui/Toast';
 import { useDraftStore } from '../stores/draftStore';
 import { useGamificationStore } from '../stores/gamificationStore';
@@ -47,6 +47,7 @@ export default function RatingFlow() {
 
  const preselectedId = (location.state as { restaurantId?: string } | null)?.restaurantId;
  const preselected = preselectedId ? restaurants.find((r) => r.id === preselectedId) : undefined;
+ const isGuest = !useAuthStore.getState().isAuthenticated || useAuthStore.getState().user?.id === 'guest';
 
  const [step, setStep] = useState(preselected ? 2 : 1);
  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(preselected || null);
@@ -249,9 +250,10 @@ export default function RatingFlow() {
  await api.post(`/ratings/${ratingData.rating.id}/photos`, formData, {
  headers: { 'Content-Type': undefined }, // Let axios set boundary automatically
  });
- } catch {
+ } catch (photoErr: any) {
  setPhotoFailed(true);
- addToast(t('rating.photoUploadFailed'), 'error');
+ const isAuthError = photoErr?.response?.status === 401 || photoErr?.response?.status === 403;
+ addToast(isAuthError ? t('rating.photoLoginRequired', 'Melde dich an, um Fotos hochzuladen') : t('rating.photoUploadFailed'), isAuthError ? 'info' : 'error');
  } finally {
  setUploading(false);
  }
@@ -533,8 +535,16 @@ export default function RatingFlow() {
  <h2 className="text-xl font-semibold text-stone-900">{t('rating.step3Title')}</h2>
  <p className="text-sm text-stone-500 mt-1 mb-6">{t('rating.step3Desc')}</p>
 
- {/* Photo upload */}
- {photoPreview ? (
+ {/* Photo upload (registered users only) */}
+ {isGuest ? (
+ <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl mb-4">
+ <svg className="w-5 h-5 text-stone-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+ <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+ </svg>
+ <span className="text-xs text-stone-500">{t('rating.photoLoginHint', 'Erstelle ein Konto, um Fotos hochzuladen')}</span>
+ </div>
+ ) : photoPreview ? (
  <div className="relative mb-4">
  <img src={photoPreview} alt="" className="w-full h-48 object-cover rounded-xl" />
  <button
