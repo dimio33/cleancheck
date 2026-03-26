@@ -275,6 +275,23 @@
       "legend": "CleanCheck-Legende"
     }
   },
+  "rewards": {
+    "title": "Belohnungen",
+    "unlocked": "Freigeschaltet",
+    "locked": "Gesperrt",
+    "claimed": "Eingelöst",
+    "claim": "Einlösen",
+    "alreadyClaimed": "Bereits eingelöst",
+    "levelRequired": "Level {{level}} benötigt",
+    "levelsRemaining": "Noch {{count}} Level",
+    "redeemCode": "Einlöse-Code",
+    "digital": "Digital",
+    "voucher": "Gutschein",
+    "noRewards": "Noch keine Belohnungen verfügbar. Steige im Level auf!",
+    "claimSuccess": "Belohnung eingelöst!",
+    "partnerRewards": "Partner-Gutscheine",
+    "partnerRewardsDesc": "Ab Level 15 echte Restaurant-Gutscheine freischalten!"
+  },
   "common": {
     "back": "Zurück",
     "cancel": "Abbrechen",

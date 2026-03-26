@@ -11,6 +11,7 @@ import userRoutes from './routes/users';
 import qrRoutes from './routes/qr';
 import leaderboardRoutes from './routes/leaderboard';
 import contestRoutes from './routes/contests';
+import rewardsRoutes from './routes/rewards';
 import { initModeration, getModerationStatus } from './services/moderationService';
 import { apiLimiter, ratingLimiter } from './middleware/rateLimiter';
 import { query } from './utils/db';
@@ -63,6 +64,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/qr', qrRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/contests', contestRoutes);
+app.use('/api/rewards', rewardsRoutes);
 
 // Health check
 app.get('/api/health', (_req: Request, res: Response) => {

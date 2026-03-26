@@ -275,6 +275,23 @@
       "legend": "CleanCheck Legend"
     }
   },
+  "rewards": {
+    "title": "Rewards",
+    "unlocked": "Unlocked",
+    "locked": "Locked",
+    "claimed": "Claimed",
+    "claim": "Claim",
+    "alreadyClaimed": "Already claimed",
+    "levelRequired": "Level {{level}} required",
+    "levelsRemaining": "{{count}} more levels",
+    "redeemCode": "Redeem Code",
+    "digital": "Digital",
+    "voucher": "Voucher",
+    "noRewards": "No rewards available yet. Level up!",
+    "claimSuccess": "Reward claimed!",
+    "partnerRewards": "Partner Vouchers",
+    "partnerRewardsDesc": "Unlock real restaurant vouchers starting at Level 15!"
+  },
   "common": {
     "back": "Back",
     "cancel": "Cancel",

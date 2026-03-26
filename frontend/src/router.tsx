@@ -14,6 +14,7 @@ const Trending = lazy(() => import('./pages/Trending'));
 const QuickRate = lazy(() => import('./pages/QuickRate'));
 const LocationPermission = lazy(() => import('./pages/LocationPermission'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
+const Rewards = lazy(() => import('./pages/Rewards'));
 
 function PageLoader() {
  return (
@@ -61,6 +62,7 @@ export default function AppRouter() {
  <Route path="/auth" element={<Auth />} />
  <Route path="/trending" element={<Trending />} />
  <Route path="/leaderboard" element={<Leaderboard />} />
+ <Route path="/rewards" element={<Rewards />} />
  <Route path="*" element={<NotFound />} />
  </Routes>
  </ErrorBoundary>

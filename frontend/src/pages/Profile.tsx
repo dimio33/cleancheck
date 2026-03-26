@@ -289,6 +289,18 @@ export default function Profile() {
  <>
  <div className="h-px bg-stone-50" />
  <button
+ onClick={() => navigate('/rewards')}
+ className="flex items-center justify-between w-full p-4 hover:bg-stone-50 transition-colors"
+ >
+ <span className="text-sm text-stone-700 flex items-center gap-2">
+ <span>🎁</span> {t('rewards.title')}
+ </span>
+ <svg className="w-4 h-4 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+ </svg>
+ </button>
+ <div className="h-px bg-stone-50" />
+ <button
  onClick={() => { navigate('/'); setTimeout(logout, 50); }}
  className="flex items-center w-full p-4 hover:bg-stone-50 transition-colors"
  >
