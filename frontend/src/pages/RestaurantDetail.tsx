@@ -10,6 +10,26 @@ import { useFavoritesStore } from '../stores/favoritesStore';
 import { useToastStore } from '../components/ui/Toast';
 import api from '../services/api';
 
+// Fun anonymous name generator (deterministic based on rating ID)
+const PREFIXES = ['Flush', 'Klo', 'Porzellan', 'Hygiene', 'Sauber', 'Glanz', 'Bürsten', 'Spül', 'Duft', 'Schaum', 'Seife', 'Wisch', 'Blank', 'Frisch', 'Putz'];
+const SUFFIXES = ['Master', 'König', 'Prüfer', 'Held', 'Guru', 'Ninja', 'Experte', 'Checker', 'Inspektor', 'Kritiker', 'Profi', 'Boss', 'Legende', 'Titan', 'Genie'];
+const AVATARS = ['🐵', '🦊', '🐸', '🐼', '🦁', '🐯', '🐨', '🐷', '🐮', '🦄', '🐔', '🐧', '🐙', '🦋', '🐢', '🦉', '🐳', '🦈', '🐝', '🐞'];
+
+function hashStr(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function funName(id: string): { name: string; avatar: string } {
+  const h = hashStr(id);
+  const prefix = PREFIXES[h % PREFIXES.length];
+  const suffix = SUFFIXES[(h >> 4) % SUFFIXES.length];
+  const num = (h % 9999) + 1;
+  const avatar = AVATARS[(h >> 8) % AVATARS.length];
+  return { name: `${prefix}${suffix}${num}`, avatar };
+}
+
 const CRITERIA_KEYS = ['cleanliness', 'smell', 'supplies', 'maintenance', 'accessibility'] as const;
 const CRITERIA_DB_MAP: Record<string, string> = {
   cleanliness: 'cleanliness',
@@ -360,12 +380,15 @@ export default function RestaurantDetail() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 text-xs font-medium shrink-0">
-                      {(rating.username || '?').charAt(0).toUpperCase()}
+                    <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-sm shrink-0">
+                      {rating.username
+                        ? <span className="text-stone-500 text-xs font-medium">{rating.username.charAt(0).toUpperCase()}</span>
+                        : <span>{funName(rating.id).avatar}</span>
+                      }
                     </div>
                     <div>
                       <span className="text-sm font-medium text-stone-800">
-                        {rating.username || t('restaurant.anonymous')}
+                        {rating.username || funName(rating.id).name}
                       </span>
                       <span className="text-[10px] text-stone-400 block">
                         {(() => {
