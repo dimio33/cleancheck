@@ -39,6 +39,8 @@ export default function Rewards() {
   const [data, setData] = useState<RewardsData>({ unlocked: [], locked: [], claimed: [] });
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
+  const [activating, setActivating] = useState<string | null>(null);
+  const [activeFrame, setActiveFrame] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const lang = i18n.language.startsWith('de') ? 'de' : 'en';
@@ -69,6 +71,24 @@ export default function Rewards() {
       setClaiming(null);
     }
   };
+
+  const handleActivate = async (rewardId: string) => {
+    setActivating(rewardId);
+    try {
+      const { data: result } = await api.post(`/rewards/${rewardId}/activate`);
+      if (result.success) {
+        setActiveFrame(result.active_frame);
+        setToast(lang === 'de' ? 'Rahmen aktiviert!' : 'Frame activated!');
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch {
+      // Error handled silently
+    } finally {
+      setActivating(null);
+    }
+  };
+
+  const isFrameReward = (r: Reward) => r.name_en?.includes('Frame') || r.name_de?.includes('Rahmen');
 
   const getName = (r: Reward) => lang === 'de' ? r.name_de : r.name_en;
   const getDesc = (r: Reward) => lang === 'de' ? r.description_de : r.description_en;
@@ -202,6 +222,25 @@ export default function Rewards() {
                             <span className="text-[10px] text-stone-400 block">{t('rewards.redeemCode')}</span>
                             <span className="text-sm font-mono font-semibold text-stone-700">{reward.redeem_code}</span>
                           </div>
+                        )}
+                        {isFrameReward(reward) && (
+                          <button
+                            onClick={() => handleActivate(reward.id)}
+                            disabled={activating === reward.id}
+                            className={`mt-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                              activeFrame && reward.name_en?.toLowerCase().includes(activeFrame)
+                                ? 'bg-teal-100 text-teal-700 ring-1 ring-teal-300'
+                                : 'bg-stone-100 text-stone-600 hover:bg-teal-50 hover:text-teal-600'
+                            }`}
+                          >
+                            {activating === reward.id ? (
+                              <div className="w-3 h-3 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-2" />
+                            ) : activeFrame && reward.name_en?.toLowerCase().includes(activeFrame) ? (
+                              <span>✓ {lang === 'de' ? 'Aktiv' : 'Active'}</span>
+                            ) : (
+                              <span>{lang === 'de' ? 'Aktivieren' : 'Activate'}</span>
+                            )}
+                          </button>
                         )}
                       </div>
                     </div>
