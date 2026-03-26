@@ -2,8 +2,9 @@ import { create } from 'zustand';
 
 export type PermissionState = 'prompt' | 'granted' | 'denied' | 'unavailable' | 'unknown';
 
-const DEFAULT_LAT = 48.7758;
-const DEFAULT_LNG = 9.1829;
+// Default: center of Germany (Kassel area) — used until real GPS position arrives
+const DEFAULT_LAT = 51.3127;
+const DEFAULT_LNG = 9.4797;
 
 interface GeoStore {
   lat: number;
