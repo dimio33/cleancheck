@@ -8,6 +8,7 @@ import { useRestaurantStore } from '../stores/restaurantStore';
 import { useDraftStore } from '../stores/draftStore';
 import BadgeCard from '../components/ui/BadgeCard';
 import XpBar from '../components/ui/XpBar';
+import AvatarFrame from '../components/ui/AvatarFrame';
 import { getScoreColor } from '../utils/geo';
 import api from '../services/api';
 import type { Badge, Rating } from '../types';
@@ -19,6 +20,7 @@ export default function Profile() {
 
  const [profileData, setProfileData] = useState<any>(null);
  const [userRatings, setUserRatings] = useState<Rating[]>([]);
+ const [claimedRewards, setClaimedRewards] = useState<any[]>([]);
  const [profileLoading, setProfileLoading] = useState(false);
  const [profileError, setProfileError] = useState(false);
 
@@ -29,6 +31,7 @@ export default function Profile() {
  Promise.all([
  api.get(`/users/${user.id}/profile`).then(({ data }) => setProfileData(data)),
  api.get(`/ratings/user/${user.id}`).then(({ data }) => setUserRatings(data.ratings || [])),
+ api.get('/rewards').then(({ data }) => setClaimedRewards(data.claimed || [])).catch(() => {}),
  ]).catch(() => setProfileError(true)).finally(() => setProfileLoading(false));
  }
  }, [user, isAuthenticated]);
@@ -47,6 +50,8 @@ export default function Profile() {
  : null;
 
  const badges: Badge[] = profileData?.badges || [];
+ const activeFrame: string | null = profileData?.user?.active_frame || null;
+ const hasAnimatedProfile = claimedRewards.some((r: any) => r.name_en === 'Animated Profile');
 
  const gamification = profileData?.gamification || {};
  const xp = gamification.xp ?? profileData?.user?.xp ?? 0;
@@ -97,8 +102,15 @@ export default function Profile() {
  return (
  <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
  {/* Teal Gradient Hero */}
- <div className="bg-gradient-to-br from-teal-600 to-teal-500 px-5 pt-8 pb-12 text-center">
+ <div
+   className={`px-5 pt-8 pb-12 text-center ${hasAnimatedProfile ? 'animate-gradient-shift bg-[length:200%_200%]' : ''}`}
+   style={hasAnimatedProfile
+     ? { backgroundImage: 'linear-gradient(135deg, #0d9488, #14b8a6, #0891b2, #0d9488)' }
+     : { backgroundImage: 'linear-gradient(to bottom right, #0d9488, #14b8a6)' }
+   }
+ >
  <div className="relative w-[72px] h-[72px] mx-auto mb-3">
+ <AvatarFrame frame={activeFrame} size="lg">
  <motion.div
  className="w-full h-full rounded-full bg-white/20 flex items-center justify-center"
  initial={{ scale: 0 }}
@@ -109,8 +121,9 @@ export default function Profile() {
  {displayUser?.username?.charAt(0)?.toUpperCase() || '?'}
  </span>
  </motion.div>
+ </AvatarFrame>
  {/* Level badge */}
- <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-teal-500 border-2 border-white flex items-center justify-center">
+ <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-teal-500 border-2 border-white flex items-center justify-center z-10">
  <span className="text-[11px] font-bold text-white">{level}</span>
  </div>
  </div>

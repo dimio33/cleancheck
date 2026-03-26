@@ -16,6 +16,7 @@ interface GamificationState {
   levelUpPending: boolean;
   xpGains: XpGain[];
   loaded: boolean;
+  activeFrame: string | null;
   fetchGamification: (userId: string) => Promise<void>;
   recordDailyLogin: (userId: string) => Promise<void>;
   setLevelUp: (v: boolean) => void;
@@ -33,6 +34,7 @@ export const useGamificationStore = create<GamificationState>((set) => ({
   levelUpPending: false,
   xpGains: [],
   loaded: false,
+  activeFrame: null,
 
   fetchGamification: async (userId: string) => {
     try {
@@ -45,6 +47,7 @@ export const useGamificationStore = create<GamificationState>((set) => ({
         streak: gamification.streak ?? data.user?.streak ?? 0,
         xpForNextLevel: gamification.xp_for_next_level ?? 100,
         xpProgress: gamification.xp_progress ?? 0,
+        activeFrame: data.user?.active_frame || null,
         loaded: true,
       });
     } catch {

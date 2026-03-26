@@ -18,7 +18,8 @@ router.get('/:id/profile', async (req: Request, res: Response): Promise<void> =>
 
     const userResult = await query(
       `SELECT id, username, avatar_url, total_ratings, locale, created_at,
-              xp, level, rank_title, current_streak, longest_streak
+              xp, level, rank_title, current_streak, longest_streak,
+              active_frame, custom_title
        FROM users WHERE id = $1`,
       [id]
     );

@@ -1,6 +1,10 @@
 import { create } from 'zustand';
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 
 export type PermissionState = 'prompt' | 'granted' | 'denied' | 'unavailable' | 'unknown';
+
+const isNative = Capacitor.isNativePlatform();
 
 // Default: center of Germany (Kassel area) — used until real GPS position arrives
 const DEFAULT_LAT = 51.3127;
@@ -42,13 +46,32 @@ export const useGeoStore = create<GeoStore>((set, get) => ({
     if (get().initialized) return;
     set({ initialized: true });
     await get().checkPermission();
-    if (get().permissionState === 'granted') {
+    const perm = get().permissionState;
+    if (perm === 'granted') {
       get().startWatching();
+    } else if (perm === 'prompt' || perm === 'unknown') {
+      // Auto-request on first launch
+      await get().requestPermission();
     }
   },
 
   checkPermission: async () => {
-    // Try Permissions API (Chrome, Firefox — NOT Safari)
+    if (isNative) {
+      try {
+        const status = await Geolocation.checkPermissions();
+        const state: PermissionState = status.location === 'granted' ? 'granted'
+          : status.location === 'denied' ? 'denied'
+          : 'prompt';
+        set({ permissionState: state, loading: state !== 'granted' ? false : get().loading });
+        localStorage.setItem('cleancheck_geo_permission', state);
+        return;
+      } catch {
+        set({ loading: false });
+        return;
+      }
+    }
+
+    // Web: Try Permissions API (Chrome, Firefox — NOT Safari)
     if ('permissions' in navigator) {
       try {
         const result = await navigator.permissions.query({ name: 'geolocation' });
@@ -87,12 +110,39 @@ export const useGeoStore = create<GeoStore>((set, get) => ({
     if (stored) {
       set({ permissionState: stored, loading: stored !== 'granted' ? false : get().loading });
     } else {
-      // No stored state and no Permissions API — stop loading
       set({ loading: false });
     }
   },
 
   requestPermission: async () => {
+    if (isNative) {
+      try {
+        const status = await Geolocation.requestPermissions({ permissions: ['location'] });
+        if (status.location === 'granted') {
+          const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+          set({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            loading: false,
+            error: null,
+            permissionState: 'granted',
+          });
+          localStorage.setItem('cleancheck_geo_permission', 'granted');
+          get().startWatching();
+          return 'granted';
+        }
+        const state: PermissionState = status.location === 'denied' ? 'denied' : 'prompt';
+        set({ permissionState: state, loading: false });
+        localStorage.setItem('cleancheck_geo_permission', state);
+        return state;
+      } catch {
+        set({ permissionState: 'denied', loading: false, error: 'Permission denied' });
+        localStorage.setItem('cleancheck_geo_permission', 'denied');
+        return 'denied';
+      }
+    }
+
+    // Web fallback
     if (!('geolocation' in navigator)) {
       set({ permissionState: 'unavailable', error: 'Geolocation not supported' });
       localStorage.setItem('cleancheck_geo_permission', 'unavailable');
@@ -131,6 +181,32 @@ export const useGeoStore = create<GeoStore>((set, get) => ({
 
   startWatching: () => {
     if (get().watchId !== null) return;
+
+    if (isNative) {
+      Geolocation.watchPosition(
+        { enableHighAccuracy: true },
+        (position, err) => {
+          if (position) {
+            set({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+              loading: false,
+              error: null,
+              permissionState: 'granted',
+            });
+            localStorage.setItem('cleancheck_geo_permission', 'granted');
+          }
+          if (err) {
+            set({ error: err.message, loading: false });
+          }
+        }
+      ).then(id => {
+        set({ watchId: parseInt(id, 10) || 1 });
+      });
+      return;
+    }
+
+    // Web fallback
     if (!('geolocation' in navigator)) return;
 
     const id = navigator.geolocation.watchPosition(
@@ -156,7 +232,11 @@ export const useGeoStore = create<GeoStore>((set, get) => ({
   stopWatching: () => {
     const { watchId } = get();
     if (watchId !== null) {
-      navigator.geolocation.clearWatch(watchId);
+      if (isNative) {
+        Geolocation.clearWatch({ id: String(watchId) });
+      } else {
+        navigator.geolocation.clearWatch(watchId);
+      }
       set({ watchId: null });
     }
   },

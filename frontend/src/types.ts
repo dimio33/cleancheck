@@ -56,6 +56,8 @@ export interface User {
   streak?: number;
   xp_for_next_level?: number;
   xp_progress?: number;
+  active_frame?: string | null;
+  custom_title?: string | null;
 }
 
 export interface Badge {

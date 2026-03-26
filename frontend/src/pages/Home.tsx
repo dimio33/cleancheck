@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
+import { Capacitor } from '@capacitor/core';
+import { APIProvider, Map, AdvancedMarker, Marker } from '@vis.gl/react-google-maps';
 import { motion } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { getDistance, getScoreColor } from '../utils/geo';
@@ -12,6 +13,7 @@ import RestaurantCard from '../components/ui/RestaurantCard';
 import PullToRefresh from '../components/ui/PullToRefresh';
 import StreakBadge from '../components/ui/StreakBadge';
 import XpGainToast from '../components/ui/XpGainToast';
+import AvatarFrame from '../components/ui/AvatarFrame';
 import { RestaurantCardSkeleton } from '../components/ui/Skeleton';
 import api from '../services/api';
 
@@ -118,7 +120,7 @@ export default function Home() {
  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
  const searchIdRef = useRef(0);
 
- const { streak, xpGains, fetchGamification, recordDailyLogin, clearXpGains } = useGamificationStore();
+ const { streak, xpGains, activeFrame, fetchGamification, recordDailyLogin, clearXpGains } = useGamificationStore();
 
  // Fetch gamification data and record daily login on mount
  useEffect(() => {
@@ -225,9 +227,11 @@ export default function Home() {
  </div>
  <div className="flex items-center gap-2">
  <StreakBadge streak={streak} />
+ <AvatarFrame frame={activeFrame} size="sm">
  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm">
  <span className="text-[14px] font-bold text-white">{userInitial}</span>
  </div>
+ </AvatarFrame>
  </div>
  </div>
  </div>
@@ -414,7 +418,7 @@ export default function Home() {
  center={mapCenter || { lat: effectiveLat, lng: effectiveLng }}
  defaultZoom={mapZoom}
  onCameraChanged={(ev) => setMapCenter(ev.detail.center)}
- mapId={import.meta.env.VITE_GOOGLE_MAPS_ID || undefined}
+ mapId={!Capacitor.isNativePlatform() ? (import.meta.env.VITE_GOOGLE_MAPS_ID || undefined) : undefined}
  gestureHandling="greedy"
  disableDefaultUI={false}
  zoomControl={true}
@@ -423,36 +427,67 @@ export default function Home() {
  fullscreenControl={false}
  style={{ width: '100%', height: '100%' }}
  >
- {restaurantsWithDistance.slice(0, 20).map((r) => (
- <AdvancedMarker
-   key={r.id}
-   position={{ lat: r.lat, lng: r.lng }}
-   onClick={() => navigate(`/restaurant/${r.id}`)}
- >
-   <div style={{
-     width: 36, height: 36, borderRadius: '50%',
-     background: r.clean_score !== null
-       ? (r.clean_score >= 7 ? '#10B981' : r.clean_score >= 4 ? '#F59E0B' : '#EF4444')
-       : '#E7E5E4',
-     border: '3px solid white',
-     display: 'flex', alignItems: 'center', justifyContent: 'center',
-     fontSize: 11, fontWeight: 700,
-     color: r.clean_score !== null ? 'white' : '#A8A29E',
-     boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-     cursor: 'pointer',
-     fontFamily: "'Inter', system-ui, sans-serif",
-   }}>
-     {r.clean_score !== null ? r.clean_score.toFixed(1) : '?'}
-   </div>
- </AdvancedMarker>
- ))}
- <AdvancedMarker position={{ lat: effectiveLat, lng: effectiveLng }}>
- <div style={{
- width: 16, height: 16, borderRadius: '50%',
- background: '#0D9488', border: '3px solid white',
- boxShadow: '0 0 0 6px rgba(13,148,136,0.2), 0 2px 4px rgba(0,0,0,0.15)',
- }} />
- </AdvancedMarker>
+ {Capacitor.isNativePlatform() ? (
+   <>
+     {restaurantsWithDistance.slice(0, 20).map((r) => (
+       <Marker
+         key={r.id}
+         position={{ lat: r.lat, lng: r.lng }}
+         onClick={() => navigate(`/restaurant/${r.id}`)}
+         label={{
+           text: r.clean_score !== null ? r.clean_score.toFixed(1) : '?',
+           fontSize: '11px',
+           fontWeight: '700',
+           color: 'white',
+         }}
+       />
+     ))}
+     <Marker
+       position={{ lat: effectiveLat, lng: effectiveLng }}
+       icon={{
+         path: 0,
+         scale: 8,
+         fillColor: '#0D9488',
+         fillOpacity: 1,
+         strokeColor: 'white',
+         strokeWeight: 3,
+       }}
+     />
+   </>
+ ) : (
+   <>
+     {restaurantsWithDistance.slice(0, 20).map((r) => (
+       <AdvancedMarker
+         key={r.id}
+         position={{ lat: r.lat, lng: r.lng }}
+         onClick={() => navigate(`/restaurant/${r.id}`)}
+       >
+         <div style={{
+           width: 36, height: 36, borderRadius: '50%',
+           background: r.clean_score !== null
+             ? (r.clean_score >= 7 ? '#10B981' : r.clean_score >= 4 ? '#F59E0B' : '#EF4444')
+             : '#E7E5E4',
+           border: '3px solid white',
+           display: 'flex', alignItems: 'center', justifyContent: 'center',
+           fontSize: 11, fontWeight: 700,
+           color: r.clean_score !== null ? 'white' : '#A8A29E',
+           boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+           cursor: 'pointer',
+           fontFamily: "'Inter', system-ui, sans-serif",
+         }}>
+           {r.clean_score !== null ? r.clean_score.toFixed(1) : '?'}
+         </div>
+       </AdvancedMarker>
+     ))}
+     <AdvancedMarker position={{ lat: effectiveLat, lng: effectiveLng }}>
+       <div style={{
+         width: 16, height: 16, borderRadius: '50%',
+         background: '#0D9488', border: '3px solid white',
+         boxShadow: '0 0 0 6px rgba(13,148,136,0.2), 0 2px 4px rgba(0,0,0,0.15)',
+       }} />
+     </AdvancedMarker>
+   </>
+ )}
  </Map>
  </APIProvider>
  </div>

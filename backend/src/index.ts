@@ -43,7 +43,7 @@ app.set('trust proxy', 1);
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'https://cleancheck.e-findo.de'],
+  origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'https://cleancheck.e-findo.de', 'capacitor://localhost'],
   credentials: true,
 }));
 app.use(express.json({ limit: '1mb' }));

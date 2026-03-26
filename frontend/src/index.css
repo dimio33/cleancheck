@@ -94,6 +94,17 @@ input[type="range"]::-moz-range-thumb {
   color: #0F766E;
 }
 
+/* Animated profile background for Level 30 reward */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient-shift {
+  animation: gradient-shift 4s ease infinite;
+}
+
 /* Skeleton shimmer effect */
 @keyframes shimmer {
   0% { background-position: -500px 0; }

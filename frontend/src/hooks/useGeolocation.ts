@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 import { useGeoStore, type PermissionState } from '../stores/geoStore';
 
 interface GeolocationState {
@@ -17,7 +19,12 @@ export function useGeolocation(): GeolocationState {
  * One-shot high-accuracy position request.
  * Used for geo-verification before rating submission.
  */
-export function getHighAccuracyPosition(): Promise<{ lat: number; lng: number }> {
+export async function getHighAccuracyPosition(): Promise<{ lat: number; lng: number }> {
+  if (Capacitor.isNativePlatform()) {
+    const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+    return { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  }
+
   return new Promise((resolve, reject) => {
     if (!('geolocation' in navigator)) {
       reject(new Error('Geolocation not supported'));
