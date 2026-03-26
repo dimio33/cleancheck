@@ -31,8 +31,8 @@ export default function TopBar() {
           </button>
         ) : <div className="w-11" />}
 
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="" className="w-6 h-6" />
+        <div className="flex items-center gap-1.5">
+          <img src="/logo.png" alt="" className="w-6 h-6 rounded-full object-cover" />
           <span className="font-semibold text-stone-800 tracking-tight">CleanCheck</span>
         </div>
 

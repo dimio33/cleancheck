@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import TopBar from './components/layout/TopBar';
 import BottomNav from './components/layout/BottomNav';
@@ -8,6 +8,7 @@ import ToastContainer from './components/ui/Toast';
 import OfflineBanner from './components/ui/OfflineBanner';
 import LocationDeniedBanner from './components/ui/LocationDeniedBanner';
 import PWAUpdatePrompt from './components/ui/PWAUpdatePrompt';
+import AnimatedSplash from './components/ui/AnimatedSplash';
 import { useThemeStore } from './stores/themeStore';
 import { useDraftStore } from './stores/draftStore';
 import { useGeoStore } from './stores/geoStore';
@@ -15,9 +16,11 @@ import { useToastStore } from './components/ui/Toast';
 import './App.css';
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const initTheme = useThemeStore((s) => s.init);
   const initGeo = useGeoStore((s) => s.initGeo);
   const addToast = useToastStore((s) => s.addToast);
+  const handleSplashComplete = useCallback(() => setShowSplash(false), []);
 
   useEffect(() => {
     initTheme();
@@ -43,6 +46,7 @@ function App() {
   return (
     <BrowserRouter>
       <ErrorBoundary>
+        {showSplash && <AnimatedSplash onComplete={handleSplashComplete} />}
         <div className="flex flex-col min-h-screen bg-stone-50">
           <TopBar />
           <OfflineBanner />
