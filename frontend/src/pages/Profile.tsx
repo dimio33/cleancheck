@@ -114,6 +114,7 @@ export default function Profile() {
  }
 
  return (
+ <>
  <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
  {/* Teal Gradient Hero */}
  <div
@@ -379,7 +380,7 @@ export default function Profile() {
  </div>
  </div>
 
- {/* Nickname Edit Modal */}
+ {/* Nickname Edit Modal — inside return via fragment */}
  {editingNickname && (
    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6" onClick={() => setEditingNickname(false)}>
      <motion.div
@@ -443,5 +444,6 @@ export default function Profile() {
      </motion.div>
    </div>
  )}
+ </>
  );
 }
