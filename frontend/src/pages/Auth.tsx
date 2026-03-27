@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../stores/authStore';
+import api from '../services/api';
 import { useShallow } from 'zustand/react/shallow';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
@@ -32,6 +33,8 @@ function AuthInner() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showNickname, setShowNickname] = useState(false);
+  const [nickname, setNickname] = useState('');
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { login, register, loginAsGuest, loginWithGoogle, loginWithApple } = useAuthStore(useShallow((s) => ({ login: s.login, register: s.register, loginAsGuest: s.loginAsGuest, loginWithGoogle: s.loginWithGoogle, loginWithApple: s.loginWithApple })));
@@ -92,7 +95,12 @@ function AuthInner() {
             setError('');
             await loginWithGoogle(response.access_token);
             localStorage.setItem('cleancheck_onboarded', 'true');
-            navigate('/');
+            const currentUser = useAuthStore.getState().user;
+            if (currentUser?.needs_nickname) {
+              setShowNickname(true);
+            } else {
+              navigate('/');
+            }
           } catch {
             setError(t('auth.socialLoginFailed'));
             setTimeout(() => setError(''), 5000);
@@ -134,7 +142,12 @@ function AuthInner() {
       const response = await AppleID.auth.signIn();
       await loginWithApple(response.authorization.id_token, response.user);
       localStorage.setItem('cleancheck_onboarded', 'true');
-      navigate('/');
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser?.needs_nickname) {
+        setShowNickname(true);
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       // User cancelled = don't show error
       const errStr = String(err?.error || err?.message || err || '');
@@ -151,6 +164,72 @@ function AuthInner() {
   };
 
   const showSocialButtons = !!GOOGLE_CLIENT_ID || appleAvailable;
+
+  // Nickname selection screen (after social login)
+  const handleNicknameSubmit = async () => {
+    if (nickname.trim().length < 3) {
+      setError(t('auth.nicknameTooShort'));
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    try {
+      setLoading(true);
+      const { data } = await api.patch('/users/username', { username: nickname.trim() });
+      const user = useAuthStore.getState().user;
+      if (user) {
+        useAuthStore.getState().setUser({ ...user, username: data.username, needs_nickname: false });
+      }
+      navigate('/');
+    } catch (err: any) {
+      const msg = err.response?.data?.error || t('auth.nicknameTaken');
+      setError(msg);
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (showNickname) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-24 max-w-lg mx-auto w-full">
+        <motion.div
+          className="w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🎭</span>
+            </div>
+            <h1 className="text-2xl font-bold text-stone-800 mb-2">{t('auth.nicknameTitle')}</h1>
+            <p className="text-sm text-stone-500 leading-relaxed">{t('auth.nicknameDesc')}</p>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 text-red-600 text-sm px-4 py-2 rounded-xl mb-4 text-center">{error}</div>
+          )}
+
+          <input
+            type="text"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            placeholder={t('auth.nicknamePlaceholder')}
+            maxLength={30}
+            className="w-full px-4 py-3 rounded-xl bg-stone-50 border border-stone-200 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-center text-lg font-medium mb-4"
+            autoFocus
+          />
+
+          <button
+            onClick={handleNicknameSubmit}
+            disabled={loading || nickname.trim().length < 3}
+            className="w-full py-3.5 rounded-xl bg-teal-600 text-white font-semibold disabled:opacity-50 active:scale-[0.98] transition-transform"
+          >
+            {loading ? '...' : t('auth.nicknameSubmit')}
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 pb-24 max-w-lg mx-auto w-full">

@@ -1,0 +1,19 @@
+{
+  "project": "CleanCheck",
+  "pages": [
+    {
+      "name": "Frontend lädt",
+      "url": "https://cleancheck.e-findo.de",
+      "expect": "CleanCheck",
+      "min_size": 500
+    }
+  ],
+  "apis": [
+    {
+      "name": "Backend Health",
+      "url": "https://backend-production-900c.up.railway.app/api/health",
+      "expect_field": "status"
+    }
+  ],
+  "logins": []
+}

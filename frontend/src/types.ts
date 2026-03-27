@@ -59,6 +59,7 @@ export interface User {
   xp_progress?: number;
   active_frame?: string | null;
   custom_title?: string | null;
+  needs_nickname?: boolean;
 }
 
 export interface Badge {

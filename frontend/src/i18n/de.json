@@ -138,6 +138,9 @@
     "noSaved": "Tippe auf das Herz bei einem Restaurant, um es zu speichern.",
     "drafts": "Entwürfe",
     "draftsHint": "Offline-Bewertungen werden gesendet sobald du online bist.",
+    "changeNickname": "Nickname ändern",
+    "nicknameSaved": "Nickname gespeichert!",
+    "nicknameCooldown": "Du kannst deinen Namen erst in {{days}} Tagen wieder ändern",
     "logout": "Abmelden",
     "loginPrompt": "Melde dich an, um deine Bewertungen zu speichern",
     "login": "Anmelden",
@@ -164,7 +167,13 @@
     "signInWithApple": "Mit Apple anmelden",
     "socialLoginFailed": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
     "appleNotAvailable": "Mit Apple anmelden ist noch nicht verfügbar",
-    "appleSetupNeeded": "Apple-Anmeldung wird eingerichtet. Bitte nutze vorerst E-Mail."
+    "appleSetupNeeded": "Apple-Anmeldung wird eingerichtet. Bitte nutze vorerst E-Mail.",
+    "nicknameTitle": "Wähle einen Nickname",
+    "nicknameDesc": "Dein Nickname ist öffentlich sichtbar bei Bewertungen. Verwende NICHT deinen echten Namen, um deine Identität zu schützen.",
+    "nicknamePlaceholder": "Dein Nickname...",
+    "nicknameSubmit": "Nickname speichern",
+    "nicknameTooShort": "Mindestens 3 Zeichen",
+    "nicknameTaken": "Dieser Name ist bereits vergeben"
   },
   "badges": {
     "firstRating": {

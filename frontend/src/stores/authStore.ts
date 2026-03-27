@@ -81,6 +81,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       restaurant_count: 0,
       average_score: 0,
       badges: [],
+      needs_nickname: data.user.needs_nickname || false,
     };
     localStorage.setItem('cleancheck_user', JSON.stringify(user));
     set({ user, token: data.token, isAuthenticated: true });
@@ -99,6 +100,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       restaurant_count: 0,
       average_score: 0,
       badges: [],
+      needs_nickname: data.user.needs_nickname || false,
     };
     localStorage.setItem('cleancheck_user', JSON.stringify(user));
     set({ user, token: data.token, isAuthenticated: true });

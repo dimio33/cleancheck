@@ -117,3 +117,13 @@ fi
 echo ""
 echo "=== Deploy complete! ==="
 echo "https://cleancheck.e-findo.de"
+
+# 6. Full Smoke Tests
+SMOKE_TEST="$HOME/.claude/smoke-test.sh"
+SMOKE_CONFIG="$SCRIPT_DIR/smoke-tests.json"
+if [ -x "$SMOKE_TEST" ] && [ -f "$SMOKE_CONFIG" ]; then
+  echo ""
+  echo "Running smoke tests..."
+  sleep 3
+  "$SMOKE_TEST" "$SMOKE_CONFIG" || echo "⚠️  Smoke tests failed — check output above!"
+fi

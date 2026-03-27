@@ -138,6 +138,9 @@
     "noSaved": "Tap the heart on a restaurant to save it.",
     "drafts": "Drafts",
     "draftsHint": "Offline ratings will sync when you're back online.",
+    "changeNickname": "Change Nickname",
+    "nicknameSaved": "Nickname saved!",
+    "nicknameCooldown": "You can change your name again in {{days}} days",
     "logout": "Log out",
     "loginPrompt": "Log in to save your ratings",
     "login": "Log in",
@@ -164,7 +167,13 @@
     "signInWithApple": "Sign in with Apple",
     "socialLoginFailed": "Sign in failed. Please try again.",
     "appleNotAvailable": "Sign in with Apple is not yet available",
-    "appleSetupNeeded": "Apple sign-in is being set up. Please use email for now."
+    "appleSetupNeeded": "Apple sign-in is being set up. Please use email for now.",
+    "nicknameTitle": "Choose a Nickname",
+    "nicknameDesc": "Your nickname is publicly visible on reviews. Do NOT use your real name to protect your identity.",
+    "nicknamePlaceholder": "Your nickname...",
+    "nicknameSubmit": "Save Nickname",
+    "nicknameTooShort": "At least 3 characters",
+    "nicknameTaken": "This name is already taken"
   },
   "badges": {
     "firstRating": {

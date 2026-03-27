@@ -122,4 +122,65 @@ router.post('/:id/daily-login', authenticate, async (req: AuthRequest, res: Resp
   }
 });
 
+// PATCH /api/users/username — change username (1x pro Monat)
+router.patch('/username', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { username } = req.body;
+    if (!username || typeof username !== 'string') {
+      res.status(400).json({ error: 'Username is required' });
+      return;
+    }
+
+    const sanitized = username.replace(/<[^>]*>/g, '').trim();
+    if (sanitized.length < 3 || sanitized.length > 30) {
+      res.status(400).json({ error: 'Username muss zwischen 3 und 30 Zeichen lang sein' });
+      return;
+    }
+
+    // Check cooldown (30 days) — skip if needs_nickname is true (first-time social login)
+    const userResult = await query<{ last_username_change: Date | null; needs_nickname: boolean }>(
+      'SELECT last_username_change, needs_nickname FROM users WHERE id = $1',
+      [req.user.id]
+    );
+
+    if (userResult.rows.length === 0) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    const { last_username_change, needs_nickname } = userResult.rows[0];
+
+    if (!needs_nickname && last_username_change) {
+      const daysSince = (Date.now() - new Date(last_username_change).getTime()) / (1000 * 60 * 60 * 24);
+      if (daysSince < 30) {
+        const daysLeft = Math.ceil(30 - daysSince);
+        res.status(429).json({ error: `Du kannst deinen Namen erst in ${daysLeft} Tagen wieder ändern` });
+        return;
+      }
+    }
+
+    // Check uniqueness
+    const existing = await query('SELECT id FROM users WHERE username = $1 AND id != $2', [sanitized, req.user.id]);
+    if (existing.rows.length > 0) {
+      res.status(409).json({ error: 'Dieser Name ist bereits vergeben' });
+      return;
+    }
+
+    await query(
+      'UPDATE users SET username = $1, last_username_change = NOW(), needs_nickname = false WHERE id = $2',
+      [sanitized, req.user.id]
+    );
+
+    res.json({ username: sanitized });
+  } catch (err) {
+    console.error('Update username error:', err);
+    res.status(500).json({ error: 'Failed to update username' });
+  }
+});
+
 export default router;

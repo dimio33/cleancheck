@@ -339,7 +339,18 @@ function userResponse(user: any) {
     avatar_url: user.avatar_url,
     total_ratings: user.total_ratings,
     locale: user.locale,
+    needs_nickname: user.needs_nickname || false,
   };
+}
+
+// Helper: generate random anonymous nickname for social login users
+function generateRandomNickname(): string {
+  const adjectives = ['Sauber', 'Glanz', 'Frisch', 'Blank', 'Hygiene', 'Putz', 'Duft', 'Schaum', 'Kristall', 'Blitz'];
+  const nouns = ['Prüfer', 'Held', 'Checker', 'Guru', 'Experte', 'Profi', 'Scout', 'Tester', 'König', 'Meister'];
+  const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const noun = nouns[Math.floor(Math.random() * nouns.length)];
+  const num = Math.floor(Math.random() * 9999) + 1;
+  return `${adj}${noun}${num}`;
 }
 
 // Helper: ensure unique username
@@ -395,12 +406,12 @@ router.post('/google', async (req: Request, res: Response): Promise<void> => {
         if (!user.avatar_url && picture) user.avatar_url = picture;
       }
     } else {
-      // Create new user
-      const username = await ensureUniqueUsername(name || email.split('@')[0]);
+      // Create new user with random nickname (NOT real name for privacy)
+      const username = await ensureUniqueUsername(generateRandomNickname());
 
       const result = await query(
-        `INSERT INTO users (username, email, auth_provider, provider_id, avatar_url)
-         VALUES ($1, $2, 'google', $3, $4) RETURNING *`,
+        `INSERT INTO users (username, email, auth_provider, provider_id, avatar_url, needs_nickname)
+         VALUES ($1, $2, 'google', $3, $4, true) RETURNING *`,
         [username, email.toLowerCase(), googleId, picture || null]
       );
       user = result.rows[0];
@@ -493,17 +504,13 @@ router.post('/apple', async (req: Request, res: Response): Promise<void> => {
         user.provider_id = appleId;
       }
     } else {
-      // Create new user — Apple may provide name only on first auth
-      const firstName = appleUser?.name?.firstName || '';
-      const lastName = appleUser?.name?.lastName || '';
-      const desiredName = `${firstName} ${lastName}`.trim() || (email ? email.split('@')[0] : `user_${appleId.substring(0, 8)}`);
-      const username = await ensureUniqueUsername(desiredName);
-
+      // Create new user with random nickname (NOT real name for privacy)
+      const username = await ensureUniqueUsername(generateRandomNickname());
       const userEmail = email || `${appleId}@privaterelay.appleid.com`;
 
       const result = await query(
-        `INSERT INTO users (username, email, auth_provider, provider_id)
-         VALUES ($1, $2, 'apple', $3) RETURNING *`,
+        `INSERT INTO users (username, email, auth_provider, provider_id, needs_nickname)
+         VALUES ($1, $2, 'apple', $3, true) RETURNING *`,
         [username, userEmail.toLowerCase(), appleId]
       );
       user = result.rows[0];

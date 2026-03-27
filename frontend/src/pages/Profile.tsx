@@ -25,6 +25,10 @@ export default function Profile() {
  const [claimedRewards, setClaimedRewards] = useState<any[]>([]);
  const [profileLoading, setProfileLoading] = useState(false);
  const [profileError, setProfileError] = useState(false);
+ const [editingNickname, setEditingNickname] = useState(false);
+ const [newNickname, setNewNickname] = useState('');
+ const [nicknameError, setNicknameError] = useState('');
+ const [nicknameSaving, setNicknameSaving] = useState(false);
 
  useEffect(() => {
  if (user && user.id !== 'guest' && isAuthenticated) {
@@ -143,7 +147,13 @@ export default function Profile() {
  — {rank}
  </span>
  </h2>
- <p className="text-[13px] text-white/70 mt-1.5">
+ <button
+   onClick={() => setEditingNickname(true)}
+   className="text-[11px] text-white/50 mt-0.5 hover:text-white/80 transition-colors"
+ >
+   ✏️ {t('profile.changeNickname')}
+ </button>
+ <p className="text-[13px] text-white/70 mt-1">
  {t('profile.memberSince')} {displayUser && new Date(displayUser.created_at).toLocaleDateString()}
  </p>
  {/* XP Bar */}
@@ -368,5 +378,70 @@ export default function Profile() {
  </div>
  </div>
  </div>
+
+ {/* Nickname Edit Modal */}
+ {editingNickname && (
+   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6" onClick={() => setEditingNickname(false)}>
+     <motion.div
+       className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl"
+       initial={{ scale: 0.9, opacity: 0 }}
+       animate={{ scale: 1, opacity: 1 }}
+       onClick={(e) => e.stopPropagation()}
+     >
+       <h3 className="text-lg font-bold text-stone-800 mb-1">{t('profile.changeNickname')}</h3>
+       <p className="text-xs text-stone-400 mb-4">Dein Nickname ist öffentlich bei Bewertungen sichtbar.</p>
+
+       {nicknameError && (
+         <div className="bg-red-50 text-red-600 text-xs px-3 py-2 rounded-lg mb-3">{nicknameError}</div>
+       )}
+
+       <input
+         type="text"
+         value={newNickname}
+         onChange={(e) => setNewNickname(e.target.value)}
+         placeholder={user?.username || ''}
+         maxLength={30}
+         className="w-full px-4 py-3 rounded-xl bg-stone-50 border border-stone-200 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500 text-center font-medium mb-3"
+         autoFocus
+       />
+
+       <div className="flex gap-2">
+         <button
+           onClick={() => setEditingNickname(false)}
+           className="flex-1 py-2.5 rounded-xl bg-stone-100 text-stone-600 font-medium text-sm"
+         >
+           {t('common.cancel')}
+         </button>
+         <button
+           onClick={async () => {
+             if (newNickname.trim().length < 3) {
+               setNicknameError(t('auth.nicknameTooShort'));
+               setTimeout(() => setNicknameError(''), 3000);
+               return;
+             }
+             try {
+               setNicknameSaving(true);
+               const { data } = await api.patch('/users/username', { username: newNickname.trim() });
+               if (user) {
+                 useAuthStore.getState().setUser({ ...user, username: data.username });
+               }
+               setEditingNickname(false);
+               setNewNickname('');
+             } catch (err: any) {
+               setNicknameError(err.response?.data?.error || t('auth.nicknameTaken'));
+               setTimeout(() => setNicknameError(''), 5000);
+             } finally {
+               setNicknameSaving(false);
+             }
+           }}
+           disabled={nicknameSaving || newNickname.trim().length < 3}
+           className="flex-1 py-2.5 rounded-xl bg-teal-600 text-white font-medium text-sm disabled:opacity-50"
+         >
+           {nicknameSaving ? '...' : t('common.save')}
+         </button>
+       </div>
+     </motion.div>
+   </div>
+ )}
  );
 }
