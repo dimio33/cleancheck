@@ -82,6 +82,7 @@ export default function RestaurantDetail() {
   const addToast = useToastStore((s) => s.addToast);
 
   const restaurant = useRestaurantStore((s) => s.getById(id || ''));
+  const isFavorite = useFavoritesStore((s) => id ? s.favorites.includes(id) : false);
 
   const [apiRatings, setApiRatings] = useState<any[]>([]);
   const [apiRestaurant, setApiRestaurant] = useState<any>(null);
@@ -181,8 +182,6 @@ export default function RestaurantDetail() {
 
   // Compute criteria averages from ratings
   const criteriaAvgs = baseRestaurant.criteria_averages || computeCriteriaAverages(apiRatings);
-
-  const isFavorite = useFavoritesStore((s) => s.favorites.includes(baseRestaurant.id));
 
   const handleShare = async () => {
     const text = `${baseRestaurant.name} — CleanScore: ${displayRestaurant.clean_score?.toFixed(1) || '?'}/10`;
