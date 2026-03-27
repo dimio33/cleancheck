@@ -17,11 +17,22 @@ import { validateImageFile, moderateImage, generateImageHash } from '../services
 import { uploadPhoto, isR2Configured } from '../services/storageService';
 import { isValidUuid } from '../utils/validate';
 
-function generateAnonymousId(req: Request): string {
-  const ip = req.ip || req.socket.remoteAddress || 'unknown';
-  const ua = req.headers['user-agent'] || 'unknown';
-  const hash = crypto.createHash('sha256').update(`${ip}-${ua}`).digest('hex').substring(0, 16);
-  return `anon-${hash}`;
+function generateAnonymousId(req: Request, res?: import('express').Response): string {
+  // DSGVO-compliant: no IP/User-Agent fingerprinting
+  const existing = req.cookies?.cleancheck_anon;
+  if (existing && typeof existing === 'string' && existing.startsWith('anon-')) {
+    return existing;
+  }
+  const id = `anon-${crypto.randomBytes(8).toString('hex')}`;
+  if (res) {
+    res.cookie('cleancheck_anon', id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+    });
+  }
+  return id;
 }
 
 const router = Router();
@@ -154,7 +165,7 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: Infinity }), async
 
     const isAnonymous = !req.user;
     const userId = req.user?.id || null;
-    const anonymousId = isAnonymous ? generateAnonymousId(req) : null;
+    const anonymousId = isAnonymous ? generateAnonymousId(req, res) : null;
 
     // Anti-spam: Duplicate comment detection (same user/anonymous + same comment within 24h)
     if (sanitizedComment && typeof sanitizedComment === 'string') {
@@ -168,7 +179,7 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: Infinity }), async
           return;
         }
       } else {
-        const anonId = generateAnonymousId(req);
+        const anonId = generateAnonymousId(req, res);
         const dupCommentCheck = await query(
           `SELECT id FROM ratings WHERE anonymous_id = $1 AND comment = $2 AND created_at > NOW() - INTERVAL '24 hours'`,
           [anonId, sanitizedComment]

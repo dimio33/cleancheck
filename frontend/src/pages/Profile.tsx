@@ -369,10 +369,64 @@ export default function Profile() {
  </button>
  <div className="h-px bg-stone-50" />
  <button
+ onClick={async () => {
+   try {
+     const response = await api.get(`/users/${user!.id}/data-export`, { responseType: 'blob' });
+     const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+     const url = URL.createObjectURL(blob);
+     const a = document.createElement('a');
+     a.href = url;
+     a.download = 'meine-daten.json';
+     a.click();
+     URL.revokeObjectURL(url);
+   } catch (err) {
+     console.error('Data export failed:', err);
+   }
+ }}
+ className="flex items-center w-full p-4 hover:bg-stone-50 transition-colors"
+ >
+ <span className="text-sm text-stone-700">{t('profile.exportData')}</span>
+ </button>
+ <div className="h-px bg-stone-50" />
+ <a
+ href="https://wc-cleancheck.de/datenschutz"
+ target="_blank"
+ rel="noopener noreferrer"
+ className="flex items-center w-full p-4 hover:bg-stone-50 transition-colors"
+ >
+ <span className="text-sm text-stone-700">{t('profile.privacy')}</span>
+ </a>
+ <div className="h-px bg-stone-50" />
+ <a
+ href="https://wc-cleancheck.de/impressum"
+ target="_blank"
+ rel="noopener noreferrer"
+ className="flex items-center w-full p-4 hover:bg-stone-50 transition-colors"
+ >
+ <span className="text-sm text-stone-700">{t('profile.imprint')}</span>
+ </a>
+ <div className="h-px bg-stone-50" />
+ <button
  onClick={() => { navigate('/'); setTimeout(logout, 50); }}
  className="flex items-center w-full p-4 hover:bg-stone-50 transition-colors"
  >
  <span className="text-sm text-rose-500 font-medium">{t('profile.logout')}</span>
+ </button>
+ <div className="h-px bg-stone-50" />
+ <button
+ onClick={async () => {
+   if (!window.confirm(t('profile.deleteAccountConfirm'))) return;
+   try {
+     await api.delete(`/users/${user!.id}`);
+     navigate('/');
+     setTimeout(logout, 50);
+   } catch (err) {
+     console.error('Account deletion failed:', err);
+   }
+ }}
+ className="flex items-center w-full p-4 hover:bg-stone-50 transition-colors"
+ >
+ <span className="text-xs text-rose-400">{t('profile.deleteAccount')}</span>
  </button>
  </>
  )}

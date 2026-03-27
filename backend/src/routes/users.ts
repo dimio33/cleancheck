@@ -183,4 +183,118 @@ router.patch('/username', authenticate, async (req: AuthRequest, res: Response):
   }
 });
 
+// DELETE /api/users/:id — delete own account (DSGVO Art. 17)
+router.delete('/:id', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidUuid(id as string)) {
+      res.status(400).json({ error: 'Invalid user ID format' });
+      return;
+    }
+
+    // Only allow deleting own account
+    if (!req.user || req.user.id !== id) {
+      res.status(403).json({ error: 'Du kannst nur deinen eigenen Account löschen' });
+      return;
+    }
+
+    // Delete all related data in correct order (foreign key dependencies)
+    await query('DELETE FROM user_rewards WHERE user_id = $1', [id]);
+    await query(
+      `DELETE FROM rating_photos WHERE rating_id IN (SELECT id FROM ratings WHERE user_id = $1)`,
+      [id]
+    );
+    await query('DELETE FROM ratings WHERE user_id = $1', [id]);
+    await query('DELETE FROM xp_events WHERE user_id = $1', [id]);
+    await query('DELETE FROM user_badges WHERE user_id = $1', [id]);
+    await query('DELETE FROM refresh_tokens WHERE user_id = $1', [id]);
+    await query('DELETE FROM first_raters WHERE user_id = $1', [id]);
+    await query('DELETE FROM leaderboard_weekly WHERE user_id = $1', [id]);
+    await query('DELETE FROM users WHERE id = $1', [id]);
+
+    console.log(JSON.stringify({
+      action: 'account_deleted',
+      user_id: id,
+      timestamp: new Date().toISOString(),
+    }));
+
+    res.json({ message: 'Account gelöscht' });
+  } catch (err) {
+    console.error('Delete account error:', err);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+});
+
+// GET /api/users/:id/data-export — export all user data (DSGVO Art. 20)
+router.get('/:id/data-export', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidUuid(id as string)) {
+      res.status(400).json({ error: 'Invalid user ID format' });
+      return;
+    }
+
+    // Only allow exporting own data
+    if (!req.user || req.user.id !== id) {
+      res.status(403).json({ error: 'Du kannst nur deine eigenen Daten exportieren' });
+      return;
+    }
+
+    const userResult = await query(
+      `SELECT username, email, locale, created_at, xp, level, current_streak, longest_streak
+       FROM users WHERE id = $1`,
+      [id]
+    );
+
+    if (userResult.rows.length === 0) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    const ratingsResult = await query(
+      `SELECT r.cleanliness, r.smell, r.supplies, r.condition, r.ambiente, r.accessibility,
+              r.overall_score, r.comment, r.visited_at, r.created_at,
+              rest.name as restaurant_name
+       FROM ratings r
+       LEFT JOIN restaurants rest ON r.restaurant_id = rest.id
+       WHERE r.user_id = $1
+       ORDER BY r.created_at DESC`,
+      [id]
+    );
+
+    const badgesResult = await query(
+      `SELECT b.slug, b.name_de, b.name_en, ub.earned_at
+       FROM user_badges ub
+       JOIN badges b ON ub.badge_id = b.id
+       WHERE ub.user_id = $1
+       ORDER BY ub.earned_at DESC`,
+      [id]
+    );
+
+    const xpEventsResult = await query(
+      `SELECT xp_amount, event_type, created_at
+       FROM xp_events WHERE user_id = $1
+       ORDER BY created_at DESC`,
+      [id]
+    );
+
+    const exportData = {
+      exported_at: new Date().toISOString(),
+      profile: userResult.rows[0],
+      ratings: ratingsResult.rows,
+      badges: badgesResult.rows,
+      xp_events: xpEventsResult.rows,
+    };
+
+    res.setHeader('Content-Disposition', 'attachment; filename="meine-daten.json"');
+    res.setHeader('Content-Type', 'application/json');
+    res.json(exportData);
+  } catch (err) {
+    console.error('Data export error:', err);
+    res.status(500).json({ error: 'Failed to export data' });
+  }
+});
+
 export default router;
