@@ -27,7 +27,7 @@ export function calculateLevel(xp: number): { level: number; xpInCurrentLevel: n
 }
 
 export function getRankTitle(level: number): { de: string; en: string } {
-  if (level >= 45) return { de: 'CleanCheck-Legende', en: 'CleanCheck Legend' };
+  if (level >= 45) return { de: 'WC-CleanCheck-Legende', en: 'WC-CleanCheck Legend' };
   if (level >= 35) return { de: 'Sauberkeits-Experte', en: 'Cleanliness Expert' };
   if (level >= 25) return { de: 'Hygiene-Meister', en: 'Hygiene Master' };
   if (level >= 15) return { de: 'Hygiene-Inspektor', en: 'Hygiene Inspector' };

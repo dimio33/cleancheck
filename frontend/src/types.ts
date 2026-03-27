@@ -17,6 +17,7 @@ export interface CriteriaScores {
   smell: number;
   supplies: number;
   maintenance: number;
+  ambiente: number;
   accessibility: number;
 }
 

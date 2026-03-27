@@ -1,17 +1,19 @@
 import { query } from '../utils/db';
 
 const WEIGHTS = {
-  cleanliness: 0.35,
-  smell: 0.25,
-  supplies: 0.20,
-  condition: 0.15,
-  accessibility: 0.05,
+  cleanliness: 0.30,
+  smell: 0.20,
+  supplies: 0.15,
+  ambiente: 0.15,
+  condition: 0.10,
+  accessibility: 0.10,
 };
 
 export function calculateOverallScore(rating: {
   cleanliness: number;
   smell: number;
   supplies: number;
+  ambiente: number;
   condition: number;
   accessibility: number;
 }): number {
@@ -19,6 +21,7 @@ export function calculateOverallScore(rating: {
     rating.cleanliness * WEIGHTS.cleanliness +
     rating.smell * WEIGHTS.smell +
     rating.supplies * WEIGHTS.supplies +
+    rating.ambiente * WEIGHTS.ambiente +
     rating.condition * WEIGHTS.condition +
     rating.accessibility * WEIGHTS.accessibility;
 

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../stores/authStore';
+import GuestRegistrationCTA from '../components/ui/GuestRegistrationCTA';
+import RewardUnlockedOverlay from '../components/ui/RewardUnlockedOverlay';
 import api from '../services/api';
 
 interface Reward {
@@ -34,7 +36,7 @@ interface RewardsData {
 export default function Rewards() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const [data, setData] = useState<RewardsData>({ unlocked: [], locked: [], claimed: [] });
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,7 @@ export default function Rewards() {
   const [activating, setActivating] = useState<string | null>(null);
   const [activeFrame, setActiveFrame] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [unlockedReward, setUnlockedReward] = useState<{ name: string; icon?: string; type: string } | null>(null);
 
   const lang = i18n.language.startsWith('de') ? 'de' : 'en';
 
@@ -59,6 +62,15 @@ export default function Rewards() {
     try {
       const { data: result } = await api.post(`/rewards/${rewardId}/claim`);
       if (result.success) {
+        // Find the reward that was just claimed for the overlay
+        const claimed = data.unlocked.find(r => r.id === rewardId);
+        if (claimed) {
+          setUnlockedReward({
+            name: getName(claimed),
+            icon: claimed.icon,
+            type: claimed.type,
+          });
+        }
         setToast(t('rewards.claimSuccess'));
         setTimeout(() => setToast(null), 3000);
         // Refresh rewards
@@ -95,16 +107,43 @@ export default function Rewards() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center px-8 text-center pb-24">
-        <span className="text-5xl mb-4">🎁</span>
-        <h2 className="text-lg font-semibold text-stone-800 mb-1">{t('rewards.title')}</h2>
-        <p className="text-sm text-stone-500 mb-6">{t('profile.loginPrompt')}</p>
-        <button
-          onClick={() => navigate('/auth')}
-          className="px-8 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20"
-        >
-          {t('profile.login')}
-        </button>
+      <div className="flex-1 flex flex-col items-center px-5 pb-24 pt-8">
+        {/* Guest CTA */}
+        <GuestRegistrationCTA variant="card" className="w-full max-w-sm mb-6" />
+
+        {/* Locked reward previews */}
+        <div className="w-full max-w-sm">
+          <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">
+            {t('rewards.locked')}
+          </h3>
+          <div className="space-y-2.5 opacity-50 pointer-events-none">
+            {[
+              { lvl: 5, icon: '🥉', label: 'Bronze Frame' },
+              { lvl: 10, icon: '🥈', label: 'Silver Frame' },
+              { lvl: 15, icon: '🥇', label: 'Gold Frame + 5\u20AC Voucher' },
+              { lvl: 25, icon: '💎', label: 'Diamond Frame + 10\u20AC Voucher' },
+            ].map((reward) => (
+              <div key={reward.lvl} className="bg-stone-50 rounded-2xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-stone-200/60 flex items-center justify-center shrink-0 relative">
+                    <span className="text-xl grayscale">{reward.icon}</span>
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-stone-400 flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-stone-500">{reward.label}</span>
+                    <span className="text-[11px] text-stone-400 font-medium block">
+                      {t('rewards.levelRequired', { level: reward.lvl })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -309,6 +348,14 @@ export default function Rewards() {
         >
           {toast}
         </motion.div>
+      )}
+
+      {/* Reward Unlocked Overlay */}
+      {unlockedReward && (
+        <RewardUnlockedOverlay
+          reward={unlockedReward}
+          onClose={() => setUnlockedReward(null)}
+        />
       )}
     </div>
   );

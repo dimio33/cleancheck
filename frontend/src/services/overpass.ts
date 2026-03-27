@@ -267,36 +267,41 @@ async function fetchFromOverpass(
     out center;
   `;
 
-  let data: any = null;
+  // Try all servers in parallel — first successful response wins
+  const PER_SERVER_TIMEOUT = 8_000;
 
-  for (const server of OVERPASS_SERVERS) {
-    try {
+  const data: any = await Promise.any(
+    OVERPASS_SERVERS.map(async (server) => {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout * 1000);
+      const timeoutId = setTimeout(() => controller.abort(), PER_SERVER_TIMEOUT);
       const fetchSignal = signal
         ? anySignal([signal, controller.signal])
         : controller.signal;
 
-      const response = await fetch(server, {
-        method: 'POST',
-        body: `data=${encodeURIComponent(query)}`,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        signal: fetchSignal,
-      });
-      clearTimeout(timeoutId);
+      try {
+        const response = await fetch(server, {
+          method: 'POST',
+          body: `data=${encodeURIComponent(query)}`,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          signal: fetchSignal,
+        });
+        clearTimeout(timeoutId);
 
-      if (!response.ok) throw new Error(`${server} returned ${response.status}`);
+        if (!response.ok) throw new Error(`${server} returned ${response.status}`);
 
-      data = await response.json();
-      break;
-    } catch (err) {
-      if (signal?.aborted) throw err;
-      console.warn(`Overpass server failed: ${server}`, err);
-      continue;
-    }
-  }
-
-  if (!data) throw new Error('All Overpass servers failed');
+        return await response.json();
+      } catch (err) {
+        clearTimeout(timeoutId);
+        if (signal?.aborted) throw err;
+        console.warn(`Overpass server failed: ${server}`, err);
+        throw err;
+      }
+    })
+  ).catch((aggregate) => {
+    // If the caller aborted, re-throw abort error
+    if (signal?.aborted) throw aggregate.errors?.[0] ?? aggregate;
+    throw new Error('All Overpass servers failed');
+  });
 
   const toRad = (x: number) => (x * Math.PI) / 180;
   const haversine = (lat2: number, lng2: number) => {

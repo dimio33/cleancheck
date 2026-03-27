@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Capacitor } from '@capacitor/core';
 import { useGeoStore } from '../../stores/geoStore';
+import { useShallow } from 'zustand/react/shallow';
 
 export default function LocationDeniedBanner() {
-  const { permissionState, requestPermission, checkPermission } = useGeoStore();
+  const { permissionState, requestPermission, checkPermission } = useGeoStore(useShallow((s) => ({ permissionState: s.permissionState, requestPermission: s.requestPermission, checkPermission: s.checkPermission })));
   const { t } = useTranslation();
   const [dismissed, setDismissed] = useState(false);
   const isNative = Capacitor.isNativePlatform();

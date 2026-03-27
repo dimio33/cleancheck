@@ -12,8 +12,10 @@ import { useAuthStore } from '../stores/authStore';
 import { useToastStore } from '../components/ui/Toast';
 import { useDraftStore } from '../stores/draftStore';
 import { useGamificationStore } from '../stores/gamificationStore';
+import { useShallow } from 'zustand/react/shallow';
 import XpGainToast from '../components/ui/XpGainToast';
 import LevelUpOverlay from '../components/ui/LevelUpOverlay';
+import GuestRegistrationCTA from '../components/ui/GuestRegistrationCTA';
 import api from '../services/api';
 import type { Restaurant, CriteriaScores } from '../types';
 
@@ -26,6 +28,7 @@ const CRITERIA = [
  { key: 'smell' as const, icon: '👃' },
  { key: 'supplies' as const, icon: '🧻' },
  { key: 'maintenance' as const, icon: '🔧' },
+ { key: 'ambiente' as const, icon: '✨' },
  { key: 'accessibility' as const, icon: '♿' },
 ];
 
@@ -38,7 +41,7 @@ export default function RatingFlow() {
  // Anonymous ratings allowed - no token check needed
  const addToast = useToastStore((s) => s.addToast);
 
- const { restaurants, fetchRestaurants } = useRestaurantStore();
+ const { restaurants, fetchRestaurants } = useRestaurantStore(useShallow((s) => ({ restaurants: s.restaurants, fetchRestaurants: s.fetchRestaurants })));
 
  // Fetch restaurants when geo is ready (same as Search/Home pages)
  useEffect(() => {
@@ -56,6 +59,7 @@ export default function RatingFlow() {
  smell: 3,
  supplies: 3,
  maintenance: 3,
+ ambiente: 3,
  accessibility: 3,
  });
  const [comment, setComment] = useState('');
@@ -71,7 +75,7 @@ export default function RatingFlow() {
  const [showLevelUp, setShowLevelUp] = useState(false);
  const [newLevel, setNewLevel] = useState(1);
  const [newRank, setNewRank] = useState('newbie');
- const { addXpGain } = useGamificationStore();
+ const addXpGain = useGamificationStore((s) => s.addXpGain);
  const loadedAtRef = useRef(Date.now());
 
  // Reset loaded_at timestamp when component mounts
@@ -230,6 +234,7 @@ export default function RatingFlow() {
  smell: scores.smell,
  supplies: scores.supplies,
  condition: scores.maintenance,
+ ambiente: scores.ambiente,
  accessibility: scores.accessibility,
  comment: comment || undefined,
  _website: honeypot || undefined,
@@ -271,13 +276,13 @@ export default function RatingFlow() {
  // Invalidate so home page refetches fresh data on return
  useRestaurantStore.getState().invalidate();
 
- // Parse gamification response
- if (ratingData.xp_gained) {
+ // Parse gamification response — only show for registered users
+ if (!isGuest && ratingData.xp_gained) {
  const gains = [{ amount: ratingData.xp_gained, source: 'rating' }];
  setRatingXpGains(gains);
  addXpGain(ratingData.xp_gained, 'rating');
  }
- if (ratingData.level_up) {
+ if (!isGuest && ratingData.level_up) {
  setNewLevel(ratingData.new_level || 2);
  setNewRank(ratingData.rank || 'newbie');
  setShowLevelUp(true);
@@ -763,6 +768,18 @@ export default function RatingFlow() {
  transition={{ delay: 0.3 + i * 0.05, duration: 1.5 }}
  />
  ))}
+
+ {/* Guest registration CTA */}
+ {isGuest && (
+ <motion.div
+ initial={{ opacity: 0, y: 20 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ delay: 0.8 }}
+ className="mb-4"
+ >
+ <GuestRegistrationCTA variant="card" />
+ </motion.div>
+ )}
 
  <motion.div
  initial={{ opacity: 0, y: 20 }}

@@ -23,6 +23,7 @@ export interface CriteriaScores {
   smell: number;
   supplies: number;
   maintenance: number;
+  ambiente: number;
   accessibility: number;
 }
 
@@ -40,6 +41,7 @@ export interface Rating {
   smell?: number;
   supplies?: number;
   condition?: number;
+  ambiente?: number;
   accessibility?: number;
   overall_score: number;
   comment?: string;

@@ -110,7 +110,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
        WHERE r.restaurant_id = $1
        ORDER BY r.created_at DESC
        LIMIT 20`,
-      [id]
+      [restaurantResult.rows[0].id]
     );
 
     // Get photos grouped by rating

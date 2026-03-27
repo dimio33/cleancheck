@@ -4,13 +4,14 @@ import { motion } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { getDistance } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
+import { useShallow } from 'zustand/react/shallow';
 import RestaurantCard from '../components/ui/RestaurantCard';
 
 export default function Search() {
  const { t } = useTranslation();
  const geo = useGeolocation();
  const { lat, lng } = geo;
- const { restaurants, fetchRestaurants } = useRestaurantStore();
+ const { restaurants, fetchRestaurants } = useRestaurantStore(useShallow((s) => ({ restaurants: s.restaurants, fetchRestaurants: s.fetchRestaurants })));
  const [query, setQuery] = useState('');
  const [selectedCuisine, setSelectedCuisine] = useState('All');
  const [minScore, setMinScore] = useState(0);

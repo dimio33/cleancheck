@@ -9,12 +9,14 @@ import { getDistance, getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useAuthStore } from '../stores/authStore';
 import { useGamificationStore } from '../stores/gamificationStore';
+import { useShallow } from 'zustand/react/shallow';
 import RestaurantCard from '../components/ui/RestaurantCard';
 import PullToRefresh from '../components/ui/PullToRefresh';
 import StreakBadge from '../components/ui/StreakBadge';
 import XpGainToast from '../components/ui/XpGainToast';
 import AvatarFrame from '../components/ui/AvatarFrame';
 import { RestaurantCardSkeleton } from '../components/ui/Skeleton';
+import GuestRegistrationCTA from '../components/ui/GuestRegistrationCTA';
 import api from '../services/api';
 
 /** Inline trending list for discovery mode (no location) */
@@ -109,7 +111,7 @@ export default function Home() {
  const user = useAuthStore((s) => s.user);
  const [sortBy, setSortBy] = useState<'distance' | 'score'>('distance');
  const [visibleCount, setVisibleCount] = useState(20);
- const { restaurants, loading, error: storeError, fetchRestaurants } = useRestaurantStore();
+ const { restaurants, loading, error: storeError, fetchRestaurants } = useRestaurantStore(useShallow((s) => ({ restaurants: s.restaurants, loading: s.loading, error: s.error, fetchRestaurants: s.fetchRestaurants })));
  const [citySearch, setCitySearch] = useState('');
  const [cityResults, setCityResults] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
  const [searchOverride, setSearchOverride] = useState<{ lat: number; lng: number } | null>(null);
@@ -120,7 +122,7 @@ export default function Home() {
  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
  const searchIdRef = useRef(0);
 
- const { streak, xpGains, activeFrame, fetchGamification, recordDailyLogin, clearXpGains } = useGamificationStore();
+ const { streak, xpGains, activeFrame, fetchGamification, recordDailyLogin, clearXpGains } = useGamificationStore(useShallow((s) => ({ streak: s.streak, xpGains: s.xpGains, activeFrame: s.activeFrame, fetchGamification: s.fetchGamification, recordDailyLogin: s.recordDailyLogin, clearXpGains: s.clearXpGains })));
 
  // Fetch gamification data and record daily login on mount
  useEffect(() => {
@@ -226,7 +228,7 @@ export default function Home() {
  </h1>
  </div>
  <div className="flex items-center gap-2">
- <StreakBadge streak={streak} />
+ {user?.id !== 'guest' && <StreakBadge streak={streak} />}
  <button onClick={() => navigate('/profile')} className="active:scale-95 transition-transform">
  <AvatarFrame frame={activeFrame} size="sm">
  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm">
@@ -238,8 +240,14 @@ export default function Home() {
  </div>
  </div>
 
- {/* XP Gain Toast */}
+ {/* XP Gain Toast or Guest CTA */}
+ {user?.id === 'guest' ? (
+ <div className="px-5 pb-2">
+ <GuestRegistrationCTA variant="inline" />
+ </div>
+ ) : (
  <XpGainToast gains={xpGains} onDone={clearXpGains} />
+ )}
 
  {/* City Search */}
  <div className="px-5 pb-3">
@@ -312,7 +320,7 @@ export default function Home() {
  </h1>
  </div>
  <div className="flex items-center gap-2">
- <StreakBadge streak={streak} />
+ {user?.id !== 'guest' && <StreakBadge streak={streak} />}
  <button onClick={() => navigate('/profile')} className="active:scale-95 transition-transform">
  <AvatarFrame frame={activeFrame} size="sm">
  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm">
@@ -323,6 +331,13 @@ export default function Home() {
  </div>
  </div>
  </div>
+
+ {/* Guest CTA in content mode */}
+ {user?.id === 'guest' && (
+ <div className="px-5 pb-2">
+ <GuestRegistrationCTA variant="inline" />
+ </div>
+ )}
 
  {/* Search bar */}
  <div className="px-5 pb-3 relative">

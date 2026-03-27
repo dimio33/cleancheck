@@ -146,7 +146,7 @@ export default function AnimatedSplash({ onComplete }: AnimatedSplashProps) {
             {/* Logo drops in */}
             <motion.img
               src="/logo.png"
-              alt="CleanCheck"
+              alt="WC-CleanCheck"
               style={{
                 width: 180,
                 height: 180,
@@ -262,7 +262,7 @@ export default function AnimatedSplash({ onComplete }: AnimatedSplashProps) {
                   textShadow: '0 2px 16px rgba(0,0,0,0.2)',
                 }}
               >
-                CleanCheck
+                WC-CleanCheck
               </motion.h1>
               <motion.p
                 style={{

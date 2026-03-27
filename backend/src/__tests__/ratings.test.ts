@@ -17,6 +17,7 @@ describe('Ratings API', () => {
           smell: 3,
           supplies: 3,
           condition: 3,
+          ambiente: 3,
           accessibility: 3,
         });
       expect(res.status).toBe(401);
@@ -32,6 +33,7 @@ describe('Ratings API', () => {
           smell: 3,
           supplies: 3,
           condition: 3,
+          ambiente: 3,
           accessibility: 3,
         });
       expect(res.status).toBe(401);
@@ -54,6 +56,7 @@ describe('Ratings API', () => {
           smell: 3,
           supplies: 3,
           condition: 3,
+          ambiente: 3,
           accessibility: 3,
         });
       // Should fail because no geo headers

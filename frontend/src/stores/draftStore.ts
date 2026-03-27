@@ -3,7 +3,7 @@ import api from '../services/api';
 
 interface RatingDraft {
   restaurantId: string;
-  scores: { cleanliness: number; smell: number; supplies: number; maintenance: number; accessibility: number };
+  scores: { cleanliness: number; smell: number; supplies: number; maintenance: number; ambiente: number; accessibility: number };
   comment?: string;
   lat: number;
   lng: number;
@@ -36,6 +36,7 @@ export const useDraftStore = create<DraftStore>((set, get) => ({
       d.scores.smell === draft.scores.smell &&
       d.scores.supplies === draft.scores.supplies &&
       d.scores.maintenance === draft.scores.maintenance &&
+      d.scores.ambiente === draft.scores.ambiente &&
       d.scores.accessibility === draft.scores.accessibility
     );
     if (existing) return;
@@ -60,6 +61,7 @@ export const useDraftStore = create<DraftStore>((set, get) => ({
           smell: draft.scores.smell,
           supplies: draft.scores.supplies,
           condition: draft.scores.maintenance,
+          ambiente: draft.scores.ambiente,
           accessibility: draft.scores.accessibility,
           comment: draft.comment || undefined,
           _loaded_at: draft.timestamp,

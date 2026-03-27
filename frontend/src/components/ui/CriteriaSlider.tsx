@@ -50,6 +50,8 @@ export default function CriteriaSlider({ icon, label, value, onChange }: Criteri
         max={5}
         step={1}
         value={value}
+        aria-label={label}
+        aria-valuenow={value}
         onChange={(e) => handleChange(Number(e.target.value))}
         className="w-full h-1 rounded-full appearance-none cursor-pointer"
         style={{

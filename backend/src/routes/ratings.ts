@@ -90,7 +90,7 @@ router.post('/verify-location', async (req: Request, res: Response): Promise<voi
 // POST /api/ratings — create rating (anonymous or authenticated, geo-verified)
 router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: Infinity }), async (req: AuthRequest, res: Response): Promise<void> => { // TODO: reset to 500 after testing
   try {
-    const { restaurant_id, cleanliness, smell, supplies, condition, accessibility, comment, visited_at, _website, _loaded_at } = req.body;
+    const { restaurant_id, cleanliness, smell, supplies, condition, ambiente, accessibility, comment, visited_at, _website, _loaded_at } = req.body;
 
     // Anti-spam: Honeypot field — bots fill hidden fields, humans don't
     if (_website) {
@@ -110,7 +110,7 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: Infinity }), async
       }
     }
 
-    if (!restaurant_id || cleanliness == null || smell == null || supplies == null || condition == null || accessibility == null) {
+    if (!restaurant_id || cleanliness == null || smell == null || supplies == null || condition == null || ambiente == null || accessibility == null) {
       res.status(400).json({ error: 'restaurant_id and all rating categories are required' });
       return;
     }
@@ -133,7 +133,7 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: Infinity }), async
     }
 
     // Validate ranges
-    const scores = [cleanliness, smell, supplies, condition, accessibility];
+    const scores = [cleanliness, smell, supplies, condition, ambiente, accessibility];
     for (const score of scores) {
       if (score < 1 || score > 5 || !Number.isInteger(score)) {
         res.status(400).json({ error: 'All scores must be integers between 1 and 5' });
@@ -203,14 +203,14 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: Infinity }), async
       }
     }
 
-    const overall_score = calculateOverallScore({ cleanliness, smell, supplies, condition, accessibility });
+    const overall_score = calculateOverallScore({ cleanliness, smell, supplies, ambiente, condition, accessibility });
 
     // Insert rating
     const result = await query(
-      `INSERT INTO ratings (user_id, anonymous_id, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, comment, visited_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      `INSERT INTO ratings (user_id, anonymous_id, restaurant_id, cleanliness, smell, supplies, condition, ambiente, accessibility, overall_score, comment, visited_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
-      [userId, anonymousId, restaurant_id, cleanliness, smell, supplies, condition, accessibility, overall_score, sanitizedComment || null, visitDate]
+      [userId, anonymousId, restaurant_id, cleanliness, smell, supplies, condition, ambiente, accessibility, overall_score, sanitizedComment || null, visitDate]
     );
 
     // Recalculate restaurant score

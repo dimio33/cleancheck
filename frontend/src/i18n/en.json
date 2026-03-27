@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "CleanCheck",
+    "name": "WC-CleanCheck",
     "tagline": "Rate restrooms. Predict kitchen quality."
   },
   "nav": {
@@ -17,8 +17,8 @@
     "slide1Title": "Rate Restrooms.\nPredict Kitchens.",
     "slide1Desc": "The cleanliness of a restroom reveals a lot about a restaurant's kitchen.",
     "slide2Title": "How it Works",
-    "slide2Desc": "Rate 5 criteria and get a CleanScore for every restaurant.",
-    "slide3Title": "Join CleanCheck",
+    "slide2Desc": "Rate 6 criteria and get a CleanScore for every restaurant.",
+    "slide3Title": "Join WC-CleanCheck",
     "slide3Desc": "Create an account or continue as a guest.",
     "continueAsGuest": "Continue as Guest",
     "noAccountNeeded": "No account needed",
@@ -27,6 +27,7 @@
       "smell": "Smell & Freshness",
       "supplies": "Supplies & Toiletries",
       "maintenance": "Maintenance",
+      "ambiente": "Ambience",
       "accessibility": "Accessibility"
     }
   },
@@ -73,6 +74,7 @@
       "smell": "Smell",
       "supplies": "Supplies",
       "maintenance": "Maintenance",
+      "ambiente": "Ambience",
       "accessibility": "Accessibility"
     },
     "reviews": "Reviews",
@@ -94,7 +96,7 @@
     "step1Title": "Choose Restaurant",
     "step1Desc": "Select a restaurant near you",
     "step2Title": "Rate the Restroom",
-    "step2Desc": "Score 5 criteria",
+    "step2Desc": "Score 6 criteria",
     "step3Title": "Photo & Comment",
     "step3Desc": "Optional: Add a photo or comment",
     "step4Title": "Done!",
@@ -160,7 +162,9 @@
     "orContinueWith": "or continue with",
     "signInWithGoogle": "Sign in with Google",
     "signInWithApple": "Sign in with Apple",
-    "socialLoginFailed": "Sign in failed. Please try again."
+    "socialLoginFailed": "Sign in failed. Please try again.",
+    "appleNotAvailable": "Sign in with Apple is not yet available",
+    "appleSetupNeeded": "Apple sign-in is being set up. Please use email for now."
   },
   "badges": {
     "firstRating": {
@@ -276,7 +280,7 @@
       "inspector": "Hygiene Inspector",
       "master": "Hygiene Master",
       "expert": "Cleanliness Expert",
-      "legend": "CleanCheck Legend"
+      "legend": "WC-CleanCheck Legend"
     }
   },
   "rewards": {
@@ -295,6 +299,12 @@
     "claimSuccess": "Reward claimed!",
     "partnerRewards": "Partner Vouchers",
     "partnerRewardsDesc": "Unlock real restaurant vouchers starting at Level 15!"
+  },
+  "guest": {
+    "ctaTitle": "Become a Hygiene Hero!",
+    "ctaDescription": "Register to earn XP, level up, and unlock exclusive rewards!",
+    "ctaButton": "Register now",
+    "ctaInline": "Register & earn XP"
   },
   "common": {
     "back": "Back",

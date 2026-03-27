@@ -9,6 +9,7 @@ const CRITERIA_ICONS = [
  { icon: '👃', key: 'smell' },
  { icon: '🧻', key: 'supplies' },
  { icon: '🔧', key: 'maintenance' },
+ { icon: '✨', key: 'ambiente' },
  { icon: '♿', key: 'accessibility' },
 ];
 

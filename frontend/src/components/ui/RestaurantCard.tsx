@@ -22,7 +22,7 @@ function getScoreBadgeBg(score: number | null): string {
 function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCardProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const isFavorite = useFavoritesStore((s) => s.isFavorite(restaurant.id));
+  const isFavorite = useFavoritesStore((s) => s.favorites.includes(restaurant.id));
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
 
   const score = restaurant.clean_score;
@@ -77,7 +77,10 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
 
       {/* Favorite heart */}
       <motion.button
-        onClick={(e) => { e.stopPropagation(); toggleFavorite(restaurant.id); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleFavorite(restaurant.id);
+        }}
         className="flex-shrink-0 w-8 h-8 flex items-center justify-center"
         aria-label="Favorite"
         whileTap={{ scale: 1.4 }}

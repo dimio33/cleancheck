@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,12 +30,13 @@ function funName(id: string): { name: string; avatar: string } {
   return { name: `${prefix}${suffix}${num}`, avatar };
 }
 
-const CRITERIA_KEYS = ['cleanliness', 'smell', 'supplies', 'maintenance', 'accessibility'] as const;
+const CRITERIA_KEYS = ['cleanliness', 'smell', 'supplies', 'maintenance', 'ambiente', 'accessibility'] as const;
 const CRITERIA_DB_MAP: Record<string, string> = {
   cleanliness: 'cleanliness',
   smell: 'smell',
   supplies: 'supplies',
   maintenance: 'condition',
+  ambiente: 'ambiente',
   accessibility: 'accessibility',
 };
 
@@ -136,11 +137,11 @@ export default function RestaurantDetail() {
     return () => { cancelled = true; };
   }, [id]);
 
-  const ratings = [...apiRatings].sort((a, b) => {
+  const ratings = useMemo(() => [...apiRatings].sort((a, b) => {
     if (ratingSort === 'highest') return Number(b.overall_score) - Number(a.overall_score);
     if (ratingSort === 'lowest') return Number(a.overall_score) - Number(b.overall_score);
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
+  }), [apiRatings, ratingSort]);
 
   // Build display data: prefer store restaurant, fall back to API restaurant (for Trending/QR links)
   const baseRestaurant = restaurant || (apiRestaurant ? {
@@ -181,7 +182,7 @@ export default function RestaurantDetail() {
   // Compute criteria averages from ratings
   const criteriaAvgs = baseRestaurant.criteria_averages || computeCriteriaAverages(apiRatings);
 
-  const isFavorite = useFavoritesStore.getState().isFavorite(baseRestaurant.id);
+  const isFavorite = useFavoritesStore((s) => s.favorites.includes(baseRestaurant.id));
 
   const handleShare = async () => {
     const text = `${baseRestaurant.name} — CleanScore: ${displayRestaurant.clean_score?.toFixed(1) || '?'}/10`;
@@ -207,7 +208,7 @@ export default function RestaurantDetail() {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => navigate(-1)}
-            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
+            className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
             aria-label="Back"
           >
             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -217,7 +218,7 @@ export default function RestaurantDetail() {
           <div className="flex gap-2">
             <button
               onClick={() => useFavoritesStore.getState().toggleFavorite(baseRestaurant.id)}
-              className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
+              className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
               aria-label="Favorite"
               aria-pressed={isFavorite}
             >
@@ -227,8 +228,9 @@ export default function RestaurantDetail() {
             </button>
             <button
               onClick={handleShare}
-              className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
+              className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
               title={t('share.title')}
+              aria-label={t('share.title')}
             >
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -237,8 +239,9 @@ export default function RestaurantDetail() {
             {dbId && (
               <button
                 onClick={() => setShowQR(true)}
-                className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
+                className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
                 title={t('qr.title')}
+                aria-label={t('qr.title')}
               >
                 <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
@@ -380,7 +383,7 @@ export default function RestaurantDetail() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-sm shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-sm shrink-0" aria-label={rating.username || funName(rating.id).name} role="img">
                       {rating.username
                         ? <span className="text-stone-500 text-xs font-medium">{rating.username.charAt(0).toUpperCase()}</span>
                         : <span>{funName(rating.id).avatar}</span>
@@ -431,7 +434,7 @@ export default function RestaurantDetail() {
                 {/* Photo gallery */}
                 {rating.photos && rating.photos.length > 0 && (
                   <div className="grid grid-cols-3 gap-1.5 mt-3 rounded-xl overflow-hidden">
-                    {rating.photos.map((photo: { id: string; photo_url: string }) => (
+                    {rating.photos.map((photo: { id: string; photo_url: string }, photoIdx: number) => (
                       <button
                         key={photo.id}
                         onClick={() => setLightboxPhoto(getPhotoUrl(photo.photo_url))}
@@ -439,7 +442,7 @@ export default function RestaurantDetail() {
                       >
                         <img
                           src={getPhotoUrl(photo.photo_url)}
-                          alt=""
+                          alt={`Bewertungsfoto ${photoIdx + 1}`}
                           loading="lazy"
                           className="w-full h-full object-cover hover:scale-105 transition-transform"
                         />

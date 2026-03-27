@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../stores/authStore';
+import { useShallow } from 'zustand/react/shallow';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
@@ -33,7 +34,7 @@ function AuthInner() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { login, register, loginAsGuest, loginWithGoogle, loginWithApple } = useAuthStore();
+  const { login, register, loginAsGuest, loginWithGoogle, loginWithApple } = useAuthStore(useShallow((s) => ({ login: s.login, register: s.register, loginAsGuest: s.loginAsGuest, loginWithGoogle: s.loginWithGoogle, loginWithApple: s.loginWithApple })));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,22 +108,43 @@ function AuthInner() {
     : null;
 
   /* --- Apple Sign-In --- */
+  // Uses Apple JS SDK with popup flow (works in both web and Capacitor WebView)
   const appleAvailable = typeof window !== 'undefined' && !!(window as any).AppleID;
 
   const handleAppleLogin = async () => {
-    if (!(window as any).AppleID) {
+    const AppleID = (window as any).AppleID;
+    if (!AppleID) {
+      setError(t('auth.appleNotAvailable', 'Mit Apple anmelden ist noch nicht verfügbar'));
+      setTimeout(() => setError(''), 5000);
       return;
     }
+
     try {
       setLoading(true);
       setError('');
-      const response = await (window as any).AppleID.auth.signIn();
+
+      // Initialize Apple JS SDK with popup mode
+      AppleID.auth.init({
+        clientId: 'com.efindo.cleancheck',
+        scope: 'name email',
+        redirectURI: 'https://cleancheck.e-findo.de',
+        usePopup: true,
+      });
+
+      const response = await AppleID.auth.signIn();
       await loginWithApple(response.authorization.id_token, response.user);
       localStorage.setItem('cleancheck_onboarded', 'true');
       navigate('/');
-    } catch {
-      setError(t('auth.socialLoginFailed'));
-      setTimeout(() => setError(''), 5000);
+    } catch (err: any) {
+      // User cancelled = don't show error
+      const errStr = String(err?.error || err?.message || err || '');
+      if (errStr.includes('popup_closed') || errStr.includes('cancel') || err?.code === 1001) {
+        // User cancelled — silent
+      } else {
+        console.error('Apple Sign-In error:', err);
+        setError(t('auth.appleSetupNeeded', 'Apple-Anmeldung wird eingerichtet. Bitte nutze vorerst E-Mail.'));
+        setTimeout(() => setError(''), 8000);
+      }
     } finally {
       setLoading(false);
     }

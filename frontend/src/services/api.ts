@@ -42,17 +42,28 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean; _retryCount?: number };
+
+    // Retry on 5xx server errors (max 2 retries, 1s delay)
+    const status = error.response?.status;
+    if (status && status >= 500 && originalRequest) {
+      const retryCount = originalRequest._retryCount || 0;
+      if (retryCount < 2) {
+        originalRequest._retryCount = retryCount + 1;
+        await new Promise((r) => setTimeout(r, 1000));
+        return api(originalRequest);
+      }
+    }
 
     // Don't retry refresh or logout requests, or non-401 errors
     if (
-      error.response?.status !== 401 ||
+      status !== 401 ||
       !originalRequest ||
       originalRequest._retry ||
       originalRequest.url === '/auth/refresh' ||
       originalRequest.url === '/auth/logout'
     ) {
-      if (error.response?.status === 401) {
+      if (status === 401) {
         clearAuth();
       }
       return Promise.reject(error);

@@ -6,9 +6,11 @@ import { useAuthStore } from '../stores/authStore';
 import { useFavoritesStore } from '../stores/favoritesStore';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useDraftStore } from '../stores/draftStore';
+import { useShallow } from 'zustand/react/shallow';
 import BadgeCard from '../components/ui/BadgeCard';
 import XpBar from '../components/ui/XpBar';
 import AvatarFrame from '../components/ui/AvatarFrame';
+import GuestRegistrationCTA from '../components/ui/GuestRegistrationCTA';
 import { getScoreColor } from '../utils/geo';
 import api from '../services/api';
 import type { Badge, Rating } from '../types';
@@ -16,7 +18,7 @@ import type { Badge, Rating } from '../types';
 export default function Profile() {
  const { t, i18n } = useTranslation();
  const navigate = useNavigate();
- const { user, isAuthenticated, logout } = useAuthStore();
+ const { user, isAuthenticated, logout } = useAuthStore(useShallow((s) => ({ user: s.user, isAuthenticated: s.isAuthenticated, logout: s.logout })));
 
  const [profileData, setProfileData] = useState<any>(null);
  const [userRatings, setUserRatings] = useState<Rating[]>([]);
@@ -63,22 +65,30 @@ export default function Profile() {
  const xpForNextLevel = gamification.xpForNextLevel ?? 100;
  const xpProgress = gamification.progress ?? 0;
 
- if (!user) {
+ if (!user || user.id === 'guest' || !isAuthenticated) {
  return (
  <div className="flex-1 flex flex-col items-center justify-center px-8 text-center pb-24">
- <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mb-5">
- <svg className="w-7 h-7 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
- <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
- </svg>
+ {/* Grayed-out XP preview */}
+ <div className="w-full max-w-xs mb-6 opacity-40 pointer-events-none">
+ <div className="bg-white rounded-2xl shadow-sm p-4">
+ <div className="flex items-center gap-3 mb-3">
+ <div className="w-12 h-12 rounded-full bg-stone-200 flex items-center justify-center">
+ <span className="text-lg font-bold text-stone-400">?</span>
  </div>
- <h2 className="text-lg font-semibold text-stone-800 mb-1">{t('profile.title')}</h2>
- <p className="text-sm text-stone-500 mb-6">{t('profile.loginPrompt')}</p>
- <button
- onClick={() => navigate('/auth')}
- className="px-8 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium shadow-lg shadow-teal-500/20"
- >
- {t('profile.login')}
- </button>
+ <div className="flex-1">
+ <div className="h-3 bg-stone-200 rounded-full w-24 mb-1.5" />
+ <div className="h-2 bg-stone-100 rounded-full w-16" />
+ </div>
+ </div>
+ <div className="h-2 bg-stone-100 rounded-full w-full mb-1" />
+ <div className="flex justify-between">
+ <span className="text-[10px] text-stone-300">0 XP</span>
+ <span className="text-[10px] text-stone-300">Level 1</span>
+ </div>
+ </div>
+ </div>
+
+ <GuestRegistrationCTA variant="card" className="w-full max-w-xs" />
  </div>
  );
  }
@@ -217,7 +227,7 @@ export default function Profile() {
  {/* Saved Restaurants */}
  {(() => {
  const favorites = useFavoritesStore((s) => s.favorites);
- const { restaurants } = useRestaurantStore();
+ const restaurants = useRestaurantStore((s) => s.restaurants);
  if (favorites.length === 0) return (
  <div className="px-4 mb-6">
  <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.saved')} (0)</h3>

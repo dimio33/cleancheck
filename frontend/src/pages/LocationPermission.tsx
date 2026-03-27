@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useGeoStore } from '../stores/geoStore';
+import { useShallow } from 'zustand/react/shallow';
 import { detectPlatform } from '../utils/platform';
 
 export default function LocationPermission() {
  const navigate = useNavigate();
  const { t } = useTranslation();
- const { permissionState, requestPermission, setPermissionAsked } = useGeoStore();
+ const { permissionState, requestPermission, setPermissionAsked } = useGeoStore(useShallow((s) => ({ permissionState: s.permissionState, requestPermission: s.requestPermission, setPermissionAsked: s.setPermissionAsked })));
  const platform = detectPlatform();
  const [loading, setLoading] = useState(false);
 
