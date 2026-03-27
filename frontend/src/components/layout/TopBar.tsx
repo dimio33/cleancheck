@@ -32,12 +32,7 @@ export default function TopBar() {
         ) : <div className="w-11" />}
 
         <div className="flex items-center gap-2">
-          {/* Simplified TopBar icon — teal squircle with checkmark */}
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)' }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
+          <img src="/logo.png" alt="WC-CleanCheck" className="w-8 h-8 rounded-lg" />
           <span className="font-bold text-stone-800 tracking-tight text-[15px]">WC-CleanCheck</span>
         </div>
 
