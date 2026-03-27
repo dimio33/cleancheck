@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "WC-CleanCheck",
-    "tagline": "Bewerte Toiletten. Sag Küchenqualität voraus."
+    "tagline": "Bewerte. Vergleiche. Entscheide besser."
   },
   "nav": {
     "home": "Home",
@@ -14,10 +14,10 @@
     "skip": "Überspringen",
     "next": "Weiter",
     "getStarted": "Los geht's",
-    "slide1Title": "Bewerte Toiletten.\nSag Küchen voraus.",
-    "slide1Desc": "Die Sauberkeit der Toilette verrät viel über die Küche eines Restaurants.",
+    "slide1Title": "Weil Sauberkeit\nkein Zufall ist.",
+    "slide1Desc": "Bewerte Restaurant-Hygiene und finde die besten Restaurants in deiner Nähe.",
     "slide2Title": "So funktioniert's",
-    "slide2Desc": "Bewerte 6 Kriterien und erhalte einen CleanScore für jedes Restaurant.",
+    "slide2Desc": "Bewerte 6 Kriterien in 30 Sekunden und erhalte einen CleanScore für jedes Restaurant.",
     "slide3Title": "Tritt WC-CleanCheck bei",
     "slide3Desc": "Erstelle ein Konto oder fahre als Gast fort.",
     "continueAsGuest": "Als Gast fortfahren",

@@ -45,7 +45,7 @@ export default defineConfig({
       manifest: {
         name: 'WC-CleanCheck',
         short_name: 'WC-CleanCheck',
-        description: 'Rate restrooms. Predict kitchen quality.',
+        description: 'Bewerte. Vergleiche. Entscheide besser.',
         theme_color: '#14b8a6',
         background_color: '#f8fafc',
         display: 'standalone',
