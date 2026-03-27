@@ -371,13 +371,16 @@ export default function Profile() {
  <button
  onClick={async () => {
    try {
-     const response = await api.get(`/users/${user!.id}/data-export`, { responseType: 'blob' });
-     const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+     const { data } = await api.get(`/users/${user!.id}/data-export`);
+     const json = JSON.stringify(data, null, 2);
+     const blob = new Blob([json], { type: 'application/json' });
      const url = URL.createObjectURL(blob);
      const a = document.createElement('a');
      a.href = url;
      a.download = 'meine-daten.json';
+     document.body.appendChild(a);
      a.click();
+     document.body.removeChild(a);
      URL.revokeObjectURL(url);
    } catch (err) {
      console.error('Data export failed:', err);

@@ -274,7 +274,7 @@ router.get('/:id/data-export', authenticate, async (req: AuthRequest, res: Respo
     );
 
     const xpEventsResult = await query(
-      `SELECT xp_amount, event_type, created_at
+      `SELECT xp_amount, source, created_at
        FROM xp_events WHERE user_id = $1
        ORDER BY created_at DESC`,
       [id]
