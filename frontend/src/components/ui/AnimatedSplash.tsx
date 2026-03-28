@@ -278,7 +278,7 @@ export default function AnimatedSplash({ onComplete }: AnimatedSplashProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
               >
-                Saubere Toilette = Saubere Küche
+                Bewerte. Vergleiche. Entscheide besser.
               </motion.p>
             </motion.div>
           )}
