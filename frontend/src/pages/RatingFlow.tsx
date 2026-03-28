@@ -501,6 +501,7 @@ export default function RatingFlow() {
  key={c.key}
  icon={c.icon}
  label={t(`restaurant.criteria.${c.key}`)}
+ description={t(`rating.criteriaDesc.${c.key}`)}
  value={scores[c.key]}
  onChange={(v) => updateScore(c.key, v)}
  />

@@ -118,7 +118,15 @@
     "photoUploadFailed": "Foto konnte nicht hochgeladen werden",
     "savedOffline": "Bewertung offline gespeichert. Wird gesendet sobald du online bist.",
     "submitFailed": "Bewertung konnte nicht gesendet werden",
-    "alreadyRated": "Du hast dieses Restaurant heute bereits bewertet"
+    "alreadyRated": "Du hast dieses Restaurant heute bereits bewertet",
+    "criteriaDesc": {
+      "cleanliness": "Böden, Oberflächen, Spiegel, Waschbecken",
+      "smell": "Frische, Belüftung, unangenehme Gerüche",
+      "supplies": "Seife, Papier, Handtücher, Trockner",
+      "maintenance": "Defekte, Reparaturen, Funktionalität",
+      "ambiente": "Passt das WC zum Stil des Restaurants?",
+      "accessibility": "Barrierefreiheit, Beschilderung, Erreichbarkeit"
+    }
   },
   "profile": {
     "title": "Profil",

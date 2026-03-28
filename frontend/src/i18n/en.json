@@ -118,7 +118,15 @@
     "photoUploadFailed": "Failed to upload photo",
     "savedOffline": "Rating saved offline. Will sync when you're back online.",
     "submitFailed": "Could not submit rating",
-    "alreadyRated": "You already rated this restaurant today"
+    "alreadyRated": "You already rated this restaurant today",
+    "criteriaDesc": {
+      "cleanliness": "Floors, surfaces, mirrors, sinks",
+      "smell": "Freshness, ventilation, unpleasant odors",
+      "supplies": "Soap, paper, towels, dryers",
+      "maintenance": "Defects, repairs, functionality",
+      "ambiente": "Does the restroom match the restaurant's style?",
+      "accessibility": "Barrier-free access, signage, reachability"
+    }
   },
   "profile": {
     "title": "Profile",

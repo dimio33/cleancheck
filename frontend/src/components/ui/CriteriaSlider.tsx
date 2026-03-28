@@ -3,11 +3,12 @@ import { motion } from 'framer-motion';
 interface CriteriaSliderProps {
   icon: string;
   label: string;
+  description?: string;
   value: number;
   onChange: (value: number) => void;
 }
 
-export default function CriteriaSlider({ icon, label, value, onChange }: CriteriaSliderProps) {
+export default function CriteriaSlider({ icon, label, description, value, onChange }: CriteriaSliderProps) {
   const getValueColor = (v: number) => {
     if (v >= 4) return { bg: 'bg-emerald-50', text: 'text-emerald-600', track: '#10B981' };
     if (v >= 3) return { bg: 'bg-amber-50', text: 'text-amber-600', track: '#F59E0B' };
@@ -30,7 +31,10 @@ export default function CriteriaSlider({ icon, label, value, onChange }: Criteri
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <span className="text-lg">{icon}</span>
-          <span className="text-sm font-medium text-stone-700">{label}</span>
+          <div>
+            <span className="text-sm font-medium text-stone-700">{label}</span>
+            {description && <span className="text-[11px] text-stone-400 block leading-tight">{description}</span>}
+          </div>
         </div>
         <motion.span
           className={`text-xl font-bold ${colors.text}`}
