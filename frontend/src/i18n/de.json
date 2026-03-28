@@ -124,7 +124,7 @@
       "smell": "Frische, Belüftung, unangenehme Gerüche",
       "supplies": "Seife, Papier, Handtücher, Trockner",
       "maintenance": "Defekte, Reparaturen, Funktionalität",
-      "ambiente": "Passt das WC zum Stil des Restaurants?",
+      "ambiente": "Passt das WC zum Restaurant? Niveau muss stimmen.",
       "accessibility": "Barrierefreiheit, Beschilderung, Erreichbarkeit"
     }
   },

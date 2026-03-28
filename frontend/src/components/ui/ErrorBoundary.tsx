@@ -12,8 +12,8 @@ export default class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, errorMessage: `${error.name}: ${error.message}\n${error.stack || ''}` };
   }
 
-  componentDidCatch(error: Error) {
-    console.error('ErrorBoundary caught:', error);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('ErrorBoundary caught:', error, 'Component stack:', errorInfo?.componentStack);
     // Send to remote logger
     try {
       fetch(`${API_URL}/client-logs`, {

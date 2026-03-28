@@ -58,7 +58,7 @@ export default function AppRouter() {
  <Route path="/rate" element={<RatingFlow />} />
  <Route path="/rate/:id" element={<QuickRate />} />
  <Route path="/restaurant/:id" element={<RestaurantDetail />} />
- <Route path="/profile" element={<Profile />} />
+ <Route path="/profile" element={<ErrorBoundary><Profile /></ErrorBoundary>} />
  <Route path="/auth" element={<Auth />} />
  <Route path="/trending" element={<Trending />} />
  <Route path="/leaderboard" element={<Leaderboard />} />

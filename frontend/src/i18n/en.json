@@ -124,7 +124,7 @@
       "smell": "Freshness, ventilation, unpleasant odors",
       "supplies": "Soap, paper, towels, dryers",
       "maintenance": "Defects, repairs, functionality",
-      "ambiente": "Does the restroom match the restaurant's style?",
+      "ambiente": "Does the restroom match the restaurant? Standards must align.",
       "accessibility": "Barrier-free access, signage, reachability"
     }
   },

@@ -20,6 +20,8 @@ export default function Profile() {
  const navigate = useNavigate();
  const { user, isAuthenticated, logout } = useAuthStore(useShallow((s) => ({ user: s.user, isAuthenticated: s.isAuthenticated, logout: s.logout })));
 
+ const favorites = useFavoritesStore((s) => s.favorites);
+ const restaurants = useRestaurantStore((s) => s.restaurants);
  const [profileData, setProfileData] = useState<any>(null);
  const [userRatings, setUserRatings] = useState<Rating[]>([]);
  const [claimedRewards, setClaimedRewards] = useState<any[]>([]);
@@ -63,9 +65,10 @@ export default function Profile() {
  const xp = gamification.xp ?? profileData?.user?.xp ?? 0;
  const level = gamification.level ?? profileData?.user?.level ?? 1;
  const rankObj = gamification.rank;
- const rank = typeof rankObj === 'object' && rankObj !== null
+ const rankRaw = typeof rankObj === 'object' && rankObj !== null
    ? (i18n.language === 'de' ? rankObj.de : rankObj.en) || 'newbie'
    : rankObj ?? 'newbie';
+ const rank = typeof rankRaw === 'string' ? rankRaw : String(rankRaw ?? 'newbie');
  const xpForNextLevel = gamification.xpForNextLevel ?? 100;
  const xpProgress = gamification.progress ?? 0;
 
@@ -237,8 +240,6 @@ export default function Profile() {
 
  {/* Saved Restaurants */}
  {(() => {
- const favorites = useFavoritesStore((s) => s.favorites);
- const restaurants = useRestaurantStore((s) => s.restaurants);
  if (favorites.length === 0) return (
  <div className="px-4 mb-6">
  <h3 className="text-xs uppercase tracking-widest text-stone-400 font-medium mb-3">{t('profile.saved')} (0)</h3>
