@@ -1,4 +1,5 @@
 import { type ReactNode, useRef, useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { hapticLight } from '../../utils/haptics';
 import './BottomSheet.css';
 
@@ -113,7 +114,7 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
 
   if (!mounted) return null;
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -162,6 +163,7 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
           </button>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
