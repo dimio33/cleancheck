@@ -110,21 +110,36 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
         onTouchEnd={onTouchEnd}
         onTransitionEnd={onTransitionEnd}
       >
-        {/* Drag handle */}
+        {/* Header: drag handle + title + X button */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-stone-300" />
         </div>
-
-        {/* Title */}
-        {title && (
-          <div className="px-5 pb-2 pt-1">
-            <h3 className="text-[15px] font-bold text-stone-900">{title}</h3>
-          </div>
-        )}
+        <div className="flex items-center justify-between px-5 pb-2 pt-1">
+          <h3 className="text-[15px] font-bold text-stone-900">{title || ''}</h3>
+          <button
+            onClick={handleClose}
+            className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center active:bg-stone-200 transition-colors"
+            aria-label="Schließen"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#78716C" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
         {/* Content */}
-        <div className="overflow-y-auto px-5 pb-8 flex-1">
+        <div className="overflow-y-auto px-5 pb-4 flex-1">
           {children}
+        </div>
+
+        {/* Apply button */}
+        <div className="px-5 pb-6 pt-2">
+          <button
+            onClick={handleClose}
+            className="w-full py-3 rounded-xl bg-teal-600 text-white font-semibold text-[15px] active:bg-teal-700 transition-colors"
+          >
+            Anwenden
+          </button>
         </div>
       </div>
     </>
