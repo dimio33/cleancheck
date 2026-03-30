@@ -1,7 +1,7 @@
 import webPush from 'web-push';
 import { query } from '../utils/db';
 
-const VAPID_PUBLIC_KEY = 'BBlRxqegdm7V_XIZ7tOFTg62pw2sPH1IhD9Cblg-xcEh10u3ENdxb_DIOLNNZrnMnuR_HuYCdzxXrffOdwheQfo';
+const VAPID_PUBLIC_KEY = 'BAVq87Syx1MA7oIpSoxEG29kSz5No_kxWeryd7C4N8MYGZnzlBoj8H_7HdSS_JhEyzyq0T7Ay5EzeHNaSTk2cnM';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
 
 if (VAPID_PRIVATE_KEY) {
