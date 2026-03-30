@@ -335,6 +335,22 @@
     "helpful": "Hilfreich",
     "loginToUpvote": "Registriere dich um abzustimmen"
   },
+  "claim": {
+    "title": "Restaurant beanspruchen",
+    "desc": "Verifizieren Sie sich als Inhaber, um auf Bewertungen antworten zu können.",
+    "contactName": "Ihr Name",
+    "contactEmail": "Geschäftliche E-Mail",
+    "contactPhone": "Telefon (optional)",
+    "submit": "Anfrage senden",
+    "success": "Ihre Anfrage wurde eingereicht. Wir prüfen Ihre Angaben und melden uns innerhalb von 48 Stunden.",
+    "alreadyClaimed": "Für dieses Restaurant liegt bereits eine Anfrage vor.",
+    "ownerLink": "Sind Sie der Inhaber?",
+    "ownerReply": "Antwort des Inhabers",
+    "replyPlaceholder": "Als Inhaber antworten...",
+    "replySubmit": "Antwort senden",
+    "replyEdit": "Bearbeiten",
+    "replySaved": "Antwort gespeichert"
+  },
   "common": {
     "back": "Zurück",
     "cancel": "Abbrechen",

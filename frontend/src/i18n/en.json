@@ -335,6 +335,22 @@
     "helpful": "Helpful",
     "loginToUpvote": "Register to vote"
   },
+  "claim": {
+    "title": "Claim Restaurant",
+    "desc": "Verify yourself as the owner to respond to reviews.",
+    "contactName": "Your Name",
+    "contactEmail": "Business Email",
+    "contactPhone": "Phone (optional)",
+    "submit": "Submit Request",
+    "success": "Your request has been submitted. We will review your details and get back to you within 48 hours.",
+    "alreadyClaimed": "A claim request already exists for this restaurant.",
+    "ownerLink": "Are you the owner?",
+    "ownerReply": "Owner's Response",
+    "replyPlaceholder": "Reply as owner...",
+    "replySubmit": "Send Reply",
+    "replyEdit": "Edit",
+    "replySaved": "Reply saved"
+  },
   "common": {
     "back": "Back",
     "cancel": "Cancel",

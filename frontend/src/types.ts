@@ -10,6 +10,8 @@ export interface Restaurant {
   criteria_averages?: CriteriaScores;
   photos?: string[];
   distance?: number;
+  owner_id?: string;
+  verified?: boolean;
 }
 
 export interface CriteriaScores {
@@ -41,12 +43,15 @@ export interface Rating {
   created_at: string;
   upvote_count?: number;
   user_upvoted?: boolean;
+  owner_reply?: string;
+  owner_reply_at?: string;
 }
 
 export interface User {
   id: string;
   username: string;
   email: string;
+  role?: 'user' | 'restaurant_owner' | 'admin';
   avatar?: string;
   created_at: string;
   rating_count: number;

@@ -562,6 +562,80 @@ router.post('/:id/upvote', authenticate, async (req: AuthRequest, res: Response)
   }
 });
 
+// POST /api/ratings/:id/owner-reply — add or edit owner reply to a rating
+router.post('/:id/owner-reply', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    if (!isValidUuid(id)) {
+      res.status(400).json({ error: 'Invalid rating ID format' });
+      return;
+    }
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { reply_text } = req.body;
+
+    // Validate reply_text
+    if (!reply_text || typeof reply_text !== 'string' || reply_text.trim().length === 0) {
+      res.status(400).json({ error: 'reply_text is required' });
+      return;
+    }
+
+    if (reply_text.length > 1000) {
+      res.status(400).json({ error: 'reply_text must be 1000 characters or fewer' });
+      return;
+    }
+
+    // Look up the rating to get restaurant_id
+    const ratingResult = await query<{ restaurant_id: string }>(
+      `SELECT restaurant_id FROM ratings WHERE id = $1`,
+      [id]
+    );
+
+    if (ratingResult.rows.length === 0) {
+      res.status(404).json({ error: 'Rating not found' });
+      return;
+    }
+
+    const restaurantId = ratingResult.rows[0].restaurant_id;
+
+    // Verify user owns this restaurant
+    const ownerCheck = await query<{ owner_id: string | null }>(
+      `SELECT owner_id FROM restaurants WHERE id = $1`,
+      [restaurantId]
+    );
+
+    if (ownerCheck.rows.length === 0) {
+      res.status(404).json({ error: 'Restaurant not found' });
+      return;
+    }
+
+    if (ownerCheck.rows[0].owner_id !== req.user.id) {
+      res.status(403).json({ error: 'You are not the owner of this restaurant' });
+      return;
+    }
+
+    // Sanitize: strip HTML tags
+    const sanitizedReply = reply_text.replace(/<[^>]*>/g, '').trim();
+
+    // UPSERT — insert or update if already replied
+    const result = await query(
+      `INSERT INTO restaurant_owner_replies (rating_id, restaurant_id, owner_id, reply_text)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (rating_id) DO UPDATE SET reply_text = $4, updated_at = NOW()
+       RETURNING *`,
+      [id, restaurantId, req.user.id, sanitizedReply]
+    );
+
+    res.status(201).json({ reply: result.rows[0] });
+  } catch (err) {
+    console.error('Owner reply error:', err);
+    res.status(500).json({ error: 'Failed to save owner reply' });
+  }
+});
+
 // POST /api/ratings/:id/report — report a rating
 router.post('/:id/report', optionalAuth, async (req: Request, res: Response): Promise<void> => {
   try {

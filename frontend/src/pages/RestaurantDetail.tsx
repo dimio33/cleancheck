@@ -94,6 +94,9 @@ export default function RestaurantDetail() {
   const [showQR, setShowQR] = useState(false);
   const [ratingSort, setRatingSort] = useState<'newest' | 'highest' | 'lowest'>('newest');
   const [upvoteState, setUpvoteState] = useState<Record<string, { upvoted: boolean; count: number }>>({});
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [replySubmitting, setReplySubmitting] = useState(false);
   const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
@@ -174,6 +177,32 @@ export default function RestaurantDetail() {
       setUpvoteState((s) => ({ ...s, [ratingId]: prev }));
     }
   };
+
+  const handleOwnerReply = async (ratingId: string) => {
+    if (!replyText.trim()) return;
+    setReplySubmitting(true);
+    try {
+      await api.post(`/ratings/${ratingId}/owner-reply`, { reply_text: replyText.trim() });
+      // Update local state
+      setApiRatings((prev) =>
+        prev.map((r) =>
+          r.id === ratingId
+            ? { ...r, owner_reply: replyText.trim(), owner_reply_at: new Date().toISOString() }
+            : r
+        )
+      );
+      setReplyingTo(null);
+      setReplyText('');
+      addToast(t('claim.replySaved'), 'success');
+      hapticSuccess();
+    } catch (err: any) {
+      addToast(err.response?.data?.error || t('common.errorOccurred'), 'error');
+    } finally {
+      setReplySubmitting(false);
+    }
+  };
+
+  const isOwner = user?.id === apiRestaurant?.owner_id && apiRestaurant?.verified;
 
   const ratings = useMemo(() => [...apiRatings].sort((a, b) => {
     if (ratingSort === 'highest') return Number(b.overall_score) - Number(a.overall_score);
@@ -383,6 +412,18 @@ export default function RestaurantDetail() {
         </motion.button>
       </div>
 
+      {/* Owner claim link */}
+      {!apiRestaurant?.verified && (
+        <div className="mx-5 mt-2 text-center">
+          <button
+            onClick={() => navigate(`/claim/${dbId || id}`, { state: { restaurantName: baseRestaurant.name } })}
+            className="text-xs text-stone-400 hover:text-teal-600 transition-colors"
+          >
+            {t('claim.ownerLink')} <span className="text-teal-500">{t('claim.title')} &rarr;</span>
+          </button>
+        </div>
+      )}
+
       {/* Photo Gallery */}
       {(() => {
         const allPhotos = ratings.flatMap((r: any) =>
@@ -539,6 +580,64 @@ export default function RestaurantDetail() {
                   )}
                 </button>
 
+                {/* Owner reply display */}
+                {rating.owner_reply && (
+                  <div className="mt-2 p-3 bg-teal-50 rounded-xl owner-reply-fade-in">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <svg className="w-3.5 h-3.5 text-teal-500" viewBox="0 0 24 24" fill="currentColor">
+                        <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-xs font-medium text-teal-600">{t('claim.ownerReply')}</span>
+                    </div>
+                    <p className="text-sm text-stone-700 leading-relaxed">{rating.owner_reply}</p>
+                  </div>
+                )}
+
+                {/* Owner reply form */}
+                {isOwner && (
+                  <>
+                    {replyingTo === rating.id ? (
+                      <div className="mt-2 owner-reply-fade-in">
+                        <textarea
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value.slice(0, 1000))}
+                          placeholder={t('claim.replyPlaceholder')}
+                          rows={3}
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-400 resize-none transition-colors"
+                        />
+                        <div className="flex items-center justify-between mt-1.5">
+                          <span className="text-[10px] text-stone-300">{replyText.length}/1000</span>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => { setReplyingTo(null); setReplyText(''); }}
+                              className="px-3 py-1.5 rounded-lg text-xs text-stone-500 hover:bg-stone-100 transition-colors"
+                            >
+                              {t('common.cancel')}
+                            </button>
+                            <button
+                              onClick={() => handleOwnerReply(rating.id)}
+                              disabled={replySubmitting || !replyText.trim()}
+                              className="px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-medium disabled:opacity-50 active:scale-95 transition-all"
+                            >
+                              {replySubmitting ? t('common.loading') : t('claim.replySubmit')}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setReplyingTo(rating.id);
+                          setReplyText(rating.owner_reply || '');
+                        }}
+                        className="mt-2 text-xs text-teal-600 font-medium hover:text-teal-700 transition-colors"
+                      >
+                        {rating.owner_reply ? t('claim.replyEdit') : t('claim.replySubmit')}
+                      </button>
+                    )}
+                  </>
+                )}
+
                 {/* Photo gallery */}
                 {rating.photos && rating.photos.length > 0 && (
                   <div className="grid grid-cols-3 gap-1.5 mt-3 rounded-xl overflow-hidden">
@@ -603,6 +702,16 @@ export default function RestaurantDetail() {
           restaurantName={baseRestaurant.name}
         />
       )}
+
+      <style>{`
+        .owner-reply-fade-in {
+          animation: ownerReplyFadeIn 0.25s ease-out;
+        }
+        @keyframes ownerReplyFadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

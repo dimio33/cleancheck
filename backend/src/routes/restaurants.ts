@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../utils/db';
-import { AuthRequest } from '../middleware/auth';
+import { authenticate, AuthRequest } from '../middleware/auth';
 import { optionalAuth } from '../middleware/optionalAuth';
 import { isValidUuid, isValidCoordinate } from '../utils/validate';
 
@@ -109,10 +109,13 @@ router.get('/:id', optionalAuth, async (req: AuthRequest, res: Response): Promis
       `SELECT r.*, u.username, u.avatar_url,
         (SELECT COUNT(*) FROM rating_upvotes WHERE rating_id = r.id) as upvote_count,
         ${userId
-          ? `EXISTS(SELECT 1 FROM rating_upvotes WHERE rating_id = r.id AND user_id = $2) as user_upvoted`
-          : `false as user_upvoted`}
+          ? `EXISTS(SELECT 1 FROM rating_upvotes WHERE rating_id = r.id AND user_id = $2) as user_upvoted,`
+          : `false as user_upvoted,`}
+        ror.reply_text as owner_reply,
+        ror.created_at as owner_reply_at
        FROM ratings r
        LEFT JOIN users u ON r.user_id = u.id
+       LEFT JOIN restaurant_owner_replies ror ON ror.rating_id = r.id
        WHERE r.restaurant_id = $1
        ORDER BY r.created_at DESC
        LIMIT 20`,
@@ -214,6 +217,80 @@ router.post('/', optionalAuth, async (req: AuthRequest, res: Response): Promise<
   } catch (err: unknown) {
     console.error('Create restaurant error:', err);
     res.status(500).json({ error: 'Failed to create restaurant' });
+  }
+});
+
+// POST /api/restaurants/:id/claim — submit a claim request for a restaurant
+router.post('/:id/claim', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidUuid(id as string)) {
+      res.status(400).json({ error: 'Invalid restaurant ID format' });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { contact_name, contact_email, contact_phone } = req.body;
+
+    // Validate required fields
+    if (!contact_name || typeof contact_name !== 'string' || contact_name.trim().length === 0) {
+      res.status(400).json({ error: 'contact_name is required' });
+      return;
+    }
+
+    if (!contact_email || typeof contact_email !== 'string') {
+      res.status(400).json({ error: 'contact_email is required' });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(contact_email)) {
+      res.status(400).json({ error: 'Invalid email format' });
+      return;
+    }
+
+    // Check restaurant exists
+    const restaurantCheck = await query(`SELECT id FROM restaurants WHERE id = $1`, [id]);
+    if (restaurantCheck.rows.length === 0) {
+      res.status(404).json({ error: 'Restaurant not found' });
+      return;
+    }
+
+    // Check no existing pending claim from this user for this restaurant
+    const existingClaim = await query<{ status: string }>(
+      `SELECT status FROM claim_requests WHERE restaurant_id = $1 AND user_id = $2`,
+      [id, req.user.id]
+    );
+
+    if (existingClaim.rows.length > 0) {
+      const status = existingClaim.rows[0].status;
+      if (status === 'pending') {
+        res.status(409).json({ error: 'You already have a pending claim for this restaurant' });
+        return;
+      }
+      if (status === 'approved') {
+        res.status(409).json({ error: 'You already own this restaurant' });
+        return;
+      }
+    }
+
+    const result = await query(
+      `INSERT INTO claim_requests (restaurant_id, user_id, contact_name, contact_email, contact_phone)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [id, req.user.id, contact_name.trim(), contact_email.trim(), contact_phone?.trim() || null]
+    );
+
+    res.status(201).json({ claim: result.rows[0] });
+  } catch (err) {
+    console.error('Claim restaurant error:', err);
+    res.status(500).json({ error: 'Failed to submit claim request' });
   }
 });
 

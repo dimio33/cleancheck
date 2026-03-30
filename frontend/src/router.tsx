@@ -19,6 +19,7 @@ const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const Rewards = lazy(() => import('./pages/Rewards'));
 const Impressum = lazy(() => import('./pages/Impressum'));
 const Datenschutz = lazy(() => import('./pages/Datenschutz'));
+const ClaimRestaurant = lazy(() => import('./pages/ClaimRestaurant'));
 
 function PageLoader() {
  return (
@@ -74,6 +75,7 @@ export default function AppRouter() {
  <Route path="/rewards" element={<Rewards />} />
  <Route path="/impressum" element={<Impressum />} />
  <Route path="/datenschutz" element={<Datenschutz />} />
+ <Route path="/claim/:id" element={<ClaimRestaurant />} />
  <Route path="*" element={<NotFound />} />
  </Routes>
  </PageTransition>
