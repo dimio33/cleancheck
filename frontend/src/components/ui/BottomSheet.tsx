@@ -1,4 +1,4 @@
-import { type ReactNode, useRef, useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { hapticLight } from '../../utils/haptics';
 import './BottomSheet.css';
@@ -11,40 +11,22 @@ interface BottomSheetProps {
 }
 
 export default function BottomSheet({ isOpen, onClose, title, children }: BottomSheetProps) {
-  const panelRef = useRef<HTMLDivElement>(null);
-  const dragStartY = useRef<number>(0);
-  const currentDragY = useRef<number>(0);
-  const isDragging = useRef(false);
-  // Track whether the sheet has ever been opened so we can render the DOM for transitions
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     if (isOpen) setMounted(true);
   }, [isOpen]);
 
-  // Lock body scroll when open — iOS WKWebView needs aggressive blocking
+  // Lock body scroll when open
   useEffect(() => {
     if (!isOpen) return;
     const scrollY = window.scrollY;
-
-    // Fix body position
     document.body.style.position = 'fixed';
     document.body.style.top = `-${scrollY}px`;
     document.body.style.left = '0';
     document.body.style.right = '0';
     document.body.style.overflow = 'hidden';
-
-    // Block ALL touch-scroll on everything except the sheet content
-    const blockTouch = (e: TouchEvent) => {
-      const target = e.target as HTMLElement;
-      // Allow scrolling inside the sheet content area
-      if (target.closest('.bottomsheet-panel .overflow-y-auto')) return;
-      e.preventDefault();
-    };
-    document.addEventListener('touchmove', blockTouch, { passive: false });
-
     return () => {
-      document.removeEventListener('touchmove', blockTouch);
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.left = '';
@@ -59,83 +41,24 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
     onClose();
   }, [onClose]);
 
-  // Touch handlers for drag-to-dismiss
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    dragStartY.current = touch.clientY;
-    currentDragY.current = 0;
-    isDragging.current = false;
-    // Remove transition during drag
-    if (panelRef.current) {
-      panelRef.current.classList.add('dragging');
-    }
-  }, []);
-
-  const onTouchMove = useCallback((e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    const dy = touch.clientY - dragStartY.current;
-    // Only allow dragging downward
-    currentDragY.current = Math.max(0, dy);
-    if (currentDragY.current > 5) {
-      isDragging.current = true;
-    }
-    if (panelRef.current && isDragging.current) {
-      panelRef.current.style.transform = `translateY(${currentDragY.current}px)`;
-    }
-  }, []);
-
-  const onTouchEnd = useCallback(() => {
-    if (panelRef.current) {
-      panelRef.current.classList.remove('dragging');
-    }
-    if (currentDragY.current > 100) {
-      // Dismiss
-      handleClose();
-    } else {
-      // Snap back
-      if (panelRef.current) {
-        panelRef.current.style.transform = '';
-      }
-    }
-    isDragging.current = false;
-    currentDragY.current = 0;
-  }, [handleClose]);
-
-  // After close transition ends, unmount
   const onTransitionEnd = useCallback(() => {
-    if (!isOpen) {
-      setMounted(false);
-      // Reset inline transform
-      if (panelRef.current) {
-        panelRef.current.style.transform = '';
-      }
-    }
+    if (!isOpen) setMounted(false);
   }, [isOpen]);
 
   if (!mounted) return null;
 
   return createPortal(
     <>
-      {/* Backdrop */}
-      <div
-        className={`bottomsheet-backdrop${isOpen ? ' open' : ''}`}
-        onClick={handleClose}
-      />
+      {/* Backdrop — no click to close, purely visual */}
+      <div className={`bottomsheet-backdrop${isOpen ? ' open' : ''}`} />
 
       {/* Panel */}
       <div
-        ref={panelRef}
         className={`bottomsheet-panel${isOpen ? ' open' : ''}`}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
         onTransitionEnd={onTransitionEnd}
       >
-        {/* Header: drag handle + title + X button */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-stone-300" />
-        </div>
-        <div className="flex items-center justify-between px-5 pb-2 pt-1">
+        {/* Header: title + X button */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-2">
           <h3 className="text-[15px] font-bold text-stone-900">{title || ''}</h3>
           <button
             onClick={handleClose}
@@ -149,7 +72,7 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto px-5 pb-4 flex-1">
+        <div className="overflow-y-auto px-5 pb-4 flex-1 overscroll-contain">
           {children}
         </div>
 
