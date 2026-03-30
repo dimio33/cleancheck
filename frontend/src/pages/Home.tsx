@@ -626,8 +626,7 @@ export default function Home() {
  </div>
  </div>
 
- {/* Reset button */}
- {(cuisineFilter !== 'All' || sortBy !== 'distance' || nameFilter) && (
+ {/* Reset button — always visible, disabled when no filters active */}
  <button
  onClick={() => {
  hapticLight();
@@ -635,11 +634,15 @@ export default function Home() {
  setSortBy('distance');
  setNameFilter('');
  }}
- className="w-full py-2.5 text-[13px] font-medium text-teal-600 active:text-teal-700 transition-colors"
+ disabled={cuisineFilter === 'All' && sortBy === 'distance' && !nameFilter}
+ className={`w-full py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
+ cuisineFilter !== 'All' || sortBy !== 'distance' || nameFilter
+   ? 'text-rose-500 bg-rose-50 active:bg-rose-100'
+   : 'text-stone-300 bg-stone-50 cursor-not-allowed'
+ }`}
  >
  {t('common.reset', 'Filter zurücksetzen')}
  </button>
- )}
  </BottomSheet>
 
  {/* Section heading with location info */}
