@@ -8,6 +8,7 @@ import { getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useFavoritesStore } from '../stores/favoritesStore';
 import { useToastStore } from '../components/ui/Toast';
+import { NoRatings } from '../components/ui/EmptyState';
 import api from '../services/api';
 import { hapticLight, hapticSuccess } from '../utils/haptics';
 
@@ -370,9 +371,7 @@ export default function RestaurantDetail() {
           )}
         </div>
         {ratings.length === 0 ? (
-          <div className="text-center py-10">
-            <p className="text-sm text-stone-400">{t('restaurant.noReviews')}</p>
-          </div>
+          <NoRatings action={{ label: t('restaurant.rateThis'), onClick: () => navigate('/rate', { state: { restaurantId: baseRestaurant.id } }) }} />
         ) : (
           <div className="space-y-2.5">
             {ratings.map((rating, i) => (

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../stores/authStore';
+import { EmptyLeaderboard } from '../components/ui/EmptyState';
 import api from '../services/api';
 
 interface LeaderboardEntry {
@@ -106,10 +107,7 @@ export default function Leaderboard() {
             <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : entries.length === 0 ? (
-          <div className="text-center py-12">
-            <span className="text-3xl block mb-2">🏆</span>
-            <p className="text-sm text-stone-400">{t('home.noRatings')}</p>
-          </div>
+          <EmptyLeaderboard />
         ) : (
           <div className="bg-white rounded-2xl shadow-sm shadow-stone-200/50 overflow-hidden">
             {entries.map((entry, i) => {

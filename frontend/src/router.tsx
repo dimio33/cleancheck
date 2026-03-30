@@ -1,6 +1,7 @@
 import { useState, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import PageTransition from './components/ui/PageTransition';
 import { RestaurantDetailSkeleton, ProfileSkeleton, TrendingSkeleton } from './components/ui/Skeleton';
 
 // Lazy-loaded pages — each becomes its own chunk
@@ -16,6 +17,8 @@ const QuickRate = lazy(() => import('./pages/QuickRate'));
 const LocationPermission = lazy(() => import('./pages/LocationPermission'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const Rewards = lazy(() => import('./pages/Rewards'));
+const Impressum = lazy(() => import('./pages/Impressum'));
+const Datenschutz = lazy(() => import('./pages/Datenschutz'));
 
 function PageLoader() {
  return (
@@ -55,6 +58,7 @@ export default function AppRouter() {
  return (
  <Suspense fallback={<PageLoader />}>
  <ErrorBoundary>
+ <PageTransition>
  <Routes>
  <Route path="/" element={<HomeOrSplash />} />
  <Route path="/splash" element={<Splash />} />
@@ -68,8 +72,11 @@ export default function AppRouter() {
  <Route path="/trending" element={<WithSkeleton skeleton={<TrendingSkeleton />}><Trending /></WithSkeleton>} />
  <Route path="/leaderboard" element={<Leaderboard />} />
  <Route path="/rewards" element={<Rewards />} />
+ <Route path="/impressum" element={<Impressum />} />
+ <Route path="/datenschutz" element={<Datenschutz />} />
  <Route path="*" element={<NotFound />} />
  </Routes>
+ </PageTransition>
  </ErrorBoundary>
  </Suspense>
  );

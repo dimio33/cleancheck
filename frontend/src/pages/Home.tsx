@@ -17,6 +17,8 @@ import XpGainToast from '../components/ui/XpGainToast';
 import AvatarFrame from '../components/ui/AvatarFrame';
 import { RestaurantCardSkeleton } from '../components/ui/Skeleton';
 import GuestRegistrationCTA from '../components/ui/GuestRegistrationCTA';
+import BottomSheet from '../components/ui/BottomSheet';
+import { NoResults } from '../components/ui/EmptyState';
 import api from '../services/api';
 import { hapticLight } from '../utils/haptics';
 
@@ -119,6 +121,7 @@ export default function Home() {
  const [nameFilter, setNameFilter] = useState('');
  const [cuisineFilter, setCuisineFilter] = useState('All');
  const [showMap, setShowMap] = useState(true);
+ const [filterSheetOpen, setFilterSheetOpen] = useState(false);
  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
  const searchIdRef = useRef(0);
@@ -529,32 +532,68 @@ export default function Home() {
  </div>
  )}
 
- {/* Sort toggle + filter chips */}
+ {/* Filter & Sort button + active filter indicators */}
  <div className="px-5 pb-2">
- {/* Sort toggle */}
- <div className="flex items-center gap-2 mb-2">
- <span className="text-[10px] uppercase tracking-widest text-stone-400">{t('home.sortBy')}:</span>
+ <div className="flex items-center gap-2">
+ <button
+ onClick={() => { hapticLight(); setFilterSheetOpen(true); }}
+ className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 text-[12px] font-medium active:scale-[0.97] transition-transform"
+ >
+ <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+ </svg>
+ {t('home.filterSort', 'Filter & Sortierung')}
+ {(cuisineFilter !== 'All' || sortBy !== 'distance' || nameFilter) && (
+ <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+ )}
+ </button>
+ {sortBy === 'score' && (
+ <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 text-[10px] font-medium">
+ {t('home.sortScore')}
+ </span>
+ )}
+ {cuisineFilter !== 'All' && (
+ <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 text-[10px] font-medium truncate max-w-[120px]">
+ {cuisineFilter}
+ </span>
+ )}
+ </div>
+ </div>
+
+ {/* Filter & Sort BottomSheet */}
+ <BottomSheet
+ isOpen={filterSheetOpen}
+ onClose={() => setFilterSheetOpen(false)}
+ title={t('home.filterSort', 'Filter & Sortierung')}
+ >
+ {/* Sort options */}
+ <div className="mb-5">
+ <p className="text-[11px] uppercase tracking-widest text-stone-400 font-medium mb-2">{t('home.sortBy')}:</p>
+ <div className="flex gap-2">
  <button
  onClick={() => { hapticLight(); setSortBy('distance'); }}
- className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-all ${
- sortBy === 'distance' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-400'
+ className={`px-3.5 py-2 rounded-xl text-[13px] font-medium transition-all ${
+ sortBy === 'distance' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-500'
  }`}
  >
  {t('search.distance')}
  </button>
  <button
  onClick={() => { hapticLight(); setSortBy('score'); }}
- className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-all ${
- sortBy === 'score' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-400'
+ className={`px-3.5 py-2 rounded-xl text-[13px] font-medium transition-all ${
+ sortBy === 'score' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-500'
  }`}
  >
  {t('home.sortScore')}
  </button>
  </div>
+ </div>
 
  {/* Restaurant name search */}
- <div className="relative mb-2">
- <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+ <div className="mb-5">
+ <p className="text-[11px] uppercase tracking-widest text-stone-400 font-medium mb-2">{t('search.placeholder', 'Restaurant suchen')}:</p>
+ <div className="relative">
+ <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
  </svg>
  <input
@@ -562,20 +601,23 @@ export default function Home() {
  value={nameFilter}
  onChange={(e) => setNameFilter(e.target.value)}
  placeholder={t('search.placeholder')}
- className="w-full pl-8 pr-4 h-9 rounded-lg bg-stone-50 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+ className="w-full pl-9 pr-4 h-10 rounded-xl bg-stone-50 border-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
  />
  </div>
+ </div>
 
- {/* Cuisine chips */}
- <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
+ {/* Cuisine filter */}
+ <div className="mb-4">
+ <p className="text-[11px] uppercase tracking-widest text-stone-400 font-medium mb-2">{t('search.allCuisines', 'Küche')}:</p>
+ <div className="flex flex-wrap gap-2">
  {cuisines.map((cuisine) => (
  <button
  key={cuisine}
  onClick={() => { hapticLight(); setCuisineFilter(cuisine); }}
- className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-200 ${
+ className={`px-3 py-1.5 rounded-xl text-[12px] font-medium transition-all duration-200 ${
  cuisineFilter === cuisine
  ? 'bg-stone-800 text-white'
- : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+ : 'bg-stone-100 text-stone-500'
  }`}
  >
  {cuisine === 'All' ? t('search.allCuisines') : cuisine}
@@ -583,6 +625,22 @@ export default function Home() {
  ))}
  </div>
  </div>
+
+ {/* Reset button */}
+ {(cuisineFilter !== 'All' || sortBy !== 'distance' || nameFilter) && (
+ <button
+ onClick={() => {
+ hapticLight();
+ setCuisineFilter('All');
+ setSortBy('distance');
+ setNameFilter('');
+ }}
+ className="w-full py-2.5 text-[13px] font-medium text-teal-600 active:text-teal-700 transition-colors"
+ >
+ {t('common.reset', 'Filter zurücksetzen')}
+ </button>
+ )}
+ </BottomSheet>
 
  {/* Section heading with location info */}
  <div className="px-5 pb-2 pt-1">
@@ -622,11 +680,7 @@ export default function Home() {
  </button>
  </div>
  ) : restaurantsWithDistance.length === 0 && !loading ? (
- <div className="flex flex-col items-center justify-center py-12 text-center">
- <span className="text-3xl mb-3">🍽️</span>
- <p className="text-sm text-stone-400">{t('search.noResults')}</p>
- <p className="text-xs text-stone-300 mt-1">{t('search.noResultsDesc')}</p>
- </div>
+ <NoResults />
  ) : (
  <div className="space-y-2">
  {restaurantsWithDistance.slice(0, visibleCount).map((r, i) => (

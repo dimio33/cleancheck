@@ -96,6 +96,12 @@ export default function Profile() {
  </div>
 
  <GuestRegistrationCTA variant="card" className="w-full max-w-xs" />
+
+ <div className="flex gap-4 mt-6">
+ <button onClick={() => navigate('/datenschutz')} className="text-xs text-stone-400 hover:text-stone-600">{t('profile.privacy')}</button>
+ <span className="text-xs text-stone-300">·</span>
+ <button onClick={() => navigate('/impressum')} className="text-xs text-stone-400 hover:text-stone-600">{t('profile.imprint')}</button>
+ </div>
  </div>
  );
  }
@@ -392,23 +398,19 @@ export default function Profile() {
  <span className="text-sm text-stone-700">{t('profile.exportData')}</span>
  </button>
  <div className="h-px bg-stone-50" />
- <a
- href="https://wc-cleancheck.de/datenschutz"
- target="_blank"
- rel="noopener noreferrer"
+ <button
+ onClick={() => navigate('/datenschutz')}
  className="flex items-center w-full p-4 hover:bg-stone-50 transition-colors"
  >
  <span className="text-sm text-stone-700">{t('profile.privacy')}</span>
- </a>
+ </button>
  <div className="h-px bg-stone-50" />
- <a
- href="https://wc-cleancheck.de/impressum"
- target="_blank"
- rel="noopener noreferrer"
+ <button
+ onClick={() => navigate('/impressum')}
  className="flex items-center w-full p-4 hover:bg-stone-50 transition-colors"
  >
  <span className="text-sm text-stone-700">{t('profile.imprint')}</span>
- </a>
+ </button>
  <div className="h-px bg-stone-50" />
  <button
  onClick={() => { navigate('/'); setTimeout(logout, 50); }}

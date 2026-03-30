@@ -1,57 +1,132 @@
-import { type ReactNode } from 'react';
-import { motion, useDragControls, type PanInfo } from 'framer-motion';
+import { type ReactNode, useRef, useCallback, useEffect, useState } from 'react';
+import { hapticLight } from '../../utils/haptics';
+import './BottomSheet.css';
 
 interface BottomSheetProps {
-  children: ReactNode;
   isOpen: boolean;
-  onClose?: () => void;
-  snapPoints?: number[];
-  defaultSnap?: number;
+  onClose: () => void;
+  title?: string;
+  children: ReactNode;
 }
 
-export default function BottomSheet({
-  children,
-  isOpen,
-  onClose,
-  snapPoints = [0.4, 0.85],
-  defaultSnap = 0,
-}: BottomSheetProps) {
-  const dragControls = useDragControls();
+export default function BottomSheet({ isOpen, onClose, title, children }: BottomSheetProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const dragStartY = useRef<number>(0);
+  const currentDragY = useRef<number>(0);
+  const isDragging = useRef(false);
+  // Track whether the sheet has ever been opened so we can render the DOM for transitions
+  const [mounted, setMounted] = useState(false);
 
-  const handleDragEnd = (_: unknown, info: PanInfo) => {
-    if (info.velocity.y > 500 || info.offset.y > 200) {
-      onClose?.();
+  useEffect(() => {
+    if (isOpen) setMounted(true);
+  }, [isOpen]);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
     }
-  };
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
-  if (!isOpen) return null;
+  const handleClose = useCallback(() => {
+    hapticLight();
+    onClose();
+  }, [onClose]);
 
-  const snapHeight = snapPoints[defaultSnap] * 100;
+  // Touch handlers for drag-to-dismiss
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    dragStartY.current = touch.clientY;
+    currentDragY.current = 0;
+    isDragging.current = false;
+    // Remove transition during drag
+    if (panelRef.current) {
+      panelRef.current.classList.add('dragging');
+    }
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const dy = touch.clientY - dragStartY.current;
+    // Only allow dragging downward
+    currentDragY.current = Math.max(0, dy);
+    if (currentDragY.current > 5) {
+      isDragging.current = true;
+    }
+    if (panelRef.current && isDragging.current) {
+      panelRef.current.style.transform = `translateY(${currentDragY.current}px)`;
+    }
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (panelRef.current) {
+      panelRef.current.classList.remove('dragging');
+    }
+    if (currentDragY.current > 100) {
+      // Dismiss
+      handleClose();
+    } else {
+      // Snap back
+      if (panelRef.current) {
+        panelRef.current.style.transform = '';
+      }
+    }
+    isDragging.current = false;
+    currentDragY.current = 0;
+  }, [handleClose]);
+
+  // After close transition ends, unmount
+  const onTransitionEnd = useCallback(() => {
+    if (!isOpen) {
+      setMounted(false);
+      // Reset inline transform
+      if (panelRef.current) {
+        panelRef.current.style.transform = '';
+      }
+    }
+  }, [isOpen]);
+
+  if (!mounted) return null;
 
   return (
-    <motion.div
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.06)] max-w-lg mx-auto max-h-[70vh]"
-      style={{ height: `${snapHeight}vh` }}
-      initial={{ y: '100%' }}
-      animate={{ y: 0 }}
-      exit={{ y: '100%' }}
-      transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      drag="y"
-      dragControls={dragControls}
-      dragConstraints={{ top: 0, bottom: 0 }}
-      dragElastic={0.1}
-      onDragEnd={handleDragEnd}
-    >
-      {/* Drag handle */}
+    <>
+      {/* Backdrop */}
       <div
-        className="flex justify-center pt-2.5 pb-1 cursor-grab active:cursor-grabbing"
-        onPointerDown={(e) => dragControls.start(e)}
+        className={`bottomsheet-backdrop${isOpen ? ' open' : ''}`}
+        onClick={handleClose}
+      />
+
+      {/* Panel */}
+      <div
+        ref={panelRef}
+        className={`bottomsheet-panel${isOpen ? ' open' : ''}`}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onTransitionEnd={onTransitionEnd}
       >
-        <div className="w-8 h-1 rounded-full bg-stone-200" />
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full bg-stone-300" />
+        </div>
+
+        {/* Title */}
+        {title && (
+          <div className="px-5 pb-2 pt-1">
+            <h3 className="text-[15px] font-bold text-stone-900">{title}</h3>
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="overflow-y-auto px-5 pb-8 flex-1">
+          {children}
+        </div>
       </div>
-      <div className="overflow-y-auto px-4 pb-4" style={{ height: 'calc(100% - 20px)' }}>
-        {children}
-      </div>
-    </motion.div>
+    </>
   );
 }
