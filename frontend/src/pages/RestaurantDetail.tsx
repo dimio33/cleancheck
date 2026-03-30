@@ -9,6 +9,7 @@ import { useRestaurantStore } from '../stores/restaurantStore';
 import { useFavoritesStore } from '../stores/favoritesStore';
 import { useToastStore } from '../components/ui/Toast';
 import api from '../services/api';
+import { hapticLight, hapticSuccess } from '../utils/haptics';
 
 // Fun anonymous name generator (deterministic based on rating ID)
 const PREFIXES = ['Flush', 'Klo', 'Porzellan', 'Hygiene', 'Sauber', 'Glanz', 'Bürsten', 'Spül', 'Duft', 'Schaum', 'Seife', 'Wisch', 'Blank', 'Frisch', 'Putz'];
@@ -184,6 +185,7 @@ export default function RestaurantDetail() {
   const criteriaAvgs = baseRestaurant.criteria_averages || computeCriteriaAverages(apiRatings);
 
   const handleShare = async () => {
+    hapticSuccess();
     const text = `${baseRestaurant.name} — CleanScore: ${displayRestaurant.clean_score?.toFixed(1) || '?'}/10`;
     const url = window.location.href;
 
@@ -216,7 +218,7 @@ export default function RestaurantDetail() {
           </button>
           <div className="flex gap-2">
             <button
-              onClick={() => useFavoritesStore.getState().toggleFavorite(baseRestaurant.id)}
+              onClick={() => { hapticLight(); useFavoritesStore.getState().toggleFavorite(baseRestaurant.id); }}
               className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
               aria-label="Favorite"
               aria-pressed={isFavorite}

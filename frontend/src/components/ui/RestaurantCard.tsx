@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import type { Restaurant } from '../../types';
 import { formatDistance } from '../../utils/geo';
 import { useFavoritesStore } from '../../stores/favoritesStore';
+import { hapticLight } from '../../utils/haptics';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -40,7 +41,7 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
     <motion.div
       role="button"
       tabIndex={0}
-      onClick={() => navigate(`/restaurant/${restaurant.id}`)}
+      onClick={() => { hapticLight(); navigate(`/restaurant/${restaurant.id}`); }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/restaurant/${restaurant.id}`); }}
       className="w-full flex items-center gap-3.5 p-4 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] text-left cursor-pointer"
       initial={{ opacity: 0, y: 12 }}
@@ -50,13 +51,17 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
     >
       {/* Score badge — squircle */}
       {hasScore ? (
-        <div
+        <motion.div
           className={`flex-shrink-0 w-12 h-12 rounded-[14px] flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.08)] ${getScoreBadgeBg(score)}`}
+          initial={{ scale: 0.85 }}
+          whileInView={{ scale: 1 }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
         >
           <span className="text-[15px] font-bold tracking-tight text-white">
             {score!.toFixed(1)}
           </span>
-        </div>
+        </motion.div>
       ) : (
         <div className="flex-shrink-0 w-12 h-12 rounded-[14px] flex items-center justify-center bg-gradient-to-br from-teal-50 to-emerald-50 border-2 border-dashed border-teal-200">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2" strokeLinecap="round">
@@ -82,6 +87,7 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
       <motion.button
         onClick={(e) => {
           e.stopPropagation();
+          hapticLight();
           toggleFavorite(restaurant.id);
         }}
         className="flex-shrink-0 w-8 h-8 flex items-center justify-center"
@@ -94,7 +100,7 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
           fill={isFavorite ? '#F43F5E' : 'none'}
           stroke={isFavorite ? '#F43F5E' : '#D6D3D1'}
           strokeWidth="2"
-          animate={{ scale: isFavorite ? [1, 1.3, 1] : 1 }}
+          animate={isFavorite ? { scale: [1, 1.3, 1], filter: ['brightness(1)', 'brightness(1.5)', 'brightness(1)'] } : { scale: 1 }}
           transition={{ duration: 0.3 }}
         >
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />

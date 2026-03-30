@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { motion, LayoutGroup } from 'framer-motion';
+import { hapticLight } from '../../utils/haptics';
 
 const MapIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -47,7 +48,7 @@ export default function BottomNav() {
     const active = isActive(path);
     return (
       <button
-        onClick={() => navigate(path)}
+        onClick={() => { hapticLight(); navigate(path); }}
         aria-label={label}
         aria-current={active ? 'page' : undefined}
         className={`flex flex-col items-center justify-center flex-1 py-2 transition-colors relative ${
@@ -71,21 +72,23 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-xl border-t border-black/[0.04]" style={{ WebkitBackdropFilter: 'blur(20px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-      <div className="flex items-center h-16 max-w-lg mx-auto px-2">
-        <Tab path="/" icon={<MapIcon />} label={t('nav.home')} />
-        <Tab path="/trending" icon={<TrendingIcon />} label={t('nav.trending')} />
+      <LayoutGroup>
+        <div className="flex items-center h-16 max-w-lg mx-auto px-2">
+          <Tab path="/" icon={<MapIcon />} label={t('nav.home')} />
+          <Tab path="/trending" icon={<TrendingIcon />} label={t('nav.trending')} />
 
-        <div className="flex items-center justify-center flex-1">
-          <button
-            onClick={() => navigate('/rate')}
-            className="flex items-center justify-center w-12 h-12 -mt-5 rounded-full bg-teal-600 text-white shadow-[0_4px_16px_rgba(13,148,136,0.3)] active:scale-95 transition-transform"
-          >
-            <PlusIcon />
-          </button>
+          <div className="flex items-center justify-center flex-1">
+            <button
+              onClick={() => { hapticLight(); navigate('/rate'); }}
+              className="flex items-center justify-center w-12 h-12 -mt-5 rounded-full bg-teal-600 text-white shadow-[0_4px_16px_rgba(13,148,136,0.3)] active:scale-95 transition-transform"
+            >
+              <PlusIcon />
+            </button>
+          </div>
+
+          <Tab path="/profile" icon={<ProfileIcon />} label={t('nav.profile')} />
         </div>
-
-        <Tab path="/profile" icon={<ProfileIcon />} label={t('nav.profile')} />
-      </div>
+      </LayoutGroup>
     </nav>
   );
 }

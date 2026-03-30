@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { getScoreColor } from '../utils/geo';
 import api from '../services/api';
+import { hapticLight } from '../utils/haptics';
 
 interface TrendingRestaurant {
  id: string;
@@ -71,7 +72,7 @@ export default function Trending() {
  <motion.button
  key={r.id}
  className="flex items-center gap-3 p-4 bg-white rounded-2xl shadow-sm shadow-stone-200/50 w-full text-left active:scale-[0.98] transition-transform"
- onClick={() => navigate(`/restaurant/${r.id}`)}
+ onClick={() => { hapticLight(); navigate(`/restaurant/${r.id}`); }}
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: i * 0.05 }}

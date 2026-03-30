@@ -1,6 +1,7 @@
 import { useState, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import { RestaurantDetailSkeleton, ProfileSkeleton, TrendingSkeleton } from './components/ui/Skeleton';
 
 // Lazy-loaded pages — each becomes its own chunk
 const Home = lazy(() => import('./pages/Home'));
@@ -22,6 +23,10 @@ function PageLoader() {
  <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
  </div>
  );
+}
+
+function WithSkeleton({ skeleton, children }: { skeleton: React.ReactNode; children: React.ReactNode }) {
+ return <Suspense fallback={skeleton}>{children}</Suspense>;
 }
 
 function HomeOrSplash() {
@@ -57,10 +62,10 @@ export default function AppRouter() {
  <Route path="/search" element={<Search />} />
  <Route path="/rate" element={<RatingFlow />} />
  <Route path="/rate/:id" element={<QuickRate />} />
- <Route path="/restaurant/:id" element={<RestaurantDetail />} />
- <Route path="/profile" element={<ErrorBoundary><Profile /></ErrorBoundary>} />
+ <Route path="/restaurant/:id" element={<WithSkeleton skeleton={<RestaurantDetailSkeleton />}><RestaurantDetail /></WithSkeleton>} />
+ <Route path="/profile" element={<ErrorBoundary><WithSkeleton skeleton={<ProfileSkeleton />}><Profile /></WithSkeleton></ErrorBoundary>} />
  <Route path="/auth" element={<Auth />} />
- <Route path="/trending" element={<Trending />} />
+ <Route path="/trending" element={<WithSkeleton skeleton={<TrendingSkeleton />}><Trending /></WithSkeleton>} />
  <Route path="/leaderboard" element={<Leaderboard />} />
  <Route path="/rewards" element={<Rewards />} />
  <Route path="*" element={<NotFound />} />

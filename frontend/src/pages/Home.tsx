@@ -18,6 +18,7 @@ import AvatarFrame from '../components/ui/AvatarFrame';
 import { RestaurantCardSkeleton } from '../components/ui/Skeleton';
 import GuestRegistrationCTA from '../components/ui/GuestRegistrationCTA';
 import api from '../services/api';
+import { hapticLight } from '../utils/haptics';
 
 /** Inline trending list for discovery mode (no location) */
 function TrendingInline() {
@@ -533,7 +534,7 @@ export default function Home() {
  <div className="flex items-center gap-2 mb-2">
  <span className="text-[10px] uppercase tracking-widest text-stone-400">{t('home.sortBy')}:</span>
  <button
- onClick={() => setSortBy('distance')}
+ onClick={() => { hapticLight(); setSortBy('distance'); }}
  className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-all ${
  sortBy === 'distance' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-400'
  }`}
@@ -541,7 +542,7 @@ export default function Home() {
  {t('search.distance')}
  </button>
  <button
- onClick={() => setSortBy('score')}
+ onClick={() => { hapticLight(); setSortBy('score'); }}
  className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-all ${
  sortBy === 'score' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-400'
  }`}
@@ -569,7 +570,7 @@ export default function Home() {
  {cuisines.map((cuisine) => (
  <button
  key={cuisine}
- onClick={() => setCuisineFilter(cuisine)}
+ onClick={() => { hapticLight(); setCuisineFilter(cuisine); }}
  className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-200 ${
  cuisineFilter === cuisine
  ? 'bg-stone-800 text-white'
