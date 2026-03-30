@@ -16,6 +16,7 @@ import { geoVerify, calculateDistance } from '../middleware/geoVerify';
 import { validateImageFile, moderateImage, generateImageHash } from '../services/moderationService';
 import { uploadPhoto, isR2Configured } from '../services/storageService';
 import { isValidUuid } from '../utils/validate';
+import { notifyUpvoteMilestone, notifyOwnerReply } from '../services/pushService';
 
 function generateAnonymousId(req: Request, res?: import('express').Response): string {
   // DSGVO-compliant: no IP/User-Agent fingerprinting
@@ -552,9 +553,19 @@ router.post('/:id/upvote', authenticate, async (req: AuthRequest, res: Response)
       [id]
     );
 
+    const upvoteCount = parseInt(countResult.rows[0].count, 10);
+
+    // Notify rating author at upvote milestones
+    if (upvoted) {
+      const authorId = ratingResult.rows[0].user_id;
+      if (authorId && [5, 10, 25, 50].includes(upvoteCount)) {
+        notifyUpvoteMilestone(authorId, upvoteCount).catch(() => {});
+      }
+    }
+
     res.json({
       upvoted,
-      upvote_count: parseInt(countResult.rows[0].count, 10),
+      upvote_count: upvoteCount,
     });
   } catch (err) {
     console.error('Upvote rating error:', err);
@@ -628,6 +639,21 @@ router.post('/:id/owner-reply', authenticate, async (req: AuthRequest, res: Resp
        RETURNING *`,
       [id, restaurantId, req.user.id, sanitizedReply]
     );
+
+    // Notify rating author about owner reply
+    const ratingAuthor = await query<{ user_id: string | null }>(
+      `SELECT user_id FROM ratings WHERE id = $1`,
+      [id]
+    );
+    const authorId = ratingAuthor.rows[0]?.user_id;
+    if (authorId) {
+      const restName = await query<{ name: string }>(
+        `SELECT name FROM restaurants WHERE id = $1`,
+        [restaurantId]
+      );
+      const restaurantName = restName.rows[0]?.name || 'Restaurant';
+      notifyOwnerReply(authorId, restaurantName).catch(() => {});
+    }
 
     res.status(201).json({ reply: result.rows[0] });
   } catch (err) {

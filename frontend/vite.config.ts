@@ -12,6 +12,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       workbox: {
+        importScripts: ['/push-handler.js'],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         skipWaiting: true,
         clientsClaim: true,

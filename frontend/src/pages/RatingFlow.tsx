@@ -17,6 +17,7 @@ import XpGainToast from '../components/ui/XpGainToast';
 import LevelUpOverlay from '../components/ui/LevelUpOverlay';
 import GuestRegistrationCTA from '../components/ui/GuestRegistrationCTA';
 import api from '../services/api';
+import { isPushSupported, isPushSubscribed, requestPushPermission } from '../services/pushNotifications';
 import type { Restaurant, CriteriaScores } from '../types';
 
 // Geo-verification constants
@@ -77,6 +78,7 @@ export default function RatingFlow() {
  const [newRank, setNewRank] = useState('newbie');
  const addXpGain = useGamificationStore((s) => s.addXpGain);
  const loadedAtRef = useRef(Date.now());
+ const [showPushPrompt, setShowPushPrompt] = useState(false);
 
  // Reset loaded_at timestamp when component mounts
  useEffect(() => {
@@ -89,6 +91,16 @@ export default function RatingFlow() {
  if (photoPreviewRef.current) URL.revokeObjectURL(photoPreviewRef.current);
  };
  }, []);
+
+ // Check if we should show push notification prompt on step 4
+ useEffect(() => {
+ if (step !== 4 || isGuest) return;
+ if (localStorage.getItem('cleancheck_push_prompted')) return;
+ if (!isPushSupported()) return;
+ isPushSubscribed().then((subscribed) => {
+ if (!subscribed) setShowPushPrompt(true);
+ }).catch(() => {});
+ }, [step, isGuest]);
 
  // Geo-verification state
  const [geoChecking, setGeoChecking] = useState(false);
@@ -780,6 +792,42 @@ export default function RatingFlow() {
  >
  <GuestRegistrationCTA variant="card" />
  </motion.div>
+ )}
+
+ {/* Push notification prompt */}
+ {showPushPrompt && (
+ <div className="mb-4 p-4 bg-white rounded-xl shadow-sm shadow-stone-200/50 text-left">
+ <div className="flex items-start gap-3">
+ <span className="text-2xl leading-none mt-0.5">&#x1F514;</span>
+ <div className="flex-1 min-w-0">
+ <p className="text-sm font-medium text-stone-800">{t('push.promptTitle')}</p>
+ <p className="text-xs text-stone-500 mt-0.5">{t('push.promptDesc')}</p>
+ <div className="flex gap-2 mt-3">
+ <button
+ onClick={async () => {
+ try {
+ await requestPushPermission();
+ } catch { /* ignore */ }
+ setShowPushPrompt(false);
+ localStorage.setItem('cleancheck_push_prompted', '1');
+ }}
+ className="px-4 py-2 text-xs font-medium text-white bg-teal-600 rounded-lg active:scale-[0.97] transition-transform"
+ >
+ {t('push.enable')}
+ </button>
+ <button
+ onClick={() => {
+ setShowPushPrompt(false);
+ localStorage.setItem('cleancheck_push_prompted', '1');
+ }}
+ className="px-4 py-2 text-xs font-medium text-stone-500 bg-stone-100 rounded-lg active:scale-[0.97] transition-transform"
+ >
+ {t('push.later')}
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
  )}
 
  <motion.div

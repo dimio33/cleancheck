@@ -1,4 +1,5 @@
 import { query } from '../utils/db';
+import { notifyBadgeEarned } from './pushService';
 
 interface Badge {
   id: string;
@@ -67,6 +68,7 @@ export async function checkAndAwardBadges(userId: string): Promise<AwardedBadge[
 
         if (badgeInfo.rows[0]) {
           newBadges.push(badgeInfo.rows[0]);
+          notifyBadgeEarned(userId, badgeInfo.rows[0].name_de || badgeInfo.rows[0].slug).catch(() => {});
         }
       }
     } catch (err) {

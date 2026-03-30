@@ -277,6 +277,12 @@
     "thanks": "Danke für die Meldung!",
     "confirmText": "Möchtest du diese Bewertung wirklich melden?"
   },
+  "push": {
+    "promptTitle": "Benachrichtigungen aktivieren?",
+    "promptDesc": "Erfahre wenn jemand auf deine Bewertung antwortet.",
+    "enable": "Aktivieren",
+    "later": "Später"
+  },
   "pwa": {
     "updateAvailable": "Update verfügbar",
     "update": "Aktualisieren"

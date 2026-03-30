@@ -14,6 +14,7 @@ import leaderboardRoutes from './routes/leaderboard';
 import contestRoutes from './routes/contests';
 import rewardsRoutes from './routes/rewards';
 import adminRoutes from './routes/admin';
+import pushRoutes from './routes/push';
 import { initModeration, getModerationStatus } from './services/moderationService';
 import { apiLimiter, ratingLimiter } from './middleware/rateLimiter';
 import { query } from './utils/db';
@@ -80,6 +81,7 @@ app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/contests', contestRoutes);
 app.use('/api/rewards', rewardsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/push', pushRoutes);
 
 // Client error logging (for debugging native apps)
 const clientLogs: Array<{ timestamp: string; level: string; message: string; meta?: unknown }> = [];

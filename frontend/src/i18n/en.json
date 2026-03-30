@@ -277,6 +277,12 @@
     "thanks": "Thanks for reporting!",
     "confirmText": "Are you sure you want to report this review?"
   },
+  "push": {
+    "promptTitle": "Enable notifications?",
+    "promptDesc": "Get notified when someone replies to your rating.",
+    "enable": "Enable",
+    "later": "Later"
+  },
   "pwa": {
     "updateAvailable": "Update available",
     "update": "Update"
