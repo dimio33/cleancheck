@@ -21,16 +21,24 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
     if (isOpen) setMounted(true);
   }, [isOpen]);
 
-  // Lock body scroll when open
+  // Lock body scroll when open — iOS needs position:fixed to truly prevent scroll
   useEffect(() => {
     if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+      return () => {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
 
   const handleClose = useCallback(() => {
