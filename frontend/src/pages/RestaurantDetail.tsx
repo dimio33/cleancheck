@@ -7,6 +7,7 @@ import AnimatedScore from '../components/ui/AnimatedScore';
 import { getScoreColor } from '../utils/geo';
 import { useRestaurantStore } from '../stores/restaurantStore';
 import { useFavoritesStore } from '../stores/favoritesStore';
+import { useAuthStore } from '../stores/authStore';
 import { useToastStore } from '../components/ui/Toast';
 import { NoRatings } from '../components/ui/EmptyState';
 import api from '../services/api';
@@ -92,6 +93,8 @@ export default function RestaurantDetail() {
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
   const [ratingSort, setRatingSort] = useState<'newest' | 'highest' | 'lowest'>('newest');
+  const [upvoteState, setUpvoteState] = useState<Record<string, { upvoted: boolean; count: number }>>({});
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
     if (!id) return;
@@ -139,6 +142,38 @@ export default function RestaurantDetail() {
     loadData();
     return () => { cancelled = true; };
   }, [id]);
+
+  // Initialize upvote state from API data
+  useEffect(() => {
+    if (apiRatings.length === 0) return;
+    const initial: Record<string, { upvoted: boolean; count: number }> = {};
+    for (const r of apiRatings) {
+      initial[r.id] = {
+        upvoted: !!r.user_upvoted,
+        count: r.upvote_count || 0,
+      };
+    }
+    setUpvoteState(initial);
+  }, [apiRatings]);
+
+  const handleUpvote = async (ratingId: string) => {
+    if (!user || user.id === 'guest') {
+      addToast(t('upvote.loginToUpvote'), 'info');
+      navigate('/auth');
+      return;
+    }
+    hapticLight();
+    const prev = upvoteState[ratingId] || { upvoted: false, count: 0 };
+    const nextUpvoted = !prev.upvoted;
+    const nextCount = nextUpvoted ? prev.count + 1 : Math.max(0, prev.count - 1);
+    setUpvoteState((s) => ({ ...s, [ratingId]: { upvoted: nextUpvoted, count: nextCount } }));
+    try {
+      await api.post(`/ratings/${ratingId}/upvote`);
+    } catch {
+      // Revert on error
+      setUpvoteState((s) => ({ ...s, [ratingId]: prev }));
+    }
+  };
 
   const ratings = useMemo(() => [...apiRatings].sort((a, b) => {
     if (ratingSort === 'highest') return Number(b.overall_score) - Number(a.overall_score);
@@ -475,6 +510,34 @@ export default function RestaurantDetail() {
                 {rating.comment && (
                   <p className="text-[13px] text-stone-600 leading-relaxed">{rating.comment}</p>
                 )}
+
+                {/* Upvote button */}
+                <button
+                  onClick={() => handleUpvote(rating.id)}
+                  className={`flex items-center gap-1 mt-2 px-1.5 py-0.5 rounded-md active:scale-95 transition-all duration-200 ${
+                    upvoteState[rating.id]?.upvoted
+                      ? 'text-teal-600'
+                      : 'text-stone-400'
+                  }`}
+                  aria-label={t('upvote.helpful')}
+                >
+                  <svg
+                    className="w-3.5 h-3.5"
+                    viewBox="0 0 24 24"
+                    fill={upvoteState[rating.id]?.upvoted ? 'currentColor' : 'none'}
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                  </svg>
+                  {(upvoteState[rating.id]?.count || 0) >= 1 && (
+                    <span className={`text-[11px] ${upvoteState[rating.id]?.upvoted ? 'font-medium' : ''}`}>
+                      {upvoteState[rating.id].count}
+                    </span>
+                  )}
+                </button>
 
                 {/* Photo gallery */}
                 {rating.photos && rating.photos.length > 0 && (

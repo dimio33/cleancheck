@@ -485,6 +485,83 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response): Pro
   }
 });
 
+// POST /api/ratings/:id/upvote — toggle upvote on a rating (auth required)
+router.post('/:id/upvote', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    if (!isValidUuid(id)) {
+      res.status(400).json({ error: 'Invalid rating ID format' });
+      return;
+    }
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    // Check rating exists and get author
+    const ratingResult = await query<{ user_id: string | null }>(
+      `SELECT user_id FROM ratings WHERE id = $1`,
+      [id]
+    );
+    if (ratingResult.rows.length === 0) {
+      res.status(404).json({ error: 'Rating not found' });
+      return;
+    }
+
+    // Don't allow upvoting your own rating
+    if (ratingResult.rows[0].user_id === req.user.id) {
+      res.status(403).json({ error: 'You cannot upvote your own rating' });
+      return;
+    }
+
+    // Toggle: try INSERT, if conflict → DELETE
+    const insertResult = await query(
+      `INSERT INTO rating_upvotes (rating_id, user_id) VALUES ($1, $2)
+       ON CONFLICT (rating_id, user_id) DO NOTHING
+       RETURNING id`,
+      [id, req.user.id]
+    );
+
+    let upvoted: boolean;
+
+    if (insertResult.rows.length > 0) {
+      // Inserted — upvoted
+      upvoted = true;
+
+      // Award +5 XP to rating author (not the upvoter)
+      const authorId = ratingResult.rows[0].user_id;
+      if (authorId) {
+        try {
+          await awardXp(authorId, 5, 'upvote', id);
+        } catch (xpErr) {
+          console.error('Upvote XP award failed (non-fatal):', xpErr);
+        }
+      }
+    } else {
+      // Conflict — already upvoted, so remove it
+      await query(
+        `DELETE FROM rating_upvotes WHERE rating_id = $1 AND user_id = $2`,
+        [id, req.user.id]
+      );
+      upvoted = false;
+    }
+
+    // Get current count
+    const countResult = await query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM rating_upvotes WHERE rating_id = $1`,
+      [id]
+    );
+
+    res.json({
+      upvoted,
+      upvote_count: parseInt(countResult.rows[0].count, 10),
+    });
+  } catch (err) {
+    console.error('Upvote rating error:', err);
+    res.status(500).json({ error: 'Failed to toggle upvote' });
+  }
+});
+
 // POST /api/ratings/:id/report — report a rating
 router.post('/:id/report', optionalAuth, async (req: Request, res: Response): Promise<void> => {
   try {

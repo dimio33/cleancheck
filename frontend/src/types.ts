@@ -39,6 +39,8 @@ export interface Rating {
   comment?: string;
   photos?: RatingPhoto[];
   created_at: string;
+  upvote_count?: number;
+  user_upvoted?: boolean;
 }
 
 export interface User {

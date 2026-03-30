@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../utils/db';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../middleware/auth';
 import { optionalAuth } from '../middleware/optionalAuth';
 import { isValidUuid, isValidCoordinate } from '../utils/validate';
 
@@ -74,7 +74,7 @@ router.get('/trending', async (_req: Request, res: Response): Promise<void> => {
 });
 
 // GET /api/restaurants/:id — full restaurant details (supports UUID or google_place_id)
-router.get('/:id', async (req: Request, res: Response): Promise<void> => {
+router.get('/:id', optionalAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const id = req.params.id as string;
 
@@ -103,14 +103,20 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    const userId = (req as AuthRequest).user?.id || null;
+
     const ratingsResult = await query(
-      `SELECT r.*, u.username, u.avatar_url
+      `SELECT r.*, u.username, u.avatar_url,
+        (SELECT COUNT(*) FROM rating_upvotes WHERE rating_id = r.id) as upvote_count,
+        ${userId
+          ? `EXISTS(SELECT 1 FROM rating_upvotes WHERE rating_id = r.id AND user_id = $2) as user_upvoted`
+          : `false as user_upvoted`}
        FROM ratings r
        LEFT JOIN users u ON r.user_id = u.id
        WHERE r.restaurant_id = $1
        ORDER BY r.created_at DESC
        LIMIT 20`,
-      [restaurantResult.rows[0].id]
+      userId ? [restaurantResult.rows[0].id, userId] : [restaurantResult.rows[0].id]
     );
 
     // Get photos grouped by rating

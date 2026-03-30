@@ -331,6 +331,10 @@
     "ctaButton": "Jetzt registrieren",
     "ctaInline": "Registrieren & XP sammeln"
   },
+  "upvote": {
+    "helpful": "Hilfreich",
+    "loginToUpvote": "Registriere dich um abzustimmen"
+  },
   "common": {
     "back": "Zurück",
     "cancel": "Abbrechen",
