@@ -21,24 +21,36 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
     if (isOpen) setMounted(true);
   }, [isOpen]);
 
-  // Lock body scroll when open — iOS needs position:fixed to truly prevent scroll
+  // Lock body scroll when open — iOS WKWebView needs aggressive blocking
   useEffect(() => {
-    if (isOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.left = '';
-        document.body.style.right = '';
-        document.body.style.overflow = '';
-        window.scrollTo(0, scrollY);
-      };
-    }
+    if (!isOpen) return;
+    const scrollY = window.scrollY;
+
+    // Fix body position
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.overflow = 'hidden';
+
+    // Block ALL touch-scroll on everything except the sheet content
+    const blockTouch = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      // Allow scrolling inside the sheet content area
+      if (target.closest('.bottomsheet-panel .overflow-y-auto')) return;
+      e.preventDefault();
+    };
+    document.addEventListener('touchmove', blockTouch, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchmove', blockTouch);
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, scrollY);
+    };
   }, [isOpen]);
 
   const handleClose = useCallback(() => {
