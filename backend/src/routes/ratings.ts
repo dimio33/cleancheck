@@ -52,7 +52,7 @@ router.post('/verify-location', async (req: Request, res: Response): Promise<voi
     const { restaurant_id } = req.body;
     const userLatStr = req.headers['x-user-lat'] as string | undefined;
     const userLngStr = req.headers['x-user-lng'] as string | undefined;
-    const maxDistance = Infinity; // TODO: reset to 500 after testing
+    const maxDistance = 500; // meters
 
     if (!restaurant_id || !userLatStr || !userLngStr) {
       res.status(400).json({ error: 'restaurant_id, X-User-Lat, and X-User-Lng are required' });
@@ -99,7 +99,7 @@ router.post('/verify-location', async (req: Request, res: Response): Promise<voi
 });
 
 // POST /api/ratings — create rating (anonymous or authenticated, geo-verified)
-router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: Infinity }), async (req: AuthRequest, res: Response): Promise<void> => { // TODO: reset to 500 after testing
+router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { restaurant_id, cleanliness, smell, supplies, condition, ambiente, accessibility, comment, visited_at, _website, _loaded_at } = req.body;
 

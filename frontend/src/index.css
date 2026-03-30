@@ -50,6 +50,15 @@ body {
   border-radius: 2px;
 }
 
+/* Hide scrollbar for horizontal scroll galleries */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 /* Custom range slider - premium design */
 input[type="range"] {
   -webkit-appearance: none;

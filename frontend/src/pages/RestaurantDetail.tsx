@@ -348,6 +348,50 @@ export default function RestaurantDetail() {
         </motion.button>
       </div>
 
+      {/* Photo Gallery */}
+      {(() => {
+        const allPhotos = ratings.flatMap((r: any) =>
+          (r.photos || []).map((p: { id: string; photo_url: string }) => ({
+            id: p.id,
+            url: getPhotoUrl(p.photo_url),
+          }))
+        );
+        if (allPhotos.length === 0) return null;
+        return (
+          <div className="mx-5 mt-6">
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="text-[16px] font-bold text-stone-900">{t('restaurant.photos')}</h2>
+              <span className="px-2 py-0.5 rounded-full bg-stone-100 text-xs font-medium text-stone-500">
+                {'\uD83D\uDCF7'} {allPhotos.length} {allPhotos.length === 1 ? 'Foto' : 'Fotos'}
+              </span>
+            </div>
+            <div
+              className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 no-scrollbar"
+              style={{
+                scrollSnapType: 'x mandatory',
+                WebkitOverflowScrolling: 'touch',
+              }}
+            >
+              {allPhotos.map((photo: { id: string; url: string }) => (
+                <button
+                  key={photo.id}
+                  onClick={() => setLightboxPhoto(photo.url)}
+                  className="shrink-0 w-28 h-28 rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)] active:scale-95 transition-transform"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <img
+                    src={photo.url}
+                    alt=""
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Reviews Section */}
       <div className="mx-5 mt-6">
         <div className="flex items-center justify-between mb-3">
