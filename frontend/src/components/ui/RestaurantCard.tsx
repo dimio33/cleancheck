@@ -53,10 +53,9 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
       {hasScore ? (
         <motion.div
           className={`flex-shrink-0 w-12 h-12 rounded-[14px] flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.08)] ${getScoreBadgeBg(score)}`}
-          initial={{ scale: 0.85 }}
-          whileInView={{ scale: 1 }}
-          viewport={{ once: true, amount: 0.5 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+          initial={{ scale: 0, opacity: 0, rotate: -20 }}
+          animate={{ scale: 1, opacity: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 350, damping: 14, delay: (index || 0) * 0.05 + 0.2 }}
         >
           <span className="text-[15px] font-bold tracking-tight text-white">
             {score!.toFixed(1)}

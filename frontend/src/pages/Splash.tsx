@@ -75,8 +75,8 @@ export default function Splash() {
  src="/logo.png"
  alt="CleanCheck"
  className="w-[120px] h-[120px] rounded-3xl shadow-lg mb-6"
- animate={{ y: [0, -6, 0] }}
- transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+ animate={{ y: [0, -14, 0] }}
+ transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
  />
 
  <h1 className="text-xl font-bold tracking-tight text-stone-900 whitespace-pre-line leading-tight text-center">

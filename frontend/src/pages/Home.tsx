@@ -308,7 +308,8 @@ export default function Home() {
 
  // ── Content-first Mode (has location) ──
  return (
- <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
+ <PullToRefresh onRefresh={handleRefresh}>
+ <div className="pb-24 max-w-lg mx-auto w-full">
  {/* Personalized Header */}
  <div className="px-5 pt-5 pb-1">
  <div className="flex items-center justify-between mb-3">
@@ -583,7 +584,6 @@ export default function Home() {
  </div>
  </div>
 
- <PullToRefresh onRefresh={handleRefresh}>
  {/* Section heading with location info */}
  <div className="px-5 pb-2 pt-1">
  {searchOverride && (
@@ -643,7 +643,7 @@ export default function Home() {
  </div>
  )}
  </div>
- </PullToRefresh>
  </div>
+ </PullToRefresh>
  );
 }

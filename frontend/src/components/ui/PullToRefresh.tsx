@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, type ReactNode } from 'react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
+import { motion, animate, useMotionValue, useTransform } from 'framer-motion';
 import { hapticLight } from '../../utils/haptics';
 
 interface PullToRefreshProps {
@@ -8,70 +8,89 @@ interface PullToRefreshProps {
 }
 
 const THRESHOLD = 80;
+const DAMPEN = 0.4;
 
 export default function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
   const [refreshing, setRefreshing] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const pullY = useMotionValue(0);
-  const spinnerOpacity = useTransform(pullY, [0, 40, THRESHOLD], [0, 0.6, 1]);
-  const spinnerScale = useTransform(pullY, [0, THRESHOLD], [0.4, 1]);
-  const spinnerRotation = useTransform(pullY, [0, THRESHOLD * 2], [0, 360]);
+  const spinnerOpacity = useTransform(pullY, [0, 30, THRESHOLD], [0, 0.5, 1]);
+  const spinnerScale = useTransform(pullY, [0, THRESHOLD], [0.3, 1]);
   const startY = useRef(0);
   const pulling = useRef(false);
   const thresholdReached = useRef(false);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // Only activate when scrolled to top
-    const el = e.currentTarget;
-    if (el.scrollTop > 0 || refreshing) return;
-    startY.current = e.touches[0].clientY;
-    pulling.current = true;
-    thresholdReached.current = false;
-  }, [refreshing]);
+  // Use native touch events for better Capacitor/WebView compatibility
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!pulling.current) return;
-    const delta = Math.max(0, e.touches[0].clientY - startY.current);
-    // Rubber band dampening
-    const dampened = delta * 0.45;
-    pullY.set(dampened);
-
-    // Haptic feedback when crossing threshold
-    if (dampened >= THRESHOLD && !thresholdReached.current) {
-      thresholdReached.current = true;
-      hapticLight();
-    } else if (dampened < THRESHOLD) {
+    const onTouchStart = (e: TouchEvent) => {
+      if (refreshing) return;
+      // Check if we're at the top of scroll
+      if (el.scrollTop > 5) return;
+      startY.current = e.touches[0].clientY;
+      pulling.current = true;
       thresholdReached.current = false;
-    }
-  }, [pullY]);
+    };
 
-  const handleTouchEnd = useCallback(async () => {
-    if (!pulling.current) return;
-    pulling.current = false;
+    const onTouchMove = (e: TouchEvent) => {
+      if (!pulling.current) return;
+      const delta = e.touches[0].clientY - startY.current;
+      if (delta < 0) {
+        // Scrolling up, abort pull
+        pulling.current = false;
+        pullY.set(0);
+        return;
+      }
+      const dampened = delta * DAMPEN;
+      pullY.set(dampened);
 
-    if (pullY.get() >= THRESHOLD) {
-      // Snap to a small holding position while refreshing
-      animate(pullY, 50, { type: 'spring', stiffness: 300, damping: 30 });
-      setRefreshing(true);
-      try {
-        await onRefresh();
-      } finally {
-        setRefreshing(false);
+      // Prevent native scroll while pulling
+      if (dampened > 10) {
+        e.preventDefault();
+      }
+
+      if (dampened >= THRESHOLD && !thresholdReached.current) {
+        thresholdReached.current = true;
+        hapticLight();
+      } else if (dampened < THRESHOLD) {
+        thresholdReached.current = false;
+      }
+    };
+
+    const onTouchEnd = async () => {
+      if (!pulling.current) return;
+      pulling.current = false;
+
+      if (pullY.get() >= THRESHOLD) {
+        animate(pullY, 50, { type: 'spring', stiffness: 300, damping: 30 });
+        setRefreshing(true);
+        try {
+          await onRefresh();
+        } finally {
+          setRefreshing(false);
+          animate(pullY, 0, { type: 'spring', stiffness: 400, damping: 30 });
+        }
+      } else {
         animate(pullY, 0, { type: 'spring', stiffness: 400, damping: 30 });
       }
-    } else {
-      // Spring back to top
-      animate(pullY, 0, { type: 'spring', stiffness: 400, damping: 30 });
-    }
-  }, [pullY, onRefresh]);
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [refreshing, pullY, onRefresh]);
 
   return (
-    <div
-      className="flex-1 overflow-y-auto"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* Pull-down spinner indicator */}
+    <div ref={containerRef} className="flex-1 overflow-y-auto overscroll-none">
+      {/* Spinner */}
       <motion.div
         className="flex items-center justify-center overflow-hidden"
         style={{ height: pullY, opacity: spinnerOpacity }}
@@ -81,7 +100,7 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
           height="28"
           viewBox="0 0 28 28"
           fill="none"
-          style={{ scale: spinnerScale, rotate: refreshing ? undefined : spinnerRotation }}
+          style={{ scale: spinnerScale }}
           animate={refreshing ? { rotate: 360 } : {}}
           transition={refreshing ? { repeat: Infinity, duration: 0.7, ease: 'linear' } : {}}
         >
