@@ -36,6 +36,8 @@
     "nearby": "Restaurants in der Nähe",
     "noRatings": "Noch keine Bewertungen",
     "ratings": "Bewertungen",
+    "ratings_one": "{{count}} Bewertung",
+    "ratings_other": "{{count}} Bewertungen",
     "away": "entfernt",
     "range": "Umkreis",
     "restaurantCount": "{{count}} Restaurants",

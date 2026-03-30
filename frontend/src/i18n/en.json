@@ -36,6 +36,8 @@
     "nearby": "Nearby Restaurants",
     "noRatings": "No ratings yet",
     "ratings": "ratings",
+    "ratings_one": "{{count}} rating",
+    "ratings_other": "{{count}} ratings",
     "away": "away",
     "range": "Range",
     "restaurantCount": "{{count}} restaurants",

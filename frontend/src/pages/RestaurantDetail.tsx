@@ -284,8 +284,9 @@ export default function RestaurantDetail() {
                 <div className="flex-1 grid grid-cols-1 gap-2.5">
                   {CRITERIA_KEYS.map((key, i) => {
                     const value = criteriaAvgs[key] || 0;
-                    const percent = (value / 5) * 100;
-                    const color = getScoreColor(value * 2);
+                    const hasValue = value > 0;
+                    const percent = hasValue ? (value / 5) * 100 : 0;
+                    const color = hasValue ? getScoreColor(value * 2) : '#E7E5E4';
                     return (
                       <motion.div
                         key={key}
@@ -306,8 +307,8 @@ export default function RestaurantDetail() {
                             transition={{ delay: 0.25 + i * 0.05, duration: 0.45 }}
                           />
                         </div>
-                        <span className="text-[11px] font-semibold text-stone-900 w-6 text-right">
-                          {value.toFixed(1)}
+                        <span className={`text-[11px] w-6 text-right ${hasValue ? 'font-semibold text-stone-900' : 'text-stone-300'}`}>
+                          {hasValue ? value.toFixed(1) : '–'}
                         </span>
                       </motion.div>
                     );

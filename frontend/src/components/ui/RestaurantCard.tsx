@@ -33,13 +33,16 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
   if (restaurant.cuisine) subtitleParts.push(restaurant.cuisine);
   if (distance !== undefined) subtitleParts.push(`${formatDistance(distance)} ${t('home.away')}`);
   if (restaurant.rating_count > 0) {
-    subtitleParts.push(`${restaurant.rating_count} ${t('home.ratings')}`);
+    subtitleParts.push(t('home.ratings', { count: restaurant.rating_count }));
   }
 
   return (
-    <motion.button
+    <motion.div
+      role="button"
+      tabIndex={0}
       onClick={() => navigate(`/restaurant/${restaurant.id}`)}
-      className="w-full flex items-center gap-3.5 p-4 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] text-left"
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/restaurant/${restaurant.id}`); }}
+      className="w-full flex items-center gap-3.5 p-4 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] text-left cursor-pointer"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, type: 'spring', damping: 20, stiffness: 300 }}
@@ -112,7 +115,7 @@ function RestaurantCardInner({ restaurant, distance, index = 0 }: RestaurantCard
       >
         <polyline points="9 18 15 12 9 6" />
       </svg>
-    </motion.button>
+    </motion.div>
   );
 }
 

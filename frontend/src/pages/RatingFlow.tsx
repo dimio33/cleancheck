@@ -111,7 +111,7 @@ export default function RatingFlow() {
  return r.name.toLowerCase().includes(searchQuery.toLowerCase());
  })
  .sort((a, b) => a.distance - b.distance)
- .slice(0, searchQuery ? 10 : 3);
+ .slice(0, searchQuery ? 20 : 15);
  }, [lat, lng, searchQuery, restaurants]);
 
  const updateScore = useCallback((key: keyof CriteriaScores, value: number) => {
