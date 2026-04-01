@@ -466,7 +466,7 @@ router.post('/apple', async (req: Request, res: Response): Promise<void> => {
     const decoded = jwt.verify(id_token, publicKey, {
       algorithms: ['RS256'],
       issuer: 'https://appleid.apple.com',
-      audience: process.env.APPLE_CLIENT_ID || 'com.efindo.cleancheck',
+      audience: [process.env.APPLE_CLIENT_ID || 'com.efindo.cleancheck', 'de.e-findo.cleancheck.web'],
     }) as any;
 
     const { sub: appleId, email } = decoded;

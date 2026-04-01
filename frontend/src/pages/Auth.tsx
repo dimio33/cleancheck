@@ -133,7 +133,7 @@ function AuthInner() {
 
       // Initialize Apple JS SDK with popup mode
       AppleID.auth.init({
-        clientId: 'com.efindo.cleancheck',
+        clientId: 'de.e-findo.cleancheck.web',
         scope: 'name email',
         redirectURI: 'https://cleancheck.e-findo.de',
         usePopup: true,
