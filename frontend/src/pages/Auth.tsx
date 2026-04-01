@@ -135,7 +135,7 @@ function AuthInner() {
       AppleID.auth.init({
         clientId: 'de.e-findo.cleancheck.web',
         scope: 'name email',
-        redirectURI: 'https://wc-cleancheck.de',
+        redirectURI: 'https://cleancheck.e-findo.de',
         usePopup: true,
       });
 
