@@ -116,51 +116,29 @@ function AuthInner() {
     : null;
 
   /* --- Apple Sign-In --- */
-  const isNative = typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform?.();
-  const appleAvailable = isNative || (typeof window !== 'undefined' && !!(window as any).AppleID);
+  const appleAvailable = typeof window !== 'undefined' && !!(window as any).AppleID;
 
   const handleAppleLogin = async () => {
+    const AppleID = (window as any).AppleID;
+    if (!AppleID) {
+      setError(t('auth.appleNotAvailable', 'Mit Apple anmelden ist noch nicht verfügbar'));
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
 
-      let idToken: string;
-      let appleUser: any;
+      AppleID.auth.init({
+        clientId: 'de.e-findo.cleancheck.web',
+        scope: 'name email',
+        redirectURI: 'https://wc-cleancheck.de',
+        usePopup: true,
+      });
 
-      if (isNative) {
-        // Native iOS — use Capacitor plugin (reliable in WKWebView)
-        const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
-        const result = await SignInWithApple.authorize({
-          clientId: 'com.efindo.cleancheck',
-          scopes: 'name email',
-          redirectURI: 'https://wc-cleancheck.de',
-          nonce: '',
-          state: '',
-        });
-        idToken = result.response.identityToken;
-        appleUser = result.response.givenName
-          ? { name: { firstName: result.response.givenName, lastName: result.response.familyName } }
-          : undefined;
-      } else {
-        // Web fallback — Apple JS SDK
-        const AppleID = (window as any).AppleID;
-        if (!AppleID) {
-          setError(t('auth.appleNotAvailable', 'Mit Apple anmelden ist noch nicht verfügbar'));
-          setTimeout(() => setError(''), 5000);
-          return;
-        }
-        AppleID.auth.init({
-          clientId: 'de.e-findo.cleancheck.web',
-          scope: 'name email',
-          redirectURI: 'https://wc-cleancheck.de',
-          usePopup: true,
-        });
-        const response = await AppleID.auth.signIn();
-        idToken = response.authorization.id_token;
-        appleUser = response.user;
-      }
-
-      await loginWithApple(idToken, appleUser);
+      const response = await AppleID.auth.signIn();
+      await loginWithApple(response.authorization.id_token, response.user);
       localStorage.setItem('cleancheck_onboarded', 'true');
       const currentUser = useAuthStore.getState().user;
       if (currentUser?.needs_nickname) {
@@ -170,7 +148,7 @@ function AuthInner() {
       }
     } catch (err: any) {
       const errStr = String(err?.error || err?.message || err || '');
-      if (errStr.includes('popup_closed') || errStr.includes('cancel') || err?.code === 1001 || errStr.includes('ERR_CANCELED')) {
+      if (errStr.includes('popup_closed') || errStr.includes('cancel') || err?.code === 1001) {
         // User cancelled — silent
       } else {
         console.error('Apple Sign-In error:', err);
