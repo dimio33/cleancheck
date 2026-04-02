@@ -13,6 +13,7 @@ import { awardXp, updateStreak, getStreakBonus } from '../services/xpService';
 import { updateLeaderboard } from '../services/leaderboardService';
 import { updateContestEntry } from '../services/contestService';
 import { geoVerify, calculateDistance } from '../middleware/geoVerify';
+import { notifyScoreChange } from '../services/scheduledPushService';
 import { validateImageFile, moderateImage, generateImageHash } from '../services/moderationService';
 import { uploadPhoto, isR2Configured } from '../services/storageService';
 import { isValidUuid } from '../utils/validate';
@@ -225,8 +226,19 @@ router.post('/', optionalAuth, geoVerify({ maxDistanceMeters: 500 }), async (req
       [userId, anonymousId, restaurant_id, cleanliness, smell, supplies, condition, ambiente, accessibility, overall_score, sanitizedComment || null, visitDate]
     );
 
+    // Get old score before recalculation
+    const oldScoreResult = await query<{ clean_score: string; name: string }>(
+      `SELECT clean_score, name FROM restaurants WHERE id = $1`,
+      [restaurant_id],
+    );
+    const oldScore = parseFloat(oldScoreResult.rows[0]?.clean_score || '0');
+    const restaurantName = oldScoreResult.rows[0]?.name || '';
+
     // Recalculate restaurant score
     const newScore = await recalculateRestaurantScore(restaurant_id);
+
+    // Notify previous raters if score changed significantly (non-blocking)
+    notifyScoreChange(restaurant_id, restaurantName, newScore, oldScore).catch(() => {});
 
     // Update user total_ratings (atomic increment) + check badges + gamification
     let newBadges: any[] = [];

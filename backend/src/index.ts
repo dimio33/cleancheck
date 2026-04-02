@@ -17,6 +17,7 @@ import adminRoutes from './routes/admin';
 import pushRoutes from './routes/push';
 import placesRoutes from './routes/places';
 import { initModeration, getModerationStatus } from './services/moderationService';
+import { runScheduledPushNotifications } from './services/scheduledPushService';
 import { apiLimiter, ratingLimiter } from './middleware/rateLimiter';
 import { query } from './utils/db';
 
@@ -158,6 +159,23 @@ if (process.env.NODE_ENV !== 'test') {
     } catch (err) {
       console.warn('Content moderation failed to initialize — uploads will still work but without NSFW scanning');
     }
+
+    // Scheduled push notifications — daily at 10:00 AM CET
+    const schedulePush = () => {
+      const now = new Date();
+      const next = new Date();
+      next.setHours(10, 0, 0, 0);
+      if (next.getTime() <= now.getTime()) {
+        next.setDate(next.getDate() + 1);
+      }
+      const delay = next.getTime() - now.getTime();
+      setTimeout(() => {
+        runScheduledPushNotifications();
+        setInterval(runScheduledPushNotifications, 24 * 60 * 60 * 1000);
+      }, delay);
+      console.log(`Scheduled push notifications: next run at ${next.toISOString()}`);
+    };
+    schedulePush();
   });
 }
 
