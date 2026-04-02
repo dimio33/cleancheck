@@ -10,20 +10,7 @@ function anySignal(signals: AbortSignal[]): AbortSignal {
   return controller.signal;
 }
 
-// ─── Google Places API (New, v1) ───────────────────────────────────────────
-
-const GOOGLE_PLACES_URL = 'https://places.googleapis.com/v1/places:searchNearby';
-
-const GOOGLE_FIELD_MASK = [
-  'places.id',
-  'places.displayName',
-  'places.location',
-  'places.formattedAddress',
-  'places.primaryType',
-  'places.primaryTypeDisplayName',
-  'places.rating',
-  'places.userRatingCount',
-].join(',');
+// ─── Google Places API (proxied through backend) ─────────────────────────────
 
 const GOOGLE_INCLUDED_TYPES = [
   'restaurant',
@@ -113,7 +100,6 @@ async function fetchGooglePlacesBatch(
   lat: number,
   lng: number,
   radius: number,
-  apiKey: string,
   signal?: AbortSignal,
 ): Promise<GooglePlace[]> {
   const controller = new AbortController();
@@ -122,33 +108,26 @@ async function fetchGooglePlacesBatch(
     ? anySignal([signal, controller.signal])
     : controller.signal;
 
-  const body = {
-    includedTypes: GOOGLE_INCLUDED_TYPES,
-    maxResultCount: 20,
-    locationRestriction: {
-      circle: {
-        center: { latitude: lat, longitude: lng },
-        radius: Math.min(radius, 50000),
-      },
-    },
-    languageCode: 'de',
-  };
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
-  const response = await fetch(GOOGLE_PLACES_URL, {
+  const response = await fetch(`${apiUrl}/places/nearby`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Goog-Api-Key': apiKey,
-      'X-Goog-FieldMask': GOOGLE_FIELD_MASK,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      lat,
+      lng,
+      radius: Math.min(radius, 50000),
+      includedTypes: GOOGLE_INCLUDED_TYPES,
+    }),
     signal: fetchSignal,
   });
   clearTimeout(timeoutId);
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
-    throw new Error(`Google Places returned ${response.status}: ${errorText}`);
+    throw new Error(`Places proxy returned ${response.status}: ${errorText}`);
   }
 
   const data = await response.json();
@@ -161,19 +140,15 @@ async function fetchFromGooglePlaces(
   radius: number,
   signal?: AbortSignal,
 ): Promise<Restaurant[]> {
-  const apiKey = import.meta.env.VITE_GOOGLE_PLACES_KEY;
-  if (!apiKey) {
-    console.warn('VITE_GOOGLE_PLACES_KEY not set, skipping Google Places');
-    throw new Error('Google Places API key not configured');
-  }
+  // API key is now on the backend — no client-side check needed
 
   // Fetch 2 batches in parallel: close (2km) + wider (full radius)
   // This gives us up to 40 unique results instead of 20
   const nearRadius = Math.min(2000, radius);
   const [nearPlaces, widePlaces] = await Promise.all([
-    fetchGooglePlacesBatch(lat, lng, nearRadius, apiKey, signal),
+    fetchGooglePlacesBatch(lat, lng, nearRadius, signal),
     radius > 2000
-      ? fetchGooglePlacesBatch(lat, lng, radius, apiKey, signal)
+      ? fetchGooglePlacesBatch(lat, lng, radius, signal)
       : Promise.resolve([]),
   ]);
 

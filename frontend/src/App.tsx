@@ -13,6 +13,7 @@ import { useThemeStore } from './stores/themeStore';
 import { useDraftStore } from './stores/draftStore';
 import { useGeoStore } from './stores/geoStore';
 import { useToastStore } from './components/ui/Toast';
+import { initNativePushListeners } from './services/pushNotifications';
 import './App.css';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
   useEffect(() => {
     initTheme();
     initGeo();
+    initNativePushListeners();
 
     // Sync offline drafts when coming back online
     const handleOnline = async () => {
